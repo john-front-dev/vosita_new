@@ -1,17 +1,76 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { MainLayout } from '@app/layouts';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
+import { PlaceholderPage } from '@pages/placeholder';
 
-import { routes } from '@shared/config';
+import { accessRules, routes } from '@shared/config';
+import type { AccessRule } from '@shared/lib';
+
+import { PrivateRoute, ProtectedRoute, PublicOnlyRoute } from './route-guards';
+
+const withAccess = (element: React.ReactNode, rule?: AccessRule) => (
+  <ProtectedRoute rule={rule}>{element}</ProtectedRoute>
+);
+
+const appRoutes = [
+  { path: routes.home, element: <HomePage /> },
+  { path: routes.applications, element: withAccess(<PlaceholderPage title="Запросы" />, accessRules.request) },
+  { path: routes.applicationsFa, element: withAccess(<PlaceholderPage title="Запросы ОС" />, accessRules.request) },
+  { path: routes.applicationsFaDetails, element: withAccess(<PlaceholderPage title="Запрос ОС" />, accessRules.request) },
+  { path: routes.applicationsLri, element: withAccess(<PlaceholderPage title="Запросы ПАУ" />, accessRules.request) },
+  { path: routes.applicationsLriDetails, element: withAccess(<PlaceholderPage title="Запрос ПАУ" />, accessRules.request) },
+  { path: routes.applicationsTmz, element: withAccess(<PlaceholderPage title="Запросы ТМЗ" />, accessRules.request) },
+  { path: routes.applicationsTmzDetails, element: withAccess(<PlaceholderPage title="Запрос ТМЗ" />, accessRules.request) },
+  { path: routes.capitalization, element: withAccess(<PlaceholderPage title="Капитализация" />, accessRules.responsibleOrAccountant) },
+  { path: routes.mbp, element: withAccess(<PlaceholderPage title="МБП" />, accessRules.mbp) },
+  { path: routes.mbpDetails, element: withAccess(<PlaceholderPage title="МБП" />, accessRules.mbp) },
+  { path: routes.categories, element: withAccess(<PlaceholderPage title="Категории" />, accessRules.responsibleOrAccountant) },
+  { path: routes.employees, element: withAccess(<PlaceholderPage title="Сотрудники" />, accessRules.responsibleOrAccountant) },
+  { path: routes.employeeDetails, element: withAccess(<PlaceholderPage title="Сотрудник" />, accessRules.responsibleOrAccountant) },
+  { path: routes.fixedAssets, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
+  { path: routes.fixedAssetsMine, element: withAccess(<PlaceholderPage title="Мои ОС" />) },
+  { path: routes.fixedAssetsStock, element: withAccess(<PlaceholderPage title="Склад" />, accessRules.warehouseData) },
+  { path: routes.fixedAssetsDetails, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
+  { path: routes.others, element: withAccess(<PlaceholderPage title="Другие" />, accessRules.responsibleOrAccountant) },
+  { path: routes.tmzReport, element: withAccess(<PlaceholderPage title="ТМЗ" />, accessRules.tmz) },
+  { path: routes.inventory, element: withAccess(<PlaceholderPage title="Инвентарь" />, accessRules.tmz) },
+  { path: routes.inventoryStorage, element: withAccess(<PlaceholderPage title="Склад ТМЗ" />, accessRules.tmz) },
+  { path: routes.inventoryGoods, element: withAccess(<PlaceholderPage title="Товары" />, accessRules.tmz) },
+  { path: routes.inventoryGoodsDetails, element: withAccess(<PlaceholderPage title="Товар" />, accessRules.tmz) },
+  { path: routes.amortizationFixedAssets, element: withAccess(<PlaceholderPage title="Амортизация ОС" />, accessRules.fixedAssets) },
+  { path: routes.amortizationLri, element: withAccess(<PlaceholderPage title="Амортизация ПАУ" />, accessRules.lri) },
+  { path: routes.trash, element: withAccess(<PlaceholderPage title="Корзина" />, accessRules.responsibleOrAccountant) },
+  { path: routes.history, element: withAccess(<PlaceholderPage title="История" />, accessRules.history) },
+  { path: routes.locations, element: withAccess(<PlaceholderPage title="Местоположения" />, accessRules.responsibleOrAccountant) },
+  { path: routes.lri, element: withAccess(<PlaceholderPage title="ПАУ" />, accessRules.lri) },
+  { path: routes.lriDetails, element: withAccess(<PlaceholderPage title="ПАУ" />, accessRules.lri) },
+  { path: routes.reports, element: withAccess(<PlaceholderPage title="Отчёты" />, accessRules.reports) },
+  { path: routes.taxGroups, element: withAccess(<PlaceholderPage title="Группа налогов" />, accessRules.responsibleOrAccountant) },
+  { path: routes.approval, element: withAccess(<PlaceholderPage title="Одобрение" />, accessRules.approval) },
+  { path: routes.changePassword, element: withAccess(<PlaceholderPage title="Изменить пароль" />) },
+];
 
 export const router = createBrowserRouter([
   {
-    path: routes.home,
-    element: <HomePage />,
+    path: routes.login,
+    element: (
+      <PublicOnlyRoute>
+        <LoginPage />
+      </PublicOnlyRoute>
+    ),
   },
   {
-    path: routes.login,
-    element: <LoginPage />,
+    path: routes.resetPassword,
+    element: <PlaceholderPage title="Сброс пароля" />,
+  },
+  {
+    element: (
+      <PrivateRoute>
+        <MainLayout />
+      </PrivateRoute>
+    ),
+    children: appRoutes,
   },
 ]);

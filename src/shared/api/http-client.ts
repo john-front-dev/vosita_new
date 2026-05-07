@@ -12,19 +12,6 @@ const ACCESS_TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const SKIP_ERROR_SNACKBAR_HEADER = 'x-skip-error-snackbar';
 
-export type ApiResponse<TPayload = unknown> = {
-  code?: number;
-  message?: string;
-  payload?: TPayload;
-};
-
-export type ApiErrorPayload = {
-  message?: string;
-  payload?: {
-    message?: string;
-  };
-};
-
 type RefreshTokenResponse = ApiResponse<{
   access_token: string;
   refresh_token?: string;
@@ -92,8 +79,8 @@ const requestNewAccessToken = async () => {
     refresh_token: refreshToken,
   });
 
-  const accessToken = response.data.payload?.access_token;
-  const nextRefreshToken = response.data.payload?.refresh_token;
+  const accessToken = response.data.payload.access_token;
+  const nextRefreshToken = response.data.payload.refresh_token;
 
   if (!accessToken) {
     throw new Error('Access token is missing in refresh response');

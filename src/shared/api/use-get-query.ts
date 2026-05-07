@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-query';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 
-import type { ApiErrorPayload } from './http-client';
 import { httpClient } from './http-client';
 
 type QueryParams = AxiosRequestConfig['params'];

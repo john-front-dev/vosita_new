@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-query';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 
-import type { ApiErrorPayload } from './http-client';
 import { httpClient } from './http-client';
 
 export type MutationMethod = 'delete' | 'patch' | 'post' | 'put';
