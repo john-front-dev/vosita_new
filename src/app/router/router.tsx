@@ -6,6 +6,7 @@ import { ApplicationsPage } from '@pages/applications';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { PlaceholderPage } from '@pages/placeholder';
+import { StockPage } from '@pages/stock';
 
 import { accessRules, routes } from '@shared/config';
 import type { AccessRule } from '@shared/lib';
@@ -35,7 +36,7 @@ const appRoutes = [
   { path: routes.employeeDetails, element: withAccess(<PlaceholderPage title="Сотрудник" />, accessRules.responsibleOrAccountant) },
   { path: routes.fixedAssets, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
   { path: routes.fixedAssetsMine, element: withAccess(<PlaceholderPage title="Мои ОС" />) },
-  { path: routes.fixedAssetsStock, element: withAccess(<PlaceholderPage title="Склад" />, accessRules.warehouseData) },
+  { path: routes.fixedAssetsStock, element: withAccess(<StockPage />, accessRules.warehouseData) },
   { path: routes.fixedAssetsDetails, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
   { path: routes.others, element: withAccess(<PlaceholderPage title="Другие" />, accessRules.responsibleOrAccountant) },
   { path: routes.tmzReport, element: withAccess(<PlaceholderPage title="ТМЗ" />, accessRules.tmz) },

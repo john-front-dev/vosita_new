@@ -34,6 +34,6 @@ export const accessRules = {
   },
   warehouseData: {
     roles: ['responsible', 'accountant'],
-    storageTypes: ['OS'],
+    storageTypes: ['OS', 'PAU'],
   },
 } satisfies Record<string, AccessRule>;

@@ -75,7 +75,7 @@ export const Sidebar = () => {
     >
       <AlifSidebar.HeaderSection
         logo={{
-          compact: <AlifIcon className="h-7 w-7 text-[var(--brand-value-default)]" />,
+          compact: <AlifIcon className="h-7 w-7 text-(--brand-value-default)" />,
           default: <LogoFull />,
         }}
       />
@@ -112,7 +112,7 @@ export const Sidebar = () => {
 
       <AlifSidebar.BottomSection>
         <AlifSidebar.Element icon={<Avatar size="m" placeholderContent={initials} />}>
-          <div className="mt-3 flex items-center justify-between gap-2 rounded-3xl  p-4">
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-3xl p-4">
             <div className="flex min-w-0 items-center gap-2">
               <Avatar size="m" placeholderContent={initials} />
               <div className="flex min-w-0 flex-col leading-tight">

@@ -5,6 +5,7 @@ import { paginationConfig } from '@shared/config';
 
 type RowClassName<T> = NonNullable<TableProps<T>['tableClassNames']>['row'];
 type RowContentClassName<T> = NonNullable<TableProps<T>['tableClassNames']>['rowContent'];
+type DataTableColumn<T> = NonNullable<TableProps<T>['columns']>[number];
 
 type DataTablePagination = {
   currentPage: number;
@@ -28,6 +29,31 @@ export type DataTableProps<T> = Omit<TableProps<T>, 'columns' | 'records'> & {
   hidePaginationWhenEmpty?: boolean;
   isFetching?: boolean;
 };
+
+const renderDefaultCellContent = (value: string | number) => {
+  const text = String(value).trim();
+
+  if (!text) {
+    return '-';
+  }
+
+  return (
+    <div
+      title={text}
+      className="max-w-130 overflow-hidden wrap-break-word text-ellipsis"
+      style={{
+        WebkitBoxOrient: 'vertical',
+        WebkitLineClamp: 2,
+        display: '-webkit-box',
+      }}
+    >
+      {text}
+    </div>
+  );
+};
+
+const isPrimitiveCellValue = (value: ReactNode): value is string | number =>
+  typeof value === 'string' || typeof value === 'number';
 
 export const DataTable = <T,>({
   columns,
@@ -70,10 +96,39 @@ export const DataTable = <T,>({
     return [resolvedClassName, isClickable ? 'cursor-pointer' : ''].filter(Boolean).join(' ');
   };
 
+  const normalizedColumns = columns.map((column) => {
+    const originalRenderRowCell = column.renderRowCell;
+
+    return {
+      ...column,
+      renderRowCell: (record: T, index: number) => {
+        const renderedValue = originalRenderRowCell?.(record, index);
+
+        if (isPrimitiveCellValue(renderedValue)) {
+          return renderDefaultCellContent(renderedValue);
+        }
+
+        if (renderedValue !== undefined) {
+          return renderedValue;
+        }
+
+        if (typeof column.accessor === 'string') {
+          const rawValue = (record as Record<string, unknown>)[column.accessor];
+
+          if (typeof rawValue === 'string' || typeof rawValue === 'number') {
+            return renderDefaultCellContent(rawValue);
+          }
+        }
+
+        return renderedValue;
+      },
+    } satisfies DataTableColumn<T>;
+  });
+
   return (
     <div className={'flex flex-1 flex-col justify-between ' + className}>
       <Table
-        columns={columns}
+        columns={normalizedColumns}
         records={records}
         emptyPlaceholder={emptyPlaceholder}
         withRowBorders={withRowBorders}

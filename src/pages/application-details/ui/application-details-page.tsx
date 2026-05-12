@@ -269,6 +269,18 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     setEditingSubrequest(null);
   };
 
+  const handleRowClick = (record: ApplicationObjectRecord) => {
+    if (!selectable) {
+      return;
+    }
+
+    setSelectedIds((currentIds) =>
+      currentIds.includes(record.id)
+        ? currentIds.filter((selectedId) => selectedId !== record.id)
+        : [...currentIds, record.id],
+    );
+  };
+
   const columns = useMemo<DataTableProps<ApplicationObjectRecord>['columns']>(
     () => [
       {
@@ -421,6 +433,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
                 records={records}
                 selectedRecords={selectable ? selectedIds : undefined}
                 onSelectedRecordsChange={selectable ? setSelectedIds : undefined}
+                onRowClick={selectable ? handleRowClick : undefined}
                 isFetching={detailsQuery.isFetching}
                 isLoading={detailsQuery.isLoading}
                 emptyPlaceholder="Пока нет объектов."

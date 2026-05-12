@@ -1,4 +1,4 @@
-import { Button, OutlineSystemDownload, snackbar, Table } from 'alif-ui';
+import { Button, OutlineSystemDownload, snackbar, Surface } from 'alif-ui';
 import { useMemo, useState } from 'react';
 
 import { httpClient, useGetQuery } from '@shared/api';
@@ -109,36 +109,6 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
     [downloadingId],
   );
 
-  const itemColumns = useMemo(
-    () => [
-      {
-        accessor: 'name',
-        minWidth: '260px',
-        renderRowCell: (item: InvoiceItemRecord) => item.name || '-',
-        title: 'Название',
-      },
-      {
-        accessor: 'quantity',
-        minWidth: '120px',
-        renderRowCell: (item: InvoiceItemRecord) => item.quantity ?? '-',
-        title: 'Количество',
-      },
-      {
-        accessor: 'unit',
-        minWidth: '90px',
-        renderRowCell: (item: InvoiceItemRecord) => item.unit || '-',
-        title: 'Ед.',
-      },
-      {
-        accessor: 'price',
-        minWidth: '120px',
-        renderRowCell: (item: InvoiceItemRecord) => formatMoney(item.price),
-        title: 'Цена',
-      },
-    ],
-    [],
-  );
-
   const downloadInvoice = async (invoice: ApplicationInvoice) => {
     try {
       setDownloadingId(invoice.id);
@@ -185,15 +155,33 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
           }
 
           return (
-            <div className="rounded-md bg-[#f9fafb] p-3">
-              <Table
-                columns={itemColumns}
-                records={items}
-                accessorId="id"
-                rowSpacing="s"
-                withRowBorders
-              />
-            </div>
+            <Surface p="4" rounded="8">
+              <div className="grid gap-3">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid gap-3 rounded-md border border-[#eaecf0] bg-white p-3 md:grid-cols-[minmax(0,1.8fr)_120px_90px_140px]"
+                  >
+                    <div className="min-w-0">
+                      <p className="mb-1 text-xs font-medium text-[#667085]">Наименование</p>
+                      <p className="text-sm text-[#101828]">{item.name || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-[#667085]">Количество</p>
+                      <p className="text-sm text-[#101828]">{item.quantity ?? '-'}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-[#667085]">Ед.</p>
+                      <p className="text-sm text-[#101828]">{item.unit || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-[#667085]">Цена</p>
+                      <p className="text-sm text-[#101828]">{formatMoney(item.price)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
           );
         },
       }}
