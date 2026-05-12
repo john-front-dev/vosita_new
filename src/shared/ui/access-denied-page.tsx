@@ -1,4 +1,4 @@
-export function AccessDeniedPage() {
+export const AccessDeniedPage = () => {
   return (
     <section className="min-h-[calc(100vh-48px)]">
       <h1 className="text-2xl font-semibold text-[#101828]">Нет доступа</h1>
@@ -7,4 +7,4 @@ export function AccessDeniedPage() {
       </p>
     </section>
   );
-}
+};

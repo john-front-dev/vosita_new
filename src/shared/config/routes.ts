@@ -10,6 +10,8 @@ export const routes = {
   applicationsLriDetails: '/applications/lease-rights-improvement/:id',
   applicationsTmz: '/applications/tmz',
   applicationsTmzDetails: '/applications/tmz/:id',
+  applicationsMbpDetails: '/applications/mbp/:id',
+  applicationsOtherDetails: '/applications/other/:id',
   capitalization: '/capitalization',
   mbp: '/mbp',
   mbpDetails: '/mbp/:id',

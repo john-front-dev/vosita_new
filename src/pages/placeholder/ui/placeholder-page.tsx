@@ -4,6 +4,6 @@ type PlaceholderPageProps = {
   title: string;
 };
 
-export function PlaceholderPage({ title }: PlaceholderPageProps) {
+export const PlaceholderPage = ({ title }: PlaceholderPageProps) => {
   return <EmptyPage title={title} />;
-}
+};

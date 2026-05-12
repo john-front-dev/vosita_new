@@ -2,7 +2,7 @@ type EmptyPageProps = {
   title: string;
 };
 
-export function EmptyPage({ title }: EmptyPageProps) {
+export const EmptyPage = ({ title }: EmptyPageProps) => {
   return (
     <section className="min-h-[calc(100vh-48px)]">
       <div>
@@ -11,4 +11,4 @@ export function EmptyPage({ title }: EmptyPageProps) {
       </div>
     </section>
   );
-}
+};

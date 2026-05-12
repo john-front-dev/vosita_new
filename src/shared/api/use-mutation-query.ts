@@ -37,7 +37,7 @@ export type UseMutationQueryParams<
   options?: MutationOptions<TData, TError, TVariables, TContext>;
 };
 
-export function useMutationQuery<
+export const useMutationQuery = <
   TData,
   TVariables extends MutationVariables = MutationVariables,
   TError = AxiosError<ApiErrorPayload>,
@@ -53,7 +53,7 @@ export function useMutationQuery<
   TError,
   TVariables,
   TContext
-> {
+> => {
   return useMutation<TData, TError, TVariables, TContext>({
     mutationKey,
     mutationFn: ({ body, params, url: variableUrl, config: variableConfig } = {} as TVariables) =>
@@ -69,4 +69,4 @@ export function useMutationQuery<
         .then((response) => response.data),
     ...options,
   });
-}
+};

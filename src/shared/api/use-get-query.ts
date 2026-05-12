@@ -23,6 +23,7 @@ export type UseGetQueryParams<
   TParams extends QueryParams = QueryParams,
   TError = AxiosError<ApiErrorPayload>,
 > = {
+  abortOnUnmount?: boolean;
   queryKey: QueryKey;
   url: string;
   params?: TParams;
@@ -43,7 +44,7 @@ const getQueryKey = <TParams extends QueryParams>(
   return [...queryKey, params];
 };
 
-export function useGetQuery<
+export const useGetQuery = <
   TData,
   TSelect = TData,
   TParams extends QueryParams = QueryParams,
@@ -53,9 +54,10 @@ export function useGetQuery<
   url,
   params,
   config,
+  abortOnUnmount = false,
   includeParamsInKey = true,
   options,
-}: UseGetQueryParams<TData, TSelect, TParams, TError>): UseQueryResult<TSelect, TError> {
+}: UseGetQueryParams<TData, TSelect, TParams, TError>): UseQueryResult<TSelect, TError> => {
   return useQuery<TData, TError, TSelect, QueryKey>({
     queryKey: getQueryKey(queryKey, params, includeParamsInKey),
     queryFn: ({ signal }) =>
@@ -63,9 +65,9 @@ export function useGetQuery<
         .get<TData>(url, {
           ...config,
           params,
-          signal,
+          signal: abortOnUnmount ? signal : undefined,
         })
         .then((response) => response.data),
     ...options,
   });
-}
+};

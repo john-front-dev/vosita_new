@@ -26,7 +26,7 @@ const defaultValues: LoginFormValues = {
   remember: false,
 };
 
-export function LoginPage() {
+export const LoginPage = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -90,7 +90,7 @@ export function LoginPage() {
         className="flex w-full max-w-105 flex-col items-center rounded-xl bg-white px-8.75 py-12.5 shadow-[0_6px_22px_rgba(16,24,40,0.08)]"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="mb-6 flex items-center justify-center gap-3 text-primary">
+        <div className="mb-6 flex items-center justify-center gap-3 text-[var(--brand-value-default)]">
           <AlifIcon className="h-[42px] w-[42px]" />
           <span className="text-[34px] font-bold leading-none tracking-normal">VOSITA</span>
         </div>
@@ -161,7 +161,7 @@ export function LoginPage() {
           />
 
           <Button
-            className="mt-0 h-12.5 w-full rounded-lg! bg-primary! text-base! font-semibold! hover:bg-primary-hover!"
+            className="mt-0 h-12.5 w-full rounded-lg! text-base! font-semibold!"
             type="submit"
             variant="primary"
             size="l"
@@ -173,7 +173,7 @@ export function LoginPage() {
 
           <button
             type="button"
-            className="mx-auto text-base font-medium text-[#8ea7c5] transition-colors hover:text-primary"
+            className="mx-auto text-base font-medium text-[#8ea7c5] transition-colors hover:text-[var(--brand-value-default)]"
           >
             Забыли пароль?
           </button>
@@ -181,4 +181,4 @@ export function LoginPage() {
       </form>
     </main>
   );
-}
+};

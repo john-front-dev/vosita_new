@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { MainLayout } from '@app/layouts';
+import { ApplicationDetailsPage } from '@pages/application-details';
+import { ApplicationsPage } from '@pages/applications';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { PlaceholderPage } from '@pages/placeholder';
@@ -16,13 +18,15 @@ const withAccess = (element: React.ReactNode, rule?: AccessRule) => (
 
 const appRoutes = [
   { path: routes.home, element: <HomePage /> },
-  { path: routes.applications, element: withAccess(<PlaceholderPage title="Запросы" />, accessRules.request) },
+  { path: routes.applications, element: withAccess(<ApplicationsPage />, accessRules.request) },
   { path: routes.applicationsFa, element: withAccess(<PlaceholderPage title="Запросы ОС" />, accessRules.request) },
-  { path: routes.applicationsFaDetails, element: withAccess(<PlaceholderPage title="Запрос ОС" />, accessRules.request) },
+  { path: routes.applicationsFaDetails, element: withAccess(<ApplicationDetailsPage type="fixed-assets" />, accessRules.request) },
   { path: routes.applicationsLri, element: withAccess(<PlaceholderPage title="Запросы ПАУ" />, accessRules.request) },
-  { path: routes.applicationsLriDetails, element: withAccess(<PlaceholderPage title="Запрос ПАУ" />, accessRules.request) },
+  { path: routes.applicationsLriDetails, element: withAccess(<ApplicationDetailsPage type="lri" />, accessRules.request) },
   { path: routes.applicationsTmz, element: withAccess(<PlaceholderPage title="Запросы ТМЗ" />, accessRules.request) },
-  { path: routes.applicationsTmzDetails, element: withAccess(<PlaceholderPage title="Запрос ТМЗ" />, accessRules.request) },
+  { path: routes.applicationsTmzDetails, element: withAccess(<ApplicationDetailsPage type="tmz" />, accessRules.request) },
+  { path: routes.applicationsMbpDetails, element: withAccess(<ApplicationDetailsPage type="mbp" />, accessRules.request) },
+  { path: routes.applicationsOtherDetails, element: withAccess(<ApplicationDetailsPage type="other" />, accessRules.request) },
   { path: routes.capitalization, element: withAccess(<PlaceholderPage title="Капитализация" />, accessRules.responsibleOrAccountant) },
   { path: routes.mbp, element: withAccess(<PlaceholderPage title="МБП" />, accessRules.mbp) },
   { path: routes.mbpDetails, element: withAccess(<PlaceholderPage title="МБП" />, accessRules.mbp) },

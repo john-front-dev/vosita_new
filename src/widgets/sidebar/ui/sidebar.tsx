@@ -15,18 +15,22 @@ import { canAccess, clearAuthSession, getStoredAccesses, getStoredUser } from '@
 
 import { sidebarNavigation, type SidebarNavItem } from '../model/navigation';
 
-function LogoFull() {
+const LogoFull = () => {
   return (
     <div className="flex items-center gap-3 pl-4">
-      <AlifIcon className="h-7 w-7 text-primary" />
-      <Typography category="display" proportions="sStrong" className="text-[20px]! text-primary!">
+      <AlifIcon className="h-7 w-7 text-[var(--brand-value-default)]" />
+      <Typography
+        category="display"
+        proportions="sStrong"
+        className="text-[20px]! text-[var(--brand-value-default)]!"
+      >
         VOSITA
       </Typography>
     </div>
   );
-}
+};
 
-export function Sidebar() {
+export const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const user = getStoredUser();
@@ -71,7 +75,7 @@ export function Sidebar() {
     >
       <AlifSidebar.HeaderSection
         logo={{
-          compact: <AlifIcon className="h-7 w-7 text-primary" />,
+          compact: <AlifIcon className="h-7 w-7 text-[var(--brand-value-default)]" />,
           default: <LogoFull />,
         }}
       />
@@ -131,4 +135,4 @@ export function Sidebar() {
       </AlifSidebar.BottomSection>
     </AlifSidebar>
   );
-}
+};

@@ -54,6 +54,7 @@ export default defineConfig([
             '@widgets',
             '@features',
             '@entities',
+            '@entities/location',
             '@shared',
             '@app/App',
             '@app/layouts',

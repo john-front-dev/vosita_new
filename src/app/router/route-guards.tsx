@@ -12,7 +12,7 @@ import {
 } from '@shared/lib';
 import { AccessDeniedPage } from '@shared/ui';
 
-export function PrivateRoute({ children }: PropsWithChildren) {
+export const PrivateRoute = ({ children }: PropsWithChildren) => {
   const location = useLocation();
   const token = getStoredAccessToken();
 
@@ -21,9 +21,9 @@ export function PrivateRoute({ children }: PropsWithChildren) {
   }
 
   return children;
-}
+};
 
-export function PublicOnlyRoute({ children }: PropsWithChildren) {
+export const PublicOnlyRoute = ({ children }: PropsWithChildren) => {
   const token = getStoredAccessToken();
   const user = getStoredUser();
   const accesses = getStoredAccesses();
@@ -33,13 +33,13 @@ export function PublicOnlyRoute({ children }: PropsWithChildren) {
   }
 
   return children;
-}
+};
 
 type ProtectedRouteProps = PropsWithChildren<{
   rule?: AccessRule;
 }>;
 
-export function ProtectedRoute({ children, rule }: ProtectedRouteProps) {
+export const ProtectedRoute = ({ children, rule }: ProtectedRouteProps) => {
   const user = getStoredUser();
   const accesses = getStoredAccesses();
 
@@ -48,4 +48,4 @@ export function ProtectedRoute({ children, rule }: ProtectedRouteProps) {
   }
 
   return children;
-}
+};

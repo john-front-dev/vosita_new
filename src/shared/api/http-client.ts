@@ -23,10 +23,37 @@ type RetryRequestConfig = InternalAxiosRequestConfig & {
 
 let refreshTokenPromise: Promise<string> | null = null;
 
+const serializeParams = (params?: Record<string, unknown>) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      const normalizedValue = value.map(String).map((item) => item.trim()).filter(Boolean);
+
+      if (normalizedValue.length) {
+        searchParams.set(key, normalizedValue.join(','));
+      }
+
+      return;
+    }
+
+    searchParams.set(key, String(value));
+  });
+
+  return searchParams.toString();
+};
+
 export const httpClient = axios.create({
   baseURL: env.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
+  },
+  paramsSerializer: {
+    serialize: serializeParams,
   },
 });
 
@@ -62,6 +89,9 @@ const getErrorMessage = (error: AxiosError<ApiErrorPayload>) => {
 
 const shouldSkipErrorSnackbar = (config?: InternalAxiosRequestConfig) =>
   Boolean(config?.headers?.get?.(SKIP_ERROR_SNACKBAR_HEADER));
+
+const isCanceledRequest = (error: AxiosError) =>
+  axios.isCancel(error) || error.code === AxiosError.ERR_CANCELED;
 
 const clearAuthTokens = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -140,6 +170,10 @@ httpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 httpClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError<ApiErrorPayload>) => {
+    if (isCanceledRequest(error)) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401) {
       return handleUnauthorizedError(error);
     }

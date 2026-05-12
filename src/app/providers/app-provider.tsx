@@ -4,11 +4,11 @@ import type { PropsWithChildren } from 'react';
 
 import { queryClient } from '@shared/api';
 
-export function AppProvider({ children }: PropsWithChildren) {
+export const AppProvider = ({ children }: PropsWithChildren) => {
   return (
     <AlifProvider brand="aliftech" initialMode="light" initialLocale="ru">
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       <SnackbarContainer position="top-right" />
     </AlifProvider>
   );
-}
+};

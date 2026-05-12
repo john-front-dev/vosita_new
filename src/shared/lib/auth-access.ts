@@ -25,7 +25,7 @@ const hasRole = (role: AccessRole, user: AuthUser, accesses: AuthAccess[]) => {
 const hasStorageType = (storageType: string, accesses: AuthAccess[]) =>
   accesses.some((access) => access.storage_type === storageType);
 
-export function canAccess(user: AuthUser | null, accesses: AuthAccess[], rule?: AccessRule) {
+export const canAccess = (user: AuthUser | null, accesses: AuthAccess[], rule?: AccessRule) => {
   if (!user) {
     return false;
   }
@@ -43,9 +43,9 @@ export function canAccess(user: AuthUser | null, accesses: AuthAccess[], rule?: 
     rule.storageTypes?.some((storageType) => hasStorageType(storageType, accesses)) ?? false;
 
   return hasAllowedRole || hasAllowedStorage;
-}
+};
 
-export function getDefaultAuthorizedPath(user: AuthUser | null, accesses: AuthAccess[]) {
+export const getDefaultAuthorizedPath = (user: AuthUser | null, accesses: AuthAccess[]) => {
   if (!user) {
     return routes.login;
   }
@@ -55,4 +55,4 @@ export function getDefaultAuthorizedPath(user: AuthUser | null, accesses: AuthAc
   }
 
   return routes.fixedAssetsMine;
-}
+};

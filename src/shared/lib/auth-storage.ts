@@ -30,7 +30,12 @@ const refreshTokenKey = 'refresh_token';
 const userKey = 'user';
 const accessesKey = 'accesses';
 
-export function setAuthSession({ accessToken, refreshToken, user, accesses = [] }: AuthSession) {
+export const setAuthSession = ({
+  accessToken,
+  refreshToken,
+  user,
+  accesses = [],
+}: AuthSession) => {
   localStorage.setItem(tokenKey, accessToken);
   localStorage.setItem(userKey, JSON.stringify(user));
   localStorage.setItem(accessesKey, JSON.stringify(accesses));
@@ -38,16 +43,16 @@ export function setAuthSession({ accessToken, refreshToken, user, accesses = [] 
   if (refreshToken) {
     localStorage.setItem(refreshTokenKey, refreshToken);
   }
-}
+};
 
-export function clearAuthSession() {
+export const clearAuthSession = () => {
   localStorage.removeItem(tokenKey);
   localStorage.removeItem(refreshTokenKey);
   localStorage.removeItem(userKey);
   localStorage.removeItem(accessesKey);
-}
+};
 
-export function getStoredUser(): AuthUser | null {
+export const getStoredUser = (): AuthUser | null => {
   const rawUser = localStorage.getItem(userKey);
 
   if (!rawUser) {
@@ -60,13 +65,13 @@ export function getStoredUser(): AuthUser | null {
     localStorage.removeItem(userKey);
     return null;
   }
-}
+};
 
-export function getStoredAccessToken() {
+export const getStoredAccessToken = () => {
   return localStorage.getItem(tokenKey);
-}
+};
 
-export function getStoredAccesses(): AuthAccess[] {
+export const getStoredAccesses = (): AuthAccess[] => {
   const rawAccesses = localStorage.getItem(accessesKey);
 
   if (!rawAccesses) {
@@ -79,4 +84,4 @@ export function getStoredAccesses(): AuthAccess[] {
     localStorage.removeItem(accessesKey);
     return [];
   }
-}
+};

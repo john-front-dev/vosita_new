@@ -1,10 +1,10 @@
 import { AppProvider } from './providers';
 import { AppRouter } from './router';
 
-export function App() {
+export const App = () => {
   return (
     <AppProvider>
       <AppRouter />
     </AppProvider>
   );
-}
+};
