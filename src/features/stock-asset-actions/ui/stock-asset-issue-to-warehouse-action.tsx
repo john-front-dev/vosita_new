@@ -1,0 +1,80 @@
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Modal, OutlineSystemShoppingBasket, Select } from 'alif-ui';
+import { useForm, useWatch } from 'react-hook-form';
+
+import { useEmployees } from '@entities/employee';
+import type { StockAsset, StockAssetType } from '@entities/stock-asset';
+import { normalizeSelectValue } from '@shared/lib';
+
+import { type IssueFormValues, issueSchema } from '../model/stock-asset-action-validation';
+import { useStockAssetIssue } from '../model/use-stock-asset-action-mutations';
+
+type Props = { asset: StockAsset; type: StockAssetType };
+
+export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const form = useForm<IssueFormValues>({
+    defaultValues: { userId: '' },
+    mode: 'onChange',
+    resolver: zodResolver(issueSchema),
+  });
+  const values = useWatch({ control: form.control });
+  const employeesQuery = useEmployees('', isOpen);
+  const action = useStockAssetIssue({ assetId: asset.id, type, onSuccess: () => setIsOpen(false) });
+  const open = () => {
+    form.reset();
+    setIsOpen(true);
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline-neutral"
+        size="m"
+        leftSection={<OutlineSystemShoppingBasket />}
+        onClick={open}
+      >
+        Отправить на склад
+      </Button>
+      <Modal
+        className="w-[560px] max-w-[calc(100vw-32px)]"
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        isCentered
+        withCloseButton
+      >
+        <Modal.Header title={`Выдача ${type === 'fixed-assets' ? 'ОС' : 'ПАУ'} на склад`} />
+        <Modal.Content>
+          <Select
+            label="Заведующий складом"
+            value={values.userId || null}
+            options={employeesQuery.employees.map((item) => ({
+              label: item.full_name,
+              value: String(item.id),
+            }))}
+            onChange={(value) =>
+              form.setValue('userId', normalizeSelectValue(value), { shouldValidate: true })
+            }
+            fullWidth
+          />
+        </Modal.Content>
+        <Modal.Actions className="flex justify-end gap-3">
+          <Button type="button" variant="outline-neutral" onClick={() => setIsOpen(false)}>
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={action.isIssuing}
+            disabled={!form.formState.isValid}
+            onClick={form.handleSubmit(({ userId }) => action.issueToWarehouse(userId))}
+          >
+            Выдать
+          </Button>
+        </Modal.Actions>
+      </Modal>
+    </>
+  );
+};
