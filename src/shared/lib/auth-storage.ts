@@ -30,15 +30,23 @@ const refreshTokenKey = 'refresh_token';
 const userKey = 'user';
 const accessesKey = 'accesses';
 
-export const setAuthSession = ({
-  accessToken,
-  refreshToken,
-  user,
-  accesses = [],
-}: AuthSession) => {
+export const setAuthSession = ({ accessToken, refreshToken, user, accesses = [] }: AuthSession) => {
   localStorage.setItem(tokenKey, accessToken);
   localStorage.setItem(userKey, JSON.stringify(user));
   localStorage.setItem(accessesKey, JSON.stringify(accesses));
+
+  if (refreshToken) {
+    localStorage.setItem(refreshTokenKey, refreshToken);
+  } else {
+    localStorage.removeItem(refreshTokenKey);
+  }
+};
+
+export const updateStoredAuthTokens = ({
+  accessToken,
+  refreshToken,
+}: Pick<AuthSession, 'accessToken' | 'refreshToken'>) => {
+  localStorage.setItem(tokenKey, accessToken);
 
   if (refreshToken) {
     localStorage.setItem(refreshTokenKey, refreshToken);
@@ -69,6 +77,10 @@ export const getStoredUser = (): AuthUser | null => {
 
 export const getStoredAccessToken = () => {
   return localStorage.getItem(tokenKey);
+};
+
+export const getStoredRefreshToken = () => {
+  return localStorage.getItem(refreshTokenKey);
 };
 
 export const getStoredAccesses = (): AuthAccess[] => {

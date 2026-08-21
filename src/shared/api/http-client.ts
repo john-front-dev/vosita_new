@@ -1,15 +1,17 @@
 import { snackbar } from 'alif-ui';
-import axios, {
-  AxiosError,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from 'axios';
+import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 
 import { env } from '@shared/config';
 
+import { notifyAuthSessionExpired } from '../lib/auth-session-events';
+import {
+  clearAuthSession,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  updateStoredAuthTokens,
+} from '../lib/auth-storage';
+
 const AUTH_REFRESH_URL = '/auth/refresh_token';
-const ACCESS_TOKEN_KEY = 'token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
 const SKIP_ERROR_SNACKBAR_HEADER = 'x-skip-error-snackbar';
 
 type RefreshTokenResponse = ApiResponse<{
@@ -22,6 +24,7 @@ type RetryRequestConfig = InternalAxiosRequestConfig & {
 };
 
 let refreshTokenPromise: Promise<string> | null = null;
+let expiredSessionKey: string | null = null;
 
 const serializeParams = (params?: Record<string, unknown>) => {
   const searchParams = new URLSearchParams();
@@ -32,7 +35,10 @@ const serializeParams = (params?: Record<string, unknown>) => {
     }
 
     if (Array.isArray(value)) {
-      const normalizedValue = value.map(String).map((item) => item.trim()).filter(Boolean);
+      const normalizedValue = value
+        .map(String)
+        .map((item) => item.trim())
+        .filter(Boolean);
 
       if (normalizedValue.length) {
         searchParams.set(key, normalizedValue.join(','));
@@ -94,12 +100,25 @@ const isCanceledRequest = (error: AxiosError) =>
   axios.isCancel(error) || error.code === AxiosError.ERR_CANCELED;
 
 const clearAuthTokens = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  clearAuthSession();
+};
+
+const expireSession = () => {
+  const sessionKey = `${getStoredAccessToken()}:${getStoredRefreshToken()}`;
+
+  clearAuthTokens();
+
+  if (expiredSessionKey && (expiredSessionKey === sessionKey || sessionKey === 'null:null')) {
+    return;
+  }
+
+  expiredSessionKey = sessionKey;
+  showErrorSnackbar('Сессия истекла', 'Пожалуйста, авторизуйтесь заново');
+  notifyAuthSessionExpired();
 };
 
 const requestNewAccessToken = async () => {
-  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  const refreshToken = getStoredRefreshToken();
 
   if (!refreshToken) {
     throw new Error('Refresh token is missing');
@@ -116,11 +135,7 @@ const requestNewAccessToken = async () => {
     throw new Error('Access token is missing in refresh response');
   }
 
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-
-  if (nextRefreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, nextRefreshToken);
-  }
+  updateStoredAuthTokens({ accessToken, refreshToken: nextRefreshToken });
 
   return accessToken;
 };
@@ -137,7 +152,7 @@ const handleUnauthorizedError = async (error: AxiosError<ApiErrorPayload>) => {
   const originalConfig = error.config as RetryRequestConfig | undefined;
 
   if (!originalConfig || originalConfig.isRetry || originalConfig.url?.includes(AUTH_REFRESH_URL)) {
-    clearAuthTokens();
+    expireSession();
     throw error;
   }
 
@@ -150,15 +165,14 @@ const handleUnauthorizedError = async (error: AxiosError<ApiErrorPayload>) => {
 
     return httpClient.request(originalConfig);
   } catch (refreshError) {
-    clearAuthTokens();
-    showErrorSnackbar('Сессия истекла', 'Пожалуйста, авторизуйтесь заново');
+    expireSession();
 
     throw refreshError;
   }
 };
 
 httpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = getStoredAccessToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
