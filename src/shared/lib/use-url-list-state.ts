@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { paginationConfig } from '@shared/config';
@@ -111,22 +111,44 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
   const limit = parsePositiveInt(searchParams.get('limit'), paginationConfig.defaultLimit);
   const filters = getFilterValues(searchParams, filterKeys) as Record<TFilterKey, string[]>;
 
+  useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    let shouldReplace = false;
+
+    if (searchParams.get('page') !== String(page)) {
+      nextParams.set('page', String(page));
+      shouldReplace = true;
+    }
+
+    if (searchParams.get('limit') !== String(limit)) {
+      nextParams.set('limit', String(limit));
+      shouldReplace = true;
+    }
+
+    if (type !== undefined && searchParams.get(typeParamKey) !== type) {
+      nextParams.set(typeParamKey, type);
+      shouldReplace = true;
+    }
+
+    if (!shouldReplace) {
+      return;
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }, [limit, page, searchParams, setSearchParams, type, typeParamKey]);
+
   const updateSearchParams = useCallback(
     (next: { limit?: number; page?: number; searchText?: string; type?: TType }) => {
       setSearchParams(
         (prevParams) => {
           const nextParams = new URLSearchParams(prevParams);
-
-          if (next.page !== undefined) {
-            nextParams.set('page', String(next.page));
-          }
-
-          if (next.limit !== undefined) {
-            nextParams.set('limit', String(next.limit));
-          }
+          nextParams.set('page', String(next.page ?? page));
+          nextParams.set('limit', String(next.limit ?? limit));
 
           if (next.type !== undefined) {
             nextParams.set(typeParamKey, next.type);
+          } else if (type !== undefined) {
+            nextParams.set(typeParamKey, type);
           }
 
           if (next.searchText !== undefined) {
@@ -142,7 +164,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
         { replace: true },
       );
     },
-    [searchParamKey, setSearchParams, typeParamKey],
+    [limit, page, searchParamKey, setSearchParams, type, typeParamKey],
   );
 
   const setType = useCallback(
@@ -161,6 +183,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
           const nextParams = new URLSearchParams(prevParams);
 
           nextParams.set('page', String(paginationConfig.defaultPage));
+          nextParams.set('limit', String(limit));
           nextParams.set(typeParamKey, value);
           nextParams.delete(searchParamKey);
 
@@ -177,6 +200,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
       clearOnTypeChange,
       filterKeys,
       isType,
+      limit,
       searchParamKey,
       setSearchParams,
       typeParamKey,
@@ -215,6 +239,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
           const nextParams = new URLSearchParams(prevParams);
 
           nextParams.set('page', String(paginationConfig.defaultPage));
+          nextParams.set('limit', String(limit));
           applyFilterValues(nextParams, nextFilters);
 
           return nextParams;
@@ -222,7 +247,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
         { replace: true },
       );
     },
-    [setSearchParams],
+    [limit, setSearchParams],
   );
 
   const setFilter = useCallback(

@@ -1,4 +1,10 @@
-type QueryParamValue = boolean | number | string | Array<boolean | number | string> | null | undefined;
+type QueryParamValue =
+  | boolean
+  | number
+  | string
+  | Array<boolean | number | string>
+  | null
+  | undefined;
 
 type BuildCleanQueryParamsOptions = {
   uppercaseKeys?: boolean;
@@ -7,7 +13,10 @@ type BuildCleanQueryParamsOptions = {
 export type QueryParams = Record<string, QueryParamValue>;
 
 const normalizeArrayValue = (value: Array<boolean | number | string>) =>
-  value.map(String).map((item) => item.trim()).filter(Boolean);
+  value
+    .map(String)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 const normalizeValue = (value: QueryParamValue) => {
   if (Array.isArray(value)) {
