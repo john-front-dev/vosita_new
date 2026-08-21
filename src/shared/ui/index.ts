@@ -1,5 +1,5 @@
-export { AccessDeniedPage } from './access-denied-page';
-export { ConfirmModal } from './confirm-modal';
-export { DataTable, type DataTableProps } from './data-table';
-export { EmptyPage } from './empty-page';
-export { QrCode } from './qr-code';
+export * from './access-denied-page';
+export * from './confirm-modal';
+export * from './data-table';
+export * from './empty-page';
+export * from './qr-code';

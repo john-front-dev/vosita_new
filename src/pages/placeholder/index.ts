@@ -1,1 +1,1 @@
-export { PlaceholderPage } from './ui/placeholder-page';
+export * from './ui/placeholder-page';

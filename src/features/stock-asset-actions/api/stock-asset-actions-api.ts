@@ -1,12 +1,13 @@
 import type { StockAssetType } from '@entities/stock-asset';
+import { apiRoutes } from '@shared/api/routes';
 
 const getAssetSegment = (type: StockAssetType) => (type === 'lri' ? 'pau' : 'os');
 
 export const stockAssetActionEndpoints = {
-  delete: (id: number | string) => `/accountant/os/delete/${id}`,
+  delete: apiRoutes.stockAssetActions.delete,
   edit: (id: number | string, type: StockAssetType) =>
-    `/accountant/${getAssetSegment(type)}/edit/${id}`,
+    apiRoutes.stockAssetActions.edit(id, getAssetSegment(type)),
   issue: (id: number | string, type: StockAssetType) =>
-    `/accountant/${getAssetSegment(type)}/issue/${id}`,
-  repair: (id: number | string) => `/accountant/os/repair/${id}`,
+    apiRoutes.stockAssetActions.issue(id, getAssetSegment(type)),
+  repair: apiRoutes.stockAssetActions.repair,
 } as const;

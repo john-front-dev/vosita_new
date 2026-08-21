@@ -1,1 +1,1 @@
-export { StockPage } from './ui/stock-page';
+export * from './ui/stock-page';

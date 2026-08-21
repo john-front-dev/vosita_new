@@ -1,3 +1,5 @@
+import { apiRoutes } from '@shared/api/routes';
+
 export const resetPasswordApi = {
-  changePassword: (id: string) => `/auth/resetpassword/${id}`,
+  changePassword: apiRoutes.auth.resetPassword,
 } as const;

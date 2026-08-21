@@ -1,1 +1,1 @@
-export { StockAssetActions } from './ui/stock-asset-actions';
+export * from './ui/stock-asset-actions';

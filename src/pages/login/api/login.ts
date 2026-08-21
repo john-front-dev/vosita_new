@@ -1,3 +1,3 @@
-export const loginApi = {
-  login: '/auth/login',
-} as const;
+import { apiRoutes } from '@shared/api/routes';
+
+export const loginApi = apiRoutes.auth;

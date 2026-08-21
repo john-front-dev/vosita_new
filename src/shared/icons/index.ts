@@ -1,1 +1,1 @@
-export { AlifIcon } from './alif-icon';
+export * from './alif-icon';

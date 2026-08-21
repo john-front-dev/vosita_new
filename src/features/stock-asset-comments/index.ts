@@ -1,1 +1,1 @@
-export { StockAssetComments } from './ui/stock-asset-comments';
+export * from './ui/stock-asset-comments';

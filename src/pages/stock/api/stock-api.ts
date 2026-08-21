@@ -1,9 +1,8 @@
-export const stockListEndpoints = {
-  'fixed-assets': '/accountant/os/',
-  lri: '/accountant/os/',
-} as const;
+import { apiRoutes } from '@shared/api/routes';
 
-export const stockDownloadEndpoint = '/os/warehouse/excel/';
+export const stockListEndpoints = apiRoutes.stock.list;
+
+export const stockDownloadEndpoint = apiRoutes.stock.download;
 
 export const serializeStockParams = (params: Record<string, string | number>) =>
   new URLSearchParams(
