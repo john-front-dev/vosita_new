@@ -9,6 +9,7 @@ import { LoginPage } from '@pages/login';
 import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
+import { StockAssetDetailsPage } from '@pages/stock-asset-details';
 
 import { accessRules, routes } from '@shared/config';
 import type { AccessRule } from '@shared/lib';
@@ -39,7 +40,7 @@ const appRoutes = [
   { path: routes.fixedAssets, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
   { path: routes.fixedAssetsMine, element: withAccess(<PlaceholderPage title="Мои ОС" />) },
   { path: routes.fixedAssetsStock, element: withAccess(<StockPage />, accessRules.warehouseData) },
-  { path: routes.fixedAssetsDetails, element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets) },
+  { path: routes.fixedAssetsDetails, element: withAccess(<StockAssetDetailsPage type="fixed-assets" />, accessRules.fixedAssets) },
   { path: routes.others, element: withAccess(<PlaceholderPage title="Другие" />, accessRules.responsibleOrAccountant) },
   { path: routes.tmzReport, element: withAccess(<PlaceholderPage title="ТМЗ" />, accessRules.tmz) },
   { path: routes.inventory, element: withAccess(<PlaceholderPage title="Инвентарь" />, accessRules.tmz) },
@@ -52,7 +53,7 @@ const appRoutes = [
   { path: routes.history, element: withAccess(<PlaceholderPage title="История" />, accessRules.history) },
   { path: routes.locations, element: withAccess(<PlaceholderPage title="Местоположения" />, accessRules.responsibleOrAccountant) },
   { path: routes.lri, element: withAccess(<PlaceholderPage title="ПАУ" />, accessRules.lri) },
-  { path: routes.lriDetails, element: withAccess(<PlaceholderPage title="ПАУ" />, accessRules.lri) },
+  { path: routes.lriDetails, element: withAccess(<StockAssetDetailsPage type="lri" />, accessRules.lri) },
   { path: routes.reports, element: withAccess(<PlaceholderPage title="Отчёты" />, accessRules.reports) },
   { path: routes.taxGroups, element: withAccess(<PlaceholderPage title="Группа налогов" />, accessRules.responsibleOrAccountant) },
   { path: routes.approval, element: withAccess(<PlaceholderPage title="Одобрение" />, accessRules.approval) },
