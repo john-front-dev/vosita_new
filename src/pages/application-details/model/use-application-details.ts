@@ -18,12 +18,7 @@ type UseApplicationDetailsParams = {
   status: ApplicationDetailsStatus;
 };
 
-export const useApplicationDetails = ({
-  id,
-  limit,
-  page,
-  status,
-}: UseApplicationDetailsParams) => {
+export const useApplicationDetails = ({ id, limit, page, status }: UseApplicationDetailsParams) => {
   const queryParams = useMemo(
     () =>
       buildCleanQueryParams({

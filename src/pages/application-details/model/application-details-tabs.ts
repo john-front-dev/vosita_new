@@ -26,8 +26,7 @@ export const defaultApplicationDetailsStatus: ApplicationDetailsStatus = 'not-re
 
 export const isApplicationDetailsStatus = (
   value: string | null,
-): value is ApplicationDetailsStatus =>
-  applicationDetailsTabs.some((tab) => tab.value === value);
+): value is ApplicationDetailsStatus => applicationDetailsTabs.some((tab) => tab.value === value);
 
 export const getApplicationDetailsApiStatus = (status: ApplicationDetailsStatus) =>
   applicationDetailsTabs.find((tab) => tab.value === status)?.apiStatus ?? 1;

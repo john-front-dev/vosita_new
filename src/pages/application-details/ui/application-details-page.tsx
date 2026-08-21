@@ -8,14 +8,15 @@ import {
   OutlineSystemShoppingBasket,
   OutlineSystemTrash,
   OutlineSystemUpload,
-  snackbar,
   Surface,
   TabMenuNew,
+  Typography,
 } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { queryClient, useMutationQuery } from '@shared/api';
 import {
+  type AuthAccess,
+  type AuthUser,
   formatDate,
   formatMoney,
   getStoredAccesses,
@@ -24,7 +25,6 @@ import {
 } from '@shared/lib';
 import { ConfirmModal, DataTable, type DataTableProps } from '@shared/ui';
 
-import { applicationEndpoints } from '../api/applications-api';
 import {
   applicationDetailsTabs,
   defaultApplicationDetailsStatus,
@@ -37,6 +37,7 @@ import type {
   ApplicationObjectRecord,
 } from '../model/types';
 import { useApplicationDetails } from '../model/use-application-details';
+import { useApplicationDetailsActions } from '../model/use-application-details-actions';
 import { ApplicationInvoicesTable } from './application-invoices-table';
 import { IssueToStockModal } from './issue-to-stock-modal';
 import { SubrequestModal } from './subrequest-modal';
@@ -67,14 +68,23 @@ const statusBarTextMap = {
 
 const statusBarClassNameMap = {
   accepted: 'border-green-200 bg-green-50 text-green-700',
-  'not-reviewed': 'border-[#9db7d4] bg-[#eef2f5] text-[#8ea7c5]',
+  'not-reviewed':
+    'border-(--color-border-info) bg-(--color-bg-info-muted) text-(--color-text-muted)',
   paid: 'border-amber-200 bg-amber-50 text-amber-700',
 } satisfies Record<ApplicationDetailsStatus, string>;
 
 const InfoItem = ({ label, value }: InfoItemProps) => (
   <div className="flex flex-col gap-1 wrap-anywhere">
-    <p className="text-xs text-[#8ea7c5]">{label}</p>
-    <p className="text-sm leading-5 font-medium text-[#344054]">{value || '-'}</p>
+    <Typography category="body" proportions="xs" className="text-(--color-text-muted)">
+      {label}
+    </Typography>
+    <Typography
+      category="body"
+      proportions="sStrong"
+      className="leading-5! text-(--color-text-body)"
+    >
+      {value || '-'}
+    </Typography>
   </div>
 );
 
@@ -87,13 +97,14 @@ const getSelectedTotalTjs = (records: ApplicationObjectRecord[], selectedIds: nu
     return total + (Number(record.total_sum) || 0);
   }, 0);
 
-const getCanManage = () => {
-  const user = getStoredUser();
-  const accesses = getStoredAccesses();
-  const isAccountant = accesses[0]?.storage_type === 'Accountant';
+const getCanManage = (user: AuthUser | null, accesses: AuthAccess[]) => {
+  const isAccountant = accesses.some((access) => access.storage_type === 'Accountant');
 
   return Boolean((user?.is_responsible_person && !user.is_warehouse_manager) || isAccountant);
 };
+
+const getCanIssueToStock = (user: AuthUser | null, accesses: AuthAccess[]) =>
+  getCanManage(user, accesses) || Boolean(user?.is_warehouse_manager);
 
 const getDetailsStatusCounts = (details?: ApplicationDetailsPayload) => ({
   accepted: details?.count?.accepted_count ?? 0,
@@ -104,6 +115,8 @@ const getDetailsStatusCounts = (details?: ApplicationDetailsPayload) => ({
 export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = getStoredUser();
+  const accesses = getStoredAccesses();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const receiptFileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -131,8 +144,11 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
 
   const details = detailsQuery.details;
   const records = detailsQuery.records;
-  const canManage = getCanManage();
-  const selectable = canManage && (status === 'not-reviewed' || status === 'paid');
+  const canManage = getCanManage(user, accesses);
+  const canIssueToStock = getCanIssueToStock(user, accesses);
+  const selectable =
+    (canManage && (status === 'not-reviewed' || status === 'paid')) ||
+    (canIssueToStock && status === 'paid');
   const canEditSubrequest = selectable && status === 'not-reviewed';
   const selectedTotalTjs = useMemo(
     () => getSelectedTotalTjs(records, selectedIds),
@@ -149,68 +165,12 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     [statusCounts],
   );
 
-  const invalidateDetails = () => {
-    queryClient.invalidateQueries({ queryKey: ['application-details'] });
-    queryClient.invalidateQueries({ queryKey: ['application-invoices'] });
-    queryClient.invalidateQueries({ queryKey: ['applications'] });
-  };
-
-  const deleteMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
-    method: 'delete',
-    url: '',
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Объекты удалены',
-          type: 'success',
-        });
-        setIsDeleteConfirmOpen(false);
-        setSelectedIds([]);
-        invalidateDetails();
-      },
+  const applicationActions = useApplicationDetailsActions({
+    onDeleted: () => {
+      setIsDeleteConfirmOpen(false);
+      setSelectedIds([]);
     },
-  });
-
-  const removeMutation = useMutationQuery<
-    ApiResponse<unknown>,
-    { params: { action_type: string; object_id: string } }
-  >({
-    method: 'post',
-    url: applicationEndpoints.action,
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Объекты удалены',
-          type: 'success',
-        });
-        setIsDeleteConfirmOpen(false);
-        setSelectedIds([]);
-        invalidateDetails();
-      },
-    },
-  });
-
-  const uploadReceiptMutation = useMutationQuery<
-    ApiResponse<unknown>,
-    { body: FormData; url: string }
-  >({
-    method: 'post',
-    url: '',
-    config: {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    },
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Чек добавлен',
-          type: 'success',
-        });
-        setSelectedIds([]);
-        invalidateDetails();
-      },
-    },
+    onReceiptUploaded: () => setSelectedIds([]),
   });
 
   const handleDelete = () => {
@@ -221,18 +181,11 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     const ids = selectedIds.join(',');
 
     if (status === 'not-reviewed') {
-      removeMutation.mutate({
-        params: {
-          action_type: 'remove',
-          object_id: ids,
-        },
-      });
+      applicationActions.removeSubrequests(ids);
       return;
     }
 
-    deleteMutation.mutate({
-      url: applicationEndpoints.deleteSubrequests(ids),
-    });
+    applicationActions.deleteSubrequests(ids);
   };
 
   const handleEditSelected = () => {
@@ -256,13 +209,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    uploadReceiptMutation.mutate({
-      body: formData,
-      url: applicationEndpoints.uploadReceipt(selectedIds.join(',')),
-    });
+    applicationActions.uploadReceipt(selectedIds.join(','), selectedFile);
   };
 
   const handleCloseEditModal = () => {
@@ -330,10 +277,23 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           <OutlineNavigationLeftArrow />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold text-[#101828]">{details?.title ?? 'Запрос'}</h1>
-          <p className="mt-1 text-sm text-[#667085]">
+          <Typography
+            element="div"
+            role="heading"
+            aria-level={1}
+            category="heading"
+            proportions="h3"
+            className="text-(--color-text-primary)"
+          >
+            {details?.title ?? 'Запрос'}
+          </Typography>
+          <Typography
+            category="body"
+            proportions="s"
+            className="mt-1 text-(--color-text-secondary)"
+          >
             Запрошено {formatDate(details?.date, 'ru', { withTime: true })}
-          </p>
+          </Typography>
         </div>
       </div>
 
@@ -361,7 +321,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           {records.length > 0 && selectable && (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                {status === 'paid' && (
+                {canIssueToStock && status === 'paid' && (
                   <Button
                     type="button"
                     variant="outline-neutral"
@@ -397,29 +357,35 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
                       variant="outline-neutral"
                       size="s"
                       leftSection={<OutlineSystemFileAdd />}
-                      disabled={selectedIds.length === 0 || uploadReceiptMutation.isPending}
-                      isLoading={uploadReceiptMutation.isPending}
+                      disabled={selectedIds.length === 0 || applicationActions.isUploadingReceipt}
+                      isLoading={applicationActions.isUploadingReceipt}
                       onClick={() => receiptFileInputRef.current?.click()}
                     >
                       Добавить чек
                     </Button>
                   </>
                 )}
-                <Button
-                  type="button"
-                  variant="risk"
-                  size="s"
-                  leftSection={<OutlineSystemTrash />}
-                  disabled={
-                    selectedIds.length === 0 || deleteMutation.isPending || removeMutation.isPending
-                  }
-                  isLoading={deleteMutation.isPending || removeMutation.isPending}
-                  onClick={() => setIsDeleteConfirmOpen(true)}
-                >
-                  Удалить
-                </Button>
+                {canManage && (
+                  <Button
+                    type="button"
+                    variant="risk"
+                    size="s"
+                    leftSection={<OutlineSystemTrash />}
+                    disabled={selectedIds.length === 0 || applicationActions.isDeleting}
+                    isLoading={applicationActions.isDeleting}
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                  >
+                    Удалить
+                  </Button>
+                )}
               </div>
-              <p className="text-sm font-medium text-[#344054]">Выбрано: {selectedIds.length}</p>
+              <Typography
+                category="body"
+                proportions="sStrong"
+                className="text-(--color-text-body)"
+              >
+                Выбрано: {selectedIds.length}
+              </Typography>
             </div>
           )}
 
@@ -482,7 +448,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
       {canManage && (
         <div className="fixed right-8 bottom-8 z-10 flex flex-col items-end gap-4">
           <Button
-            className="min-w-38 rounded-2xl! shadow-[0_8px_20px_rgba(16,24,40,0.28)]"
+            className="min-w-38 rounded-2xl!"
             type="button"
             variant="primary"
             size="l"
@@ -492,7 +458,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
             Загрузить Excel
           </Button>
           <Button
-            className="min-w-30 rounded-2xl! shadow-[0_8px_20px_rgba(16,24,40,0.22)]"
+            className="min-w-30 rounded-2xl!"
             type="button"
             variant="primary"
             size="l"
@@ -509,7 +475,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           isOpen={isSubrequestOpen}
           requestId={details.id}
           onClose={() => setIsSubrequestOpen(false)}
-          onSuccess={invalidateDetails}
+          onSuccess={applicationActions.refresh}
         />
       )}
 
@@ -518,7 +484,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           isOpen={Boolean(editingSubrequest)}
           subrequest={editingSubrequest}
           onClose={handleCloseEditModal}
-          onSuccess={invalidateDetails}
+          onSuccess={applicationActions.refresh}
         />
       )}
 
@@ -526,7 +492,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
         <UploadSubrequestsModal
           isOpen={isUploadOpen}
           onClose={() => setIsUploadOpen(false)}
-          onSuccess={invalidateDetails}
+          onSuccess={applicationActions.refresh}
         />
       )}
 
@@ -538,7 +504,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           onClose={() => setIsIssueOpen(false)}
           onSuccess={() => {
             setSelectedIds([]);
-            invalidateDetails();
+            applicationActions.refresh();
           }}
         />
       )}
@@ -548,7 +514,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
         message="После удаления их нельзя будет восстановить."
         confirmText="Удалить"
         isOpen={isDeleteConfirmOpen}
-        isConfirmLoading={deleteMutation.isPending || removeMutation.isPending}
+        isConfirmLoading={applicationActions.isDeleting}
         variant="risk"
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDelete}

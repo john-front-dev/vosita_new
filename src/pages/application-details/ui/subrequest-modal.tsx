@@ -1,6 +1,6 @@
+import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Modal, Select, snackbar } from 'alif-ui';
-import { useEffect, useMemo } from 'react';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 
 import { useMutationQuery } from '@shared/api';
@@ -204,7 +204,6 @@ export const SubrequestModal = ({
                     isHintAlwaysShown={Boolean(errors.categoryId)}
                     isLoading={categoriesQuery.isLoading}
                     fullWidth
-                    hasSearch
                   />
                 )}
               />

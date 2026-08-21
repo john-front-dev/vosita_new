@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  FileUploader,
-  Modal,
-  OutlineSystemDownload,
-  snackbar,
-  Tooltip,
-} from 'alif-ui';
+import { Button, FileUploader, Modal, OutlineSystemDownload, snackbar, Tooltip } from 'alif-ui';
 
 import { useMutationQuery } from '@shared/api';
 
@@ -41,7 +34,7 @@ export const UploadSubrequestsModal = ({
     options: {
       onSuccess: () => {
         snackbar.show({
-          title: 'Excel загружен',
+          title: 'Успешно',
           type: 'success',
         });
         setFile(null);
@@ -62,18 +55,17 @@ export const UploadSubrequestsModal = ({
   };
 
   return (
-    <Modal className="w-[550px]" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
-      <Modal.Header title="Массовое добавление запросов" />
+    <Modal className="w-150" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
+      <Modal.Header className="relative" title="Массовое добавление запросов" />
       <Modal.Content className="flex flex-col gap-4">
-        <div className="flex justify-end">
+        <div className="absolute top-7 right-20">
           <Tooltip label="Пример Excel">
             <a
-              className="inline-flex items-center gap-2 rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-medium text-[#344054] transition-colors hover:bg-[#f9fafb]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-(--color-text-body) transition-colors hover:bg-(--color-bg-subtle)"
               href={subrequestTemplate.url}
               download={subrequestTemplate.fileName}
             >
-              <OutlineSystemDownload className="h-5 w-5" />
-              Скачать пример Excel
+              <OutlineSystemDownload className="h-5 w-5 fill-black" />
             </a>
           </Tooltip>
         </div>
