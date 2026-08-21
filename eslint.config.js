@@ -80,7 +80,9 @@ export default defineConfig([
           rules: [
             {
               from: { type: 'app' },
-              allow: { to: { type: ['app', 'pages', 'widgets', 'features', 'entities', 'shared'] } },
+              allow: {
+                to: { type: ['app', 'pages', 'widgets', 'features', 'entities', 'shared'] },
+              },
             },
             {
               from: { type: 'pages' },
