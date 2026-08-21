@@ -4,6 +4,7 @@ import { MainLayout } from '@app/layouts';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
 import { ChangePasswordPage } from '@pages/change-password';
+import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { PlaceholderPage } from '@pages/placeholder';
@@ -84,7 +85,7 @@ const appRoutes = [
   },
   {
     path: routes.fixedAssets,
-    element: withAccess(<PlaceholderPage title="ОС" />, accessRules.fixedAssets),
+    element: withAccess(<FixedAssetsPage />, accessRules.fixedAssets),
   },
   { path: routes.fixedAssetsMine, element: withAccess(<PlaceholderPage title="Мои ОС" />) },
   { path: routes.fixedAssetsStock, element: withAccess(<StockPage />, accessRules.warehouseData) },

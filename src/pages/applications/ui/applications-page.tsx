@@ -206,7 +206,7 @@ export const ApplicationsPage = () => {
             {appliedFilters.map((filter) => (
               <Tag
                 key={`${filter.key}-${filter.id}`}
-                variant="secondary"
+                variant="primary"
                 size="s"
                 onClose={() =>
                   setFilter(
@@ -218,7 +218,7 @@ export const ApplicationsPage = () => {
                 {filter.label}
               </Tag>
             ))}
-            <Button type="button" variant="tertiary" size="s" onClick={clearFilters}>
+            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
               Сбросить
             </Button>
           </div>

@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCategories } from '@entities/category';
 import { useWarehouseManagers } from '@entities/employee';
 import { useAccessibleWarehouses } from '@entities/location';
-import { stockAssetStatusBadgeVariants, stockAssetStatusLabels } from '@entities/stock-asset';
+import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
 import { httpClient } from '@shared/api';
 import { routes } from '@shared/config';
 import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
@@ -42,16 +42,6 @@ const getStockDetailsPath = (type: StockListType, id: number | string) => {
   };
 
   return detailsPathMap[type].replace(':id', String(id));
-};
-
-const getStatusLabel = (statusId?: number) => {
-  return statusId ? (stockAssetStatusLabels[statusId] ?? `Статус ${statusId}`) : '-';
-};
-
-const getStatusBadgeVariant = (
-  statusId?: number,
-): 'info' | 'neutral' | 'success' | 'warning' | 'error' => {
-  return statusId ? (stockAssetStatusBadgeVariants[statusId] ?? 'neutral') : 'neutral';
 };
 
 export const StockPage = () => {
@@ -189,9 +179,9 @@ export const StockPage = () => {
             className="text-nowrap"
             size="m"
             type="secondary"
-            variant={getStatusBadgeVariant(record.status_id)}
+            variant={getStockAssetStatusBadgeVariant(record.status_id)}
           >
-            {getStatusLabel(record.status_id)}
+            {getStockAssetStatusLabel(record.status_id)}
           </Badge>
         ),
         title: 'Статус',
@@ -289,14 +279,14 @@ export const StockPage = () => {
             {appliedFilters.map((filter) => (
               <Tag
                 key={`${filter.key}-${filter.id}`}
-                variant="secondary"
+                variant="primary"
                 size="s"
                 onClose={() => setFilter(filter.key, [])}
               >
                 {filter.label}
               </Tag>
             ))}
-            <Button type="button" variant="tertiary" size="s" onClick={clearFilters}>
+            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
               Сбросить
             </Button>
           </div>

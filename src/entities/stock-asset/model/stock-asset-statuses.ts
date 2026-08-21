@@ -25,6 +25,12 @@ export const stockAssetStatusBadgeVariants: Record<
   19: 'warning',
 };
 
+export const getStockAssetStatusLabel = (statusId?: number) =>
+  statusId ? (stockAssetStatusLabels[statusId] ?? `Статус ${statusId}`) : '-';
+
+export const getStockAssetStatusBadgeVariant = (statusId?: number) =>
+  statusId ? (stockAssetStatusBadgeVariants[statusId] ?? 'neutral') : 'neutral';
+
 type StockAssetStatusColor = 'blue' | 'green' | 'grey' | 'red' | 'yellow';
 
 export const getStockAssetStatusPresentation = (isRepair?: number, statusId?: number) => {

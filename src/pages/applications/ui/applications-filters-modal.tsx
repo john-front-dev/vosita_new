@@ -111,7 +111,7 @@ export const ApplicationsFiltersModal = ({
           onChange={(values) => handleDepartmentChange(values as SelectValue[])}
           fullWidth
           isLoading={isLoading}
-          proportions="l"
+          proportions="m"
         />
         <SelectMultiple
           label="Здание"
@@ -120,7 +120,7 @@ export const ApplicationsFiltersModal = ({
           onChange={(values) => handleSubdivisionChange(values as SelectValue[])}
           fullWidth
           isLoading={isLoading}
-          proportions="l"
+          proportions="m"
         />
         <SelectMultiple
           label="Склад"
@@ -129,7 +129,7 @@ export const ApplicationsFiltersModal = ({
           onChange={(values) => handleStorageChange(values as SelectValue[])}
           fullWidth
           isLoading={isLoading}
-          proportions="l"
+          proportions="m"
         />
       </Modal.Content>
       <Modal.Actions className="flex justify-end">
