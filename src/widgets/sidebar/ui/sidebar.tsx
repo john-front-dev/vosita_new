@@ -18,11 +18,11 @@ import { sidebarNavigation, type SidebarNavItem } from '../model/navigation';
 const LogoFull = () => {
   return (
     <div className="flex items-center gap-3 pl-4">
-      <AlifIcon className="h-7 w-7 text-[var(--brand-value-default)]" />
+      <AlifIcon className="h-7 w-7 text-(--brand-value-default)" />
       <Typography
         category="display"
         proportions="sStrong"
-        className="text-[20px]! text-[var(--brand-value-default)]!"
+        className="text-[20px]! text-(--brand-value-default)!"
       >
         VOSITA
       </Typography>
@@ -116,8 +116,12 @@ export const Sidebar = () => {
             <div className="flex min-w-0 items-center gap-2">
               <Avatar size="m" placeholderContent={initials} />
               <div className="flex min-w-0 flex-col leading-tight">
-                <span className="w-37.5 truncate">{user?.full_name}</span>
-                <span className="w-37.5 truncate text-sm opacity-60">{user?.email}</span>
+                <Typography category="body" proportions="s" className="w-37.5 truncate">
+                  {user?.full_name}
+                </Typography>
+                <Typography category="body" proportions="s" className="w-37.5 truncate opacity-60">
+                  {user?.email}
+                </Typography>
               </div>
             </div>
             <Menu

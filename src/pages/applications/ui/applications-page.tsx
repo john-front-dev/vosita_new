@@ -7,6 +7,7 @@ import {
   SegmentedControl,
   Surface,
   Tag,
+  Typography,
 } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
@@ -138,7 +139,16 @@ export const ApplicationsPage = () => {
   return (
     <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-[#101828]">Запросы</h1>
+        <Typography
+          element="div"
+          role="heading"
+          aria-level={1}
+          category="heading"
+          proportions="h3"
+          className="text-(--color-text-primary)"
+        >
+          Запросы
+        </Typography>
 
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
           <SegmentedControl

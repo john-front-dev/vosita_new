@@ -1,4 +1,4 @@
-import { Button, Modal } from 'alif-ui';
+import { Button, Modal, Typography } from 'alif-ui';
 import type { ReactNode } from 'react';
 
 type ConfirmModalProps = {
@@ -11,6 +11,7 @@ type ConfirmModalProps = {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
+  width?: 'default' | 'large';
   variant?: 'default' | 'risk';
 };
 
@@ -24,13 +25,28 @@ export const ConfirmModal = ({
   onClose,
   onConfirm,
   title,
+  width = 'default',
   variant = 'default',
 }: ConfirmModalProps) => (
-  <Modal className="w-[420px]" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
+  <Modal
+    className={
+      width === 'large'
+        ? 'w-[560px] max-w-[calc(100vw-32px)]'
+        : 'w-[420px] max-w-[calc(100vw-32px)]'
+    }
+    isOpen={isOpen}
+    onClose={onClose}
+    isCentered
+    withCloseButton
+  >
     <Modal.Header title={title} />
     {(message || children) && (
       <Modal.Content>
-        {message && <p className="text-sm leading-5 text-[#667085]">{message}</p>}
+        {message && (
+          <Typography category="body" proportions="s" className="text-(--color-text-secondary)">
+            {message}
+          </Typography>
+        )}
         {children}
       </Modal.Content>
     )}

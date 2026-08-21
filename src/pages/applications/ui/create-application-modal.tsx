@@ -196,7 +196,6 @@ export const CreateApplicationModal = ({
                   setValue('storageId', '', { shouldValidate: true });
                 }}
                 fullWidth
-                hasSearch
               />
             )}
           />
@@ -215,7 +214,6 @@ export const CreateApplicationModal = ({
                 }}
                 disabled={!departmentId}
                 fullWidth
-                hasSearch
               />
             )}
           />
@@ -234,7 +232,6 @@ export const CreateApplicationModal = ({
                 isHintAlwaysShown={Boolean(errors.storageId)}
                 disabled={!subdivisionId}
                 fullWidth
-                hasSearch
               />
             )}
           />

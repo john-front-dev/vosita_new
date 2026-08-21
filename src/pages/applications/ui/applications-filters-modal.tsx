@@ -110,7 +110,6 @@ export const ApplicationsFiltersModal = ({
           options={departmentOptions}
           onChange={(values) => handleDepartmentChange(values as SelectValue[])}
           fullWidth
-          hasSearch
           isLoading={isLoading}
           proportions="l"
         />
@@ -120,7 +119,6 @@ export const ApplicationsFiltersModal = ({
           options={subdivisionOptions}
           onChange={(values) => handleSubdivisionChange(values as SelectValue[])}
           fullWidth
-          hasSearch
           isLoading={isLoading}
           proportions="l"
         />
@@ -130,7 +128,6 @@ export const ApplicationsFiltersModal = ({
           options={storageOptions}
           onChange={(values) => handleStorageChange(values as SelectValue[])}
           fullWidth
-          hasSearch
           isLoading={isLoading}
           proportions="l"
         />
