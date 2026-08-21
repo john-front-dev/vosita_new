@@ -3,9 +3,11 @@ import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout } from '@app/layouts';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
+import { ChangePasswordPage } from '@pages/change-password';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { PlaceholderPage } from '@pages/placeholder';
+import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
 
 import { accessRules, routes } from '@shared/config';
@@ -54,7 +56,6 @@ const appRoutes = [
   { path: routes.reports, element: withAccess(<PlaceholderPage title="Отчёты" />, accessRules.reports) },
   { path: routes.taxGroups, element: withAccess(<PlaceholderPage title="Группа налогов" />, accessRules.responsibleOrAccountant) },
   { path: routes.approval, element: withAccess(<PlaceholderPage title="Одобрение" />, accessRules.approval) },
-  { path: routes.changePassword, element: withAccess(<PlaceholderPage title="Изменить пароль" />) },
 ];
 
 export const router = createBrowserRouter([
@@ -68,7 +69,15 @@ export const router = createBrowserRouter([
   },
   {
     path: routes.resetPassword,
-    element: <PlaceholderPage title="Сброс пароля" />,
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: routes.changePassword,
+    element: (
+      <PrivateRoute>
+        <ChangePasswordPage />
+      </PrivateRoute>
+    ),
   },
   {
     element: (

@@ -6,18 +6,14 @@ import {
   Input,
   OutlineSystemEyeOff,
   OutlineSystemEyeOn,
-  snackbar,
+  Typography,
 } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 
-import { useMutationQuery } from '@shared/api';
-import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
-import { setAuthSession } from '@shared/lib';
 
-import { loginApi } from '../api/login';
-import type { LoginFormValues, LoginRequest, LoginResponse } from '../model/types';
+import type { LoginFormValues } from '../model/types';
+import { useLogin } from '../model/use-login';
 import { loginSchema } from '../model/validation';
 
 const defaultValues: LoginFormValues = {
@@ -27,12 +23,11 @@ const defaultValues: LoginFormValues = {
 };
 
 export const LoginPage = () => {
-  const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const loginMutation = useLogin();
 
   const {
     control,
-    getValues,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<LoginFormValues>({
@@ -41,58 +36,30 @@ export const LoginPage = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const loginMutation = useMutationQuery<LoginResponse, { body: LoginRequest }>({
-    method: 'post',
-    url: loginApi.login,
-    options: {
-      onSuccess: (response) => {
-        const { auth } = response.payload;
-
-        if (!auth.access_token) {
-          snackbar.show({
-            title: 'Не удалось войти',
-            subtitle: 'Сервер не вернул access token',
-            type: 'error',
-            withCloseButton: true,
-          });
-          return;
-        }
-
-        setAuthSession({
-          accessToken: auth.access_token,
-          refreshToken: auth.refresh_token,
-          user: auth.user,
-          accesses: response.payload.accesses,
-        });
-
-        if (!getValues('remember')) {
-          localStorage.removeItem('refresh_token');
-        }
-
-        navigate(routes.home, { replace: true });
-      },
-    },
-  });
-
   const onSubmit: SubmitHandler<LoginFormValues> = (values) => {
-    loginMutation.mutate({
-      body: {
-        email: values.email.trim(),
-        password: values.password,
-        is_remember_me: values.remember,
-      },
+    loginMutation.login({
+      email: values.email.trim(),
+      password: values.password,
+      is_remember_me: values.remember,
     });
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-8 text-[#101828]">
+    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-8 text-(--color-text-primary)">
       <form
         className="flex w-full max-w-105 flex-col items-center rounded-xl bg-white px-8.75 py-12.5 shadow-[0_6px_22px_rgba(16,24,40,0.08)]"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="mb-6 flex items-center justify-center gap-3 text-[var(--brand-value-default)]">
+        <div className="mb-6 flex items-center justify-center gap-3 text-(--brand-value-default)">
           <AlifIcon className="h-[42px] w-[42px]" />
-          <span className="text-[34px] font-bold leading-none tracking-normal">VOSITA</span>
+          <Typography
+            element="span"
+            category="display"
+            proportions="sStrong"
+            className="text-[34px]! leading-none! tracking-normal!"
+          >
+            VOSITA
+          </Typography>
         </div>
 
         <div className="flex w-full flex-col gap-5">
@@ -136,7 +103,7 @@ export const LoginPage = () => {
                 rightIcon={
                   <button
                     type="button"
-                    className="flex text-[#8fb0cf]"
+                    className="flex text-(--color-input-icon)"
                     onClick={() => setIsPasswordVisible((currentValue) => !currentValue)}
                     aria-label={isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'}
                   >
@@ -173,7 +140,7 @@ export const LoginPage = () => {
 
           <button
             type="button"
-            className="mx-auto text-base font-medium text-[#8ea7c5] transition-colors hover:text-[var(--brand-value-default)]"
+            className="mx-auto text-base font-medium text-(--color-text-muted) transition-colors hover:text-(--brand-value-default)"
           >
             Забыли пароль?
           </button>
