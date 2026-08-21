@@ -7,6 +7,7 @@ import {
   Sidebar as AlifSidebar,
   Typography,
 } from 'alif-ui';
+import type { MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { routes } from '@shared/config';
@@ -26,6 +27,43 @@ const LogoFull = () => {
       >
         VOSITA
       </Typography>
+    </div>
+  );
+};
+
+type NavigableCollapseProps = {
+  item: SidebarNavItem;
+  isChildActive: (item: SidebarNavItem) => boolean;
+  onNavigate: (path: string) => void;
+};
+
+const NavigableCollapse = ({ item, isChildActive, onNavigate }: NavigableCollapseProps) => {
+  const handleClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    const header = event.currentTarget.querySelector<HTMLElement>('[class*="_collapseButton_"]');
+    if (!header?.contains(event.target as Node)) return;
+
+    const arrow = header.lastElementChild;
+    if (arrow?.contains(event.target as Node)) return;
+
+    event.stopPropagation();
+    onNavigate(item.path);
+  };
+
+  return (
+    <div className="sidebar-collapse" onClickCapture={handleClickCapture}>
+      <AlifSidebar.Collapse icon={item.icon} label={item.title}>
+        {item.children?.map((child) => (
+          <AlifSidebar.Item
+            key={child.path}
+            icon={child.icon}
+            path={child.path}
+            active={isChildActive(child)}
+            onClick={onNavigate}
+          >
+            {child.title}
+          </AlifSidebar.Item>
+        ))}
+      </AlifSidebar.Collapse>
     </div>
   );
 };
@@ -83,19 +121,30 @@ export const Sidebar = () => {
       <AlifSidebar.Items>
         {allowedNavigation.map((item) =>
           item.children?.length ? (
-            <AlifSidebar.Collapse key={item.path} icon={item.icon} label={item.title}>
-              {item.children.map((child) => (
-                <AlifSidebar.Item
-                  key={child.path}
-                  icon={child.icon}
-                  path={child.path}
-                  active={isActive(child)}
-                  onClick={goToPath}
-                >
-                  {child.title}
-                </AlifSidebar.Item>
-              ))}
-            </AlifSidebar.Collapse>
+            item.title === 'Больше' ? (
+              <div key={item.path} className="sidebar-collapse">
+                <AlifSidebar.Collapse icon={item.icon} label={item.title}>
+                  {item.children.map((child) => (
+                    <AlifSidebar.Item
+                      key={child.path}
+                      icon={child.icon}
+                      path={child.path}
+                      active={isActive(child)}
+                      onClick={goToPath}
+                    >
+                      {child.title}
+                    </AlifSidebar.Item>
+                  ))}
+                </AlifSidebar.Collapse>
+              </div>
+            ) : (
+              <NavigableCollapse
+                key={item.path}
+                item={item}
+                isChildActive={isActive}
+                onNavigate={goToPath}
+              />
+            )
           ) : (
             <AlifSidebar.Item
               key={item.path}
