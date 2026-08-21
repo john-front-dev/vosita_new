@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Badge,
   Button,
   OutlineSystemDownload,
   OutlineSystemFilterFromLessToMore,
@@ -8,10 +9,14 @@ import {
   snackbar,
   Surface,
   Tag,
+  Typography,
 } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
+import { useCategories } from '@entities/category';
+import { useWarehouseManagers } from '@entities/employee';
 import { useAccessibleWarehouses } from '@entities/location';
+import { stockAssetStatusBadgeVariants, stockAssetStatusLabels } from '@entities/stock-asset';
 import { httpClient } from '@shared/api';
 import { routes } from '@shared/config';
 import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
@@ -40,16 +45,13 @@ const getStockDetailsPath = (type: StockListType, id: number | string) => {
 };
 
 const getStatusLabel = (statusId?: number) => {
-  const statusMap: Record<number, string> = {
-    1: 'Новый',
-    2: 'На складе',
-    3: 'В эксплуатации',
-    4: 'Смешанный',
-    8: 'Списан',
-    19: 'В ожидании принятия',
-  };
+  return statusId ? (stockAssetStatusLabels[statusId] ?? `Статус ${statusId}`) : '-';
+};
 
-  return statusId ? (statusMap[statusId] ?? `Статус ${statusId}`) : '-';
+const getStatusBadgeVariant = (
+  statusId?: number,
+): 'info' | 'neutral' | 'success' | 'warning' | 'error' => {
+  return statusId ? (stockAssetStatusBadgeVariants[statusId] ?? 'neutral') : 'neutral';
 };
 
 export const StockPage = () => {
@@ -91,10 +93,23 @@ export const StockPage = () => {
       ),
     [filters],
   );
+  const categoriesQuery = useCategories();
+  const warehouseManagersQuery = useWarehouseManagers(stockFilters.BUILDING_ID[0]);
 
   const appliedFilters = useMemo(
-    () => getAppliedStockFilters(stockFilters, accessibleWarehouses.warehouses),
-    [accessibleWarehouses.warehouses, stockFilters],
+    () =>
+      getAppliedStockFilters(
+        stockFilters,
+        accessibleWarehouses.warehouses,
+        categoriesQuery.categories,
+        warehouseManagersQuery.warehouseManagers,
+      ),
+    [
+      accessibleWarehouses.warehouses,
+      categoriesQuery.categories,
+      stockFilters,
+      warehouseManagersQuery.warehouseManagers,
+    ],
   );
 
   const stockList = useStockList({
@@ -168,8 +183,17 @@ export const StockPage = () => {
       },
       {
         accessor: 'status_id',
-        minWidth: '140px',
-        renderRowCell: (record) => getStatusLabel(record.status_id),
+        minWidth: '160px',
+        renderRowCell: (record) => (
+          <Badge
+            className="text-nowrap"
+            size="m"
+            type="secondary"
+            variant={getStatusBadgeVariant(record.status_id)}
+          >
+            {getStatusLabel(record.status_id)}
+          </Badge>
+        ),
         title: 'Статус',
       },
       {
@@ -187,7 +211,8 @@ export const StockPage = () => {
     return [
       {
         accessor: 'inventory_number',
-        maxWidth: '150px',
+        maxWidth: '190px',
+        minWidth: '190px',
         renderRowCell: (record) => record.inventory_number || '-',
         title: 'Инвентарный номер',
       },
@@ -198,7 +223,16 @@ export const StockPage = () => {
   return (
     <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-[#101828]">Склад</h1>
+        <Typography
+          element="div"
+          role="heading"
+          aria-level={1}
+          category="heading"
+          proportions="h3"
+          className="text-(--color-text-primary)"
+        >
+          Склад
+        </Typography>
 
         <div className="flex flex-wrap items-center gap-3">
           <Button

@@ -1,5 +1,8 @@
+import type { Category } from '@entities/category';
+import type { WarehouseManager } from '@entities/employee';
 import type { AccessibleWarehouse } from '@entities/location';
 import { buildDepartmentOptions, buildSubdivisionOptions } from '@entities/location';
+import { stockAssetFilterStatusLabels } from '@entities/stock-asset';
 
 import type { StockFilterKey, StockFilters } from '../model/types';
 
@@ -7,12 +10,6 @@ type StockFilterTag = {
   id: string;
   key: StockFilterKey;
   label: string;
-};
-
-const stockStatusLabels: Record<string, string> = {
-  '1': 'Новые',
-  '2': 'В хранении',
-  '19': 'В ожидании принятия',
 };
 
 const stockRepairLabels: Record<string, string> = {
@@ -34,15 +31,31 @@ const getLocationLabel = (
 export const getAppliedStockFilters = (
   filters: StockFilters,
   warehouses: AccessibleWarehouse[],
+  categories: Category[],
+  warehouseManagers: WarehouseManager[],
 ): StockFilterTag[] => {
   const cityId = filters.CITY_ID[0];
   const buildingId = filters.BUILDING_ID[0];
+  const categoryId = filters.CATEGORY_ID[0];
+  const warehouseManagerId = filters.WAREHOUSE_MANAGER_ID[0];
   const statusId = filters.STATUS_ID[0];
   const repairId = filters.REPAIR[0];
   const cityOptions = buildDepartmentOptions(warehouses);
   const buildingOptions = buildSubdivisionOptions(warehouses, cityId ? [cityId] : []);
 
   return [
+    warehouseManagerId && {
+      id: warehouseManagerId,
+      key: 'WAREHOUSE_MANAGER_ID' as const,
+      label:
+        warehouseManagers.find((manager) => manager.user_id === warehouseManagerId)?.user_name ??
+        warehouseManagerId,
+    },
+    categoryId && {
+      id: categoryId,
+      key: 'CATEGORY_ID' as const,
+      label: categories.find((category) => String(category.id) === categoryId)?.name ?? categoryId,
+    },
     cityId && {
       id: cityId,
       key: 'CITY_ID' as const,
@@ -56,7 +69,7 @@ export const getAppliedStockFilters = (
     statusId && {
       id: statusId,
       key: 'STATUS_ID' as const,
-      label: stockStatusLabels[statusId] ?? statusId,
+      label: stockAssetFilterStatusLabels[statusId] ?? statusId,
     },
     repairId && {
       id: repairId,

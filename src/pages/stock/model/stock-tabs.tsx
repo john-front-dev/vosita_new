@@ -47,4 +47,3 @@ export const getDefaultStockListType = (
 
 export const isStockListType = (value: string | null): value is StockListType =>
   stockListTypes.some((type) => type === value);
-

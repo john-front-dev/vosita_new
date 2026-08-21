@@ -22,7 +22,7 @@ export const buildStockListParams = ({
 }): StockListParams => ({
   BUILDING_ID: getFirstFilterValue(filters.BUILDING_ID),
   CATEGORY: stockTypeCategoryMap[type],
-  CATEGORY_ID: '',
+  CATEGORY_ID: getFirstFilterValue(filters.CATEGORY_ID),
   CITY_ID: getFirstFilterValue(filters.CITY_ID),
   EXPLOITER_ID: '',
   LIMIT: limit,
@@ -31,5 +31,5 @@ export const buildStockListParams = ({
   RESPONSIBLE_PERSON_ID: '',
   SEARCH_TEXT: searchText ?? '',
   STATUS_ID: Number(getFirstFilterValue(filters.STATUS_ID) || '4'),
-  WAREHOUSE_MANAGER_ID: '',
+  WAREHOUSE_MANAGER_ID: getFirstFilterValue(filters.WAREHOUSE_MANAGER_ID),
 });

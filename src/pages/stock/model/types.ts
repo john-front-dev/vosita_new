@@ -2,7 +2,13 @@ export type StockListType = 'fixed-assets' | 'lri';
 
 export type StockCategory = 1 | 2;
 
-export type StockFilterKey = 'BUILDING_ID' | 'CITY_ID' | 'REPAIR' | 'STATUS_ID';
+export type StockFilterKey =
+  | 'BUILDING_ID'
+  | 'CATEGORY_ID'
+  | 'CITY_ID'
+  | 'REPAIR'
+  | 'STATUS_ID'
+  | 'WAREHOUSE_MANAGER_ID';
 
 export type StockFilters = Record<StockFilterKey, string[]>;
 
