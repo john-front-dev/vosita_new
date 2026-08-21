@@ -2,8 +2,7 @@ import type { AccessibleWarehouse, LocationOption } from '../model/types';
 
 const getUniqueOptions = (options: LocationOption[]) =>
   options.filter(
-    (option, index, array) =>
-      array.findIndex((entry) => entry.value === option.value) === index,
+    (option, index, array) => array.findIndex((entry) => entry.value === option.value) === index,
   );
 
 const hasValue = (value: number | string | undefined): value is number | string =>

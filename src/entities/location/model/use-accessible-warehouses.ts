@@ -7,9 +7,7 @@ import type {
   AccessibleWarehousesResponse,
 } from './types';
 
-const getWarehousesFromPayload = (
-  payload?: AccessibleWarehousesPayload,
-): AccessibleWarehouse[] => {
+const getWarehousesFromPayload = (payload?: AccessibleWarehousesPayload): AccessibleWarehouse[] => {
   if (Array.isArray(payload)) {
     return payload;
   }

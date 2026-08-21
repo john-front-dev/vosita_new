@@ -25,3 +25,8 @@ export type LocationOption = {
   label: string;
   value: string;
 };
+
+export type City = { id: number | string; name: string };
+export type Building = { id: number | string; name?: string; build?: string };
+export type Cabinet = { id: number | string; room: string };
+export type LocationListResponse<T> = ApiResponse<{ data?: T[] } | T[]>;
