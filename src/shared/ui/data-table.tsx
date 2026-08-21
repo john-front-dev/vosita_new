@@ -1,10 +1,8 @@
+import { type ReactNode, useRef } from 'react';
 import { Pagination, type PaginationProps, Table, type TableProps } from 'alif-ui';
-import type { ReactNode } from 'react';
 
 import { paginationConfig } from '@shared/config';
 
-type RowClassName<T> = NonNullable<TableProps<T>['tableClassNames']>['row'];
-type RowContentClassName<T> = NonNullable<TableProps<T>['tableClassNames']>['rowContent'];
 type DataTableColumn<T> = NonNullable<TableProps<T>['columns']>[number];
 
 type DataTablePagination = {
@@ -19,13 +17,13 @@ type DataTablePagination = {
 export type DataTableProps<T> = Omit<TableProps<T>, 'columns' | 'records'> & {
   columns: TableProps<T>['columns'];
   records: T[];
+  children?: ReactNode;
   pagination?: DataTablePagination;
   paginationProps?: Omit<
     PaginationProps,
     'currentPage' | 'onPageChange' | 'onPageSizeChange' | 'pageOptions' | 'pageSize' | 'totalCount'
   >;
   className?: string;
-  footer?: ReactNode;
   hidePaginationWhenEmpty?: boolean;
   isFetching?: boolean;
 };
@@ -52,16 +50,13 @@ const renderDefaultCellContent = (value: string | number) => {
   );
 };
 
-const isPrimitiveCellValue = (value: ReactNode): value is string | number =>
-  typeof value === 'string' || typeof value === 'number';
-
 export const DataTable = <T,>({
   columns,
   records,
+  children,
   pagination,
   paginationProps,
   className,
-  footer,
   hidePaginationWhenEmpty = true,
   emptyPlaceholder = 'Нет данных',
   isFetching = false,
@@ -71,62 +66,45 @@ export const DataTable = <T,>({
 }: DataTableProps<T>) => {
   const shouldShowPagination =
     Boolean(pagination) && (!hidePaginationWhenEmpty || Boolean(pagination?.totalCount));
-  const isClickable = Boolean(tableProps.onRowClick);
   const shouldShowSkeleton = Boolean(isLoading || isFetching);
+  const shouldSkipNextPageResetRef = useRef(false);
 
-  const handlePageSizeChange = (pageSize: unknown) => {
-    const resolvedPageSize =
-      typeof pageSize === 'object' && pageSize !== null && 'value' in pageSize
-        ? Number(pageSize.value)
-        : Number(pageSize);
-
-    if (Number.isNaN(resolvedPageSize)) {
+  const handlePageChange = (page: number) => {
+    if (shouldSkipNextPageResetRef.current && page === paginationConfig.defaultPage) {
+      shouldSkipNextPageResetRef.current = false;
       return;
     }
 
-    pagination?.onPageSizeChange?.(resolvedPageSize);
+    shouldSkipNextPageResetRef.current = false;
+    pagination?.onPageChange(page);
   };
 
-  const getClickableClassName = <TRecord,>(
-    className: RowClassName<TRecord> | RowContentClassName<TRecord>,
-    record: TRecord,
-  ) => {
-    const resolvedClassName = typeof className === 'function' ? className(record) : className;
-
-    return [resolvedClassName, isClickable ? 'cursor-pointer' : ''].filter(Boolean).join(' ');
+  const handlePageSizeChange = (pageSize: number) => {
+    shouldSkipNextPageResetRef.current = true;
+    pagination?.onPageSizeChange?.(pageSize);
   };
 
-  const normalizedColumns = columns.map((column) => {
-    const originalRenderRowCell = column.renderRowCell;
+  const normalizedColumns = columns.map((column) => ({
+    ...column,
+    renderRowCell: (record: T, index: number) => {
+      const renderedValue = column.renderRowCell?.(record, index);
 
-    return {
-      ...column,
-      renderRowCell: (record: T, index: number) => {
-        const renderedValue = originalRenderRowCell?.(record, index);
-
-        if (isPrimitiveCellValue(renderedValue)) {
-          return renderDefaultCellContent(renderedValue);
-        }
-
-        if (renderedValue !== undefined) {
-          return renderedValue;
-        }
-
-        if (typeof column.accessor === 'string') {
-          const rawValue = (record as Record<string, unknown>)[column.accessor];
-
-          if (typeof rawValue === 'string' || typeof rawValue === 'number') {
-            return renderDefaultCellContent(rawValue);
-          }
-        }
-
+      if (renderedValue !== undefined) {
         return renderedValue;
-      },
-    } satisfies DataTableColumn<T>;
-  });
+      }
+
+      const rawValue = (record as Record<string, unknown>)[column.accessor];
+
+      if (typeof rawValue === 'string' || typeof rawValue === 'number') {
+        return renderDefaultCellContent(rawValue);
+      }
+
+      return renderedValue;
+    },
+  })) satisfies DataTableColumn<T>[];
 
   return (
-    <div className={'flex flex-1 flex-col justify-between ' + className}>
+    <div className={'w-full ' + className}>
       <Table
         columns={normalizedColumns}
         records={records}
@@ -134,33 +112,26 @@ export const DataTable = <T,>({
         withRowBorders={withRowBorders}
         isLoading={shouldShowSkeleton}
         {...tableProps}
-        tableClassNames={{
-          ...tableProps.tableClassNames,
-          row: (record) => getClickableClassName(tableProps.tableClassNames?.row, record),
-          rowContent: (record) =>
-            getClickableClassName(tableProps.tableClassNames?.rowContent, record),
-        }}
       />
 
-      {(shouldShowPagination || footer) && (
-        <div className="flex items-center justify-center gap-3 pt-4">
-          {shouldShowPagination && pagination && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              pageSize={pagination.pageSize}
-              totalCount={pagination.totalCount}
-              onPageChange={pagination.onPageChange}
-              onPageSizeChange={handlePageSizeChange}
-              pageOptions={pagination.pageOptions ?? [...paginationConfig.pageOptions]}
-              size="m"
-              variant="default"
-              rounded
-              showFirstLastButton
-              showPages
-              {...paginationProps}
-            />
-          )}
-        </div>
+      {children}
+
+      {shouldShowPagination && pagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          pageSize={pagination.pageSize}
+          totalCount={pagination.totalCount}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          className="mt-6 flex justify-center"
+          pageOptions={pagination.pageOptions ?? [...paginationConfig.pageOptions]}
+          size="m"
+          variant="default"
+          rounded
+          showFirstLastButton
+          showPages
+          {...paginationProps}
+        />
       )}
     </div>
   );
