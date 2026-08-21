@@ -11,12 +11,10 @@ export {
   setAuthSession,
   updateStoredAuthTokens,
 } from './auth-storage';
-export {
-  buildCleanQueryParams,
-  type QueryParams,
-} from './build-clean-query-params';
+export { buildCleanQueryParams, type QueryParams } from './build-clean-query-params';
 export { formatDate } from './format-date';
 export { formatMoney } from './format-money';
+export { normalizeSelectValue } from './normalize-select-value';
 export { useDebouncedValue } from './use-debounced-value';
 export { useUrlListState } from './use-url-list-state';
 export { useUrlPagination } from './use-url-pagination';
