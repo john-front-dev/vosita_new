@@ -4,6 +4,11 @@ export const apiRoutes = {
     refreshToken: '/auth/refresh_token',
     resetPassword: (id: string) => `/auth/resetpassword/${id}`,
   },
+  amortization: {
+    download: '/amortization/report/excel/',
+    fixedAssets: '/amortization/report/',
+    lri: '/amortization/pau',
+  },
   applications: {
     list: {
       'fixed-assets': '/accountant/requests/',

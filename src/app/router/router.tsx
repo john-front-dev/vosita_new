@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout } from '@app/layouts';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
+import { AmortizationPage } from '@pages/amortization';
 import { ChangePasswordPage } from '@pages/change-password';
 import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HomePage } from '@pages/home';
@@ -116,11 +117,11 @@ const appRoutes = [
   },
   {
     path: routes.amortizationFixedAssets,
-    element: withAccess(<PlaceholderPage title="Амортизация ОС" />, accessRules.fixedAssets),
+    element: withAccess(<AmortizationPage type="fixed-assets" />, accessRules.fixedAssets),
   },
   {
     path: routes.amortizationLri,
-    element: withAccess(<PlaceholderPage title="Амортизация ПАУ" />, accessRules.lri),
+    element: withAccess(<AmortizationPage type="lri" />, accessRules.lri),
   },
   {
     path: routes.trash,
