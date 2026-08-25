@@ -1,8 +1,7 @@
 import { snackbar } from 'alif-ui';
 
+import { applicationEndpoints } from '@entities/application';
 import { queryClient, useMutationQuery } from '@shared/api';
-
-import { applicationEndpoints } from '../api/applications-api';
 
 const invalidateApplicationQueries = () => {
   queryClient.invalidateQueries({ queryKey: ['application-details'] });

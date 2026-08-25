@@ -3,9 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Modal, Select, snackbar } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 
+import { applicationEndpoints } from '@entities/application';
 import { useMutationQuery } from '@shared/api';
 
-import { applicationEndpoints } from '../api/applications-api';
 import { applicationUnits } from '../model/application-units';
 import {
   subrequestDefaultValues,

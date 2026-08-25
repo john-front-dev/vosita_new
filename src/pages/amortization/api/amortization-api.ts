@@ -1,3 +1,5 @@
-import { apiRoutes } from '@shared/api/routes';
-
-export const amortizationEndpoints = apiRoutes.amortization;
+export const amortizationEndpoints = {
+  download: '/amortization/report/excel/',
+  fixedAssets: '/amortization/report/',
+  lri: '/amortization/pau',
+} as const;

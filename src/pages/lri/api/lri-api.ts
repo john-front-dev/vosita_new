@@ -1,3 +1,3 @@
-import { apiRoutes } from '@shared/api';
-
-export const lriEndpoints = apiRoutes.lri;
+export const lriEndpoints = {
+  list: '/accountant/os/',
+} as const;

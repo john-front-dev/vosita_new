@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Modal, Select, snackbar, TextArea } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
+import { applicationEndpoints } from '@entities/application';
 import {
   type AccessibleWarehouse,
   buildDepartmentOptions,
@@ -12,7 +13,6 @@ import {
 import { useMutationQuery } from '@shared/api';
 import { getStoredAccesses, getStoredUser } from '@shared/lib';
 
-import { applicationEndpoints } from '../api/applications-api';
 import { createApplicationOptions } from '../model/create-application-options';
 import {
   createApplicationDefaultValues,

@@ -10,8 +10,8 @@ import {
   getStoredRefreshToken,
   updateStoredAuthTokens,
 } from '../lib/auth-storage';
-import { refreshAccessToken } from './auth-api';
 import { getApiErrorMessage, isCanceledRequest, shouldSkipErrorSnackbar } from './http-utils';
+import { refreshAccessToken } from './refresh-token-api';
 
 type RetryRequestConfig = InternalAxiosRequestConfig & {
   isRetry?: boolean;

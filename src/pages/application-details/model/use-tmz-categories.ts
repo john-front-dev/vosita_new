@@ -1,6 +1,6 @@
+import { applicationDictionaryEndpoints } from '@entities/application';
 import { useGetQuery } from '@shared/api';
 
-import { applicationDictionaryEndpoints } from '../api/applications-api';
 import type { TmzCategoriesPayload, TmzCategoriesResponse } from './types';
 
 const getCategoriesFromPayload = (payload?: TmzCategoriesPayload) => {

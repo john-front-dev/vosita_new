@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Button, OutlineSystemDownload, snackbar, Surface, Typography } from 'alif-ui';
 
+import { applicationEndpoints } from '@entities/application';
 import { httpClient, useGetQuery } from '@shared/api';
 import { formatDate, formatMoney } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
-import { applicationEndpoints } from '../api/applications-api';
 import type {
   ApplicationInvoice,
   ApplicationInvoiceItem,

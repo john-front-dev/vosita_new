@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 
+import { applicationEndpoints } from '@entities/application';
 import { useGetQuery } from '@shared/api';
 import { buildCleanQueryParams } from '@shared/lib';
 
-import { applicationEndpoints } from '../api/applications-api';
 import { getApplicationDetailsApiStatus } from './application-details-tabs';
 import type {
   ApplicationDetailsParams,

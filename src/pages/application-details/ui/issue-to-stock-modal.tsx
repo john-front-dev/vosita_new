@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button, Input, Modal, snackbar } from 'alif-ui';
 
+import { applicationEndpoints } from '@entities/application';
 import { useMutationQuery } from '@shared/api';
 
-import { applicationEndpoints } from '../api/applications-api';
 import type { ApplicationListType, IssueApplicationObjectsRequest } from '../model/types';
 
 type IssueToStockModalProps = {

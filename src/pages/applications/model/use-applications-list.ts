@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
+import { applicationListEndpoints } from '@entities/application';
 import { useGetQuery } from '@shared/api';
 
-import { applicationListEndpoints } from '../api/applications-api';
 import { buildApplicationListParams } from '../lib/build-application-list-params';
 import type {
   ApplicationFilters,
