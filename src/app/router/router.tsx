@@ -1,13 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { MainLayout } from '@app/layouts';
+import { AmortizationPage } from '@pages/amortization';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
-import { AmortizationPage } from '@pages/amortization';
 import { ChangePasswordPage } from '@pages/change-password';
 import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
+import { LriPage } from '@pages/lri';
 import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
@@ -138,7 +139,7 @@ const appRoutes = [
       accessRules.responsibleOrAccountant,
     ),
   },
-  { path: routes.lri, element: withAccess(<PlaceholderPage title="ПАУ" />, accessRules.lri) },
+  { path: routes.lri, element: withAccess(<LriPage />, accessRules.lri) },
   {
     path: routes.lriDetails,
     element: withAccess(<StockAssetDetailsPage type="lri" />, accessRules.lri),

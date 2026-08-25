@@ -39,6 +39,7 @@ export type StockRecord = {
   building_id?: string;
   cabinet?: string;
   category_id?: number;
+  category_name?: string;
   city?: string;
   city_id?: string;
   currency?: string;

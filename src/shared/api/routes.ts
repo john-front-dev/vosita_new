@@ -9,6 +9,9 @@ export const apiRoutes = {
     fixedAssets: '/amortization/report/',
     lri: '/amortization/pau',
   },
+  lri: {
+    list: '/accountant/os/',
+  },
   applications: {
     list: {
       'fixed-assets': '/accountant/requests/',
