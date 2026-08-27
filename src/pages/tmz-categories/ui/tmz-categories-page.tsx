@@ -1,0 +1,245 @@
+import { useMemo, useState } from 'react';
+import { Button, Search, Surface, Tag, Typography } from 'alif-ui';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { useBuildings, useCities } from '@entities/location';
+import { routes } from '@shared/config';
+import { formatMoney, useUrlListState } from '@shared/lib';
+import { DataTable, type DataTableProps } from '@shared/ui';
+
+import {
+  tmzCategoriesDefaultFilters,
+  type TmzCategoriesFilterKey,
+} from '../model/tmz-categories-filters';
+import type { TmzCategoryRow } from '../model/types';
+import { useTmzCategories } from '../model/use-tmz-categories';
+import { useTmzFilterCategories } from '../model/use-tmz-filter-categories';
+import { TmzCategoriesFilters } from './tmz-categories-filters';
+
+export const TmzCategoriesPage = () => {
+  const navigate = useNavigate();
+  const { storageId: storageIdParam } = useParams();
+  const storageId = Number(storageIdParam) || 0;
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const {
+    clearFilters,
+    filters: urlFilters,
+    pagination,
+    queryParams,
+    searchText,
+    setFilter,
+    setFilters,
+    setSearchText,
+  } = useUrlListState<string, TmzCategoriesFilterKey>({
+    filterKeys: Object.keys(tmzCategoriesDefaultFilters) as TmzCategoriesFilterKey[],
+  });
+  const filters = { ...tmzCategoriesDefaultFilters, ...urlFilters };
+  const citiesQuery = useCities('', Boolean(filters.CITY_ID[0]));
+  const buildingsQuery = useBuildings(
+    filters.CITY_ID[0],
+    '',
+    Boolean(filters.BUILDING_ID[0]),
+  );
+  const filterCategoriesQuery = useTmzFilterCategories(Boolean(filters.CATEGORY_ID[0]));
+  const categories = useTmzCategories({
+    filters,
+    limit: queryParams.limit,
+    page: queryParams.page,
+    searchText: queryParams.searchText,
+    storageId,
+  });
+  const appliedFilters = useMemo(
+    () =>
+      [
+        filters.CITY_ID[0] && {
+          key: 'CITY_ID' as const,
+          label:
+            citiesQuery.cities.find((city) => String(city.id) === filters.CITY_ID[0])?.name ??
+            filters.CITY_ID[0],
+        },
+        filters.BUILDING_ID[0] && {
+          key: 'BUILDING_ID' as const,
+          label:
+            buildingsQuery.buildings.find(
+              (building) => String(building.id) === filters.BUILDING_ID[0],
+            )?.name ??
+            buildingsQuery.buildings.find(
+              (building) => String(building.id) === filters.BUILDING_ID[0],
+            )?.build ??
+            filters.BUILDING_ID[0],
+        },
+        filters.CATEGORY_ID[0] && {
+          key: 'CATEGORY_ID' as const,
+          label:
+            filterCategoriesQuery.categories.find(
+              (category) => String(category.id) === filters.CATEGORY_ID[0],
+            )?.name ?? filters.CATEGORY_ID[0],
+        },
+        filters.WITH_ZEROS[0] === 'true' && {
+          key: 'WITH_ZEROS' as const,
+          label: 'С нулевыми остатками',
+        },
+      ].filter((filter): filter is { key: TmzCategoriesFilterKey; label: string } =>
+        Boolean(filter),
+      ),
+    [
+      buildingsQuery.buildings,
+      citiesQuery.cities,
+      filterCategoriesQuery.categories,
+      filters.BUILDING_ID,
+      filters.CATEGORY_ID,
+      filters.CITY_ID,
+      filters.WITH_ZEROS,
+    ],
+  );
+  const columns = useMemo<DataTableProps<TmzCategoryRow>['columns']>(
+    () => [
+      { accessor: 'displayId', maxWidth: '90px', minWidth: '90px', title: 'ID' },
+      {
+        accessor: 'name',
+        minWidth: '280px',
+        renderRowCell: (record) => (
+          <div className={record.kind === 'good' ? 'pl-6' : 'font-semibold'}>
+            {record.kind === 'good' && (
+              <span className="mr-2 text-(--color-text-disabled)">Товар</span>
+            )}
+            {record.name}
+          </div>
+        ),
+        title: 'Название',
+      },
+      {
+        accessor: 'totalQty',
+        minWidth: '150px',
+        renderRowCell: (record) =>
+          `${record.totalQty.toLocaleString('ru-RU')}${record.unit ? ` ${record.unit}` : ''}`,
+        title: 'Общее кол-во',
+      },
+      {
+        accessor: 'price',
+        minWidth: '140px',
+        renderRowCell: (record) =>
+          record.price === undefined ? '-' : formatMoney(record.price, { currency: 'TJS' }),
+        title: 'Цена',
+      },
+      {
+        accessor: 'totalPrice',
+        minWidth: '170px',
+        renderRowCell: (record) => formatMoney(record.totalPrice, { currency: 'TJS' }),
+        title: 'Общая цена',
+      },
+    ],
+    [],
+  );
+
+  const handleRowClick = (record: TmzCategoryRow) => {
+    const categoryPath = routes.inventoryGoods
+      .replace(':storageId', String(record.storageId))
+      .replace(':catId', String(record.categoryId));
+
+    navigate(
+      record.goodId
+        ? routes.inventoryGoodsDetails
+            .replace(':storageId', String(record.storageId))
+            .replace(':catId', String(record.categoryId))
+            .replace(':goodId', String(record.goodId))
+        : categoryPath,
+    );
+  };
+
+  return (
+    <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <Typography
+            element="div"
+            role="heading"
+            aria-level={1}
+            category="heading"
+            proportions="h3"
+          >
+            Категории TMZ
+          </Typography>
+          <Typography
+            element="div"
+            category="body"
+            proportions="s"
+            className="mt-1 text-(--color-text-secondary)"
+          >
+            Общая сумма остатков:{' '}
+            {categories.totalSum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} сомони
+          </Typography>
+        </div>
+      </div>
+
+      <Surface className="flex flex-1 flex-col gap-4" p="6" rounded="12">
+        <div className="flex min-w-0 gap-3">
+          <Search
+            className="min-w-70 flex-1"
+            label="Поиск"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            onClear={() => setSearchText('')}
+            fullWidth
+            proportions="l"
+          />
+          <TmzCategoriesFilters
+            filters={filters}
+            isOpen={isFiltersOpen}
+            onClick={() => setIsFiltersOpen(true)}
+            onApply={(nextFilters) => {
+              setFilters(nextFilters);
+              setIsFiltersOpen(false);
+            }}
+            onClose={() => setIsFiltersOpen(false)}
+          />
+        </div>
+
+        {appliedFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {appliedFilters.map((filter) => (
+              <Tag
+                key={filter.key}
+                variant="primary"
+                size="s"
+                onClose={() => {
+                  if (filter.key === 'CITY_ID') {
+                    setFilters({ ...filters, BUILDING_ID: [], CITY_ID: [] });
+                    return;
+                  }
+
+                  setFilter(filter.key, []);
+                }}
+              >
+                {filter.label}
+              </Tag>
+            ))}
+            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
+              Сбросить
+            </Button>
+          </div>
+        )}
+
+        <DataTable
+          columns={columns}
+          records={categories.rows}
+          isFetching={categories.isFetching}
+          isLoading={categories.isLoading}
+          onRowClick={handleRowClick}
+          emptyPlaceholder={
+            categories.isSearching
+              ? `По поиску «${queryParams.searchText}» ничего не найдено.`
+              : storageId
+                ? 'Список категорий ТМЗ пока пуст.'
+                : 'Выберите склад ТМЗ в боковом меню.'
+          }
+          pagination={
+            categories.isSearching
+              ? undefined
+              : { ...pagination, totalCount: categories.totalCount }
+          }
+        />
+      </Surface>
+    </section>
+  );
+};

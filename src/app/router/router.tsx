@@ -13,6 +13,7 @@ import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
 import { StockAssetDetailsPage } from '@pages/stock-asset-details';
+import { TmzCategoriesPage } from '@pages/tmz-categories';
 import { TmzReportPage } from '@pages/tmz-report';
 
 import { accessRules, routes } from '@shared/config';
@@ -103,11 +104,11 @@ const appRoutes = [
   { path: routes.tmzReport, element: withAccess(<TmzReportPage />, accessRules.tmz) },
   {
     path: routes.inventory,
-    element: withAccess(<PlaceholderPage title="Инвентарь" />, accessRules.tmz),
+    element: withAccess(<TmzCategoriesPage />, accessRules.tmz),
   },
   {
     path: routes.inventoryStorage,
-    element: withAccess(<PlaceholderPage title="Склад ТМЗ" />, accessRules.tmz),
+    element: withAccess(<TmzCategoriesPage />, accessRules.tmz),
   },
   {
     path: routes.inventoryGoods,

@@ -36,7 +36,7 @@ export const AmortizationPage = ({ type }: AmortizationPageProps) => {
 
   return (
     <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <Typography element="div" role="heading" aria-level={1} category="heading" proportions="h3">
           {title}
         </Typography>
