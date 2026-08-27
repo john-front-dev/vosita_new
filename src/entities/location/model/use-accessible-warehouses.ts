@@ -26,3 +26,16 @@ export const useAccessibleWarehouses = () => {
     warehouses: getWarehousesFromPayload(query.data?.payload),
   };
 };
+
+export const useAllWarehouses = (enabled: boolean) => {
+  const query = useGetQuery<AccessibleWarehousesResponse>({
+    queryKey: ['all-warehouses'],
+    url: locationEndpoints.allWarehouses,
+    options: { enabled },
+  });
+
+  return {
+    ...query,
+    warehouses: getWarehousesFromPayload(query.data?.payload),
+  };
+};

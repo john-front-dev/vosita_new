@@ -10,11 +10,13 @@ import {
 import type { MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useAllWarehouses } from '@entities/location';
 import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
 import { canAccess, clearAuthSession, getStoredAccesses, getStoredUser } from '@shared/lib';
 
 import { sidebarNavigation, type SidebarNavItem } from '../model/navigation';
+import { getTmzNavigationItems } from '../model/tmz-navigation';
 
 const LogoFull = () => {
   return (
@@ -73,6 +75,8 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const user = getStoredUser();
   const accesses = getStoredAccesses();
+  const allWarehouses = useAllWarehouses(Boolean(user?.is_responsible_person));
+  const tmzNavigationItems = getTmzNavigationItems(user, accesses, allWarehouses.warehouses);
   const userName = user?.full_name.trim().split(/\s+/).filter(Boolean) ?? [];
   const initials =
     userName.length > 1
@@ -87,6 +91,11 @@ export const Sidebar = () => {
   };
 
   const allowedNavigation = sidebarNavigation
+    .map((item) =>
+      item.path === routes.tmzReport
+        ? { ...item, children: tmzNavigationItems.length ? tmzNavigationItems : undefined }
+        : item,
+    )
     .filter((item) => canAccess(user, accesses, item.access))
     .map((item) => ({
       ...item,

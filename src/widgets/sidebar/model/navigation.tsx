@@ -7,7 +7,6 @@ import {
   OutlineSystemFolder,
   OutlineSystemGridView,
   OutlineSystemHomeFavourite,
-  OutlineSystemListView,
   OutlineSystemMapPin,
   OutlineSystemMoreHorizontal,
   OutlineSystemShoppingBasket,
@@ -73,7 +72,6 @@ export const sidebarNavigation: SidebarNavItem[] = [
     path: routes.tmzReport,
     icon: <OutlineSystemShoppingBasket />,
     access: accessRules.tmz,
-    children: [{ title: 'Инвентарь', path: routes.inventory, icon: <OutlineSystemListView /> }],
   },
   {
     title: 'МБП',

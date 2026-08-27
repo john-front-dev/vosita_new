@@ -20,6 +20,11 @@
   --color-text-primary: #101828;
   --color-text-secondary: #667085;
   --color-text-disabled: #a1aeba;
+  --color-table-border: var(--color-primary-soft);
+  --color-table-header: #cfd9de;
+  --color-table-body: #f1f1f1;
+  --color-table-text: #202b33;
+  --color-table-text-muted: #687882;
   font-family:
     Inter,
     system-ui,

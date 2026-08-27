@@ -1,3 +1,5 @@
+export type AmortizationType = 'fixed-assets' | 'lri';
+
 export type AmortizationRecord = {
   id: number | string;
   currency?: string;
@@ -20,7 +22,7 @@ export type UseAmortizationListParams = {
   from: string;
   searchText: string;
   to: string;
-  type: 'fixed-assets' | 'lri';
+  type: AmortizationType;
 };
 
 export type AmortizationPayload = {
