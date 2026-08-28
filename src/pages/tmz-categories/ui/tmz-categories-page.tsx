@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button, Search, Surface, Tag, Typography } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useTmzCategoryOptions } from '@entities/category';
 import { useBuildings, useCities } from '@entities/location';
 import { routes } from '@shared/config';
 import { formatMoney, useUrlListState } from '@shared/lib';
@@ -13,7 +14,6 @@ import {
 } from '../model/tmz-categories-filters';
 import type { TmzCategoryRow } from '../model/types';
 import { useTmzCategories } from '../model/use-tmz-categories';
-import { useTmzFilterCategories } from '../model/use-tmz-filter-categories';
 import { TmzCategoriesFilters } from './tmz-categories-filters';
 
 export const TmzCategoriesPage = () => {
@@ -40,7 +40,7 @@ export const TmzCategoriesPage = () => {
     '',
     Boolean(filters.BUILDING_ID[0]),
   );
-  const filterCategoriesQuery = useTmzFilterCategories(Boolean(filters.CATEGORY_ID[0]));
+  const filterCategoriesQuery = useTmzCategoryOptions(Boolean(filters.CATEGORY_ID[0]));
   const categories = useTmzCategories({
     filters,
     limit: queryParams.limit,
@@ -99,7 +99,7 @@ export const TmzCategoriesPage = () => {
         accessor: 'name',
         minWidth: '280px',
         renderRowCell: (record) => (
-          <div className={record.kind === 'good' ? 'pl-6' : 'font-semibold'}>
+          <div className={record.kind === 'good' ? 'pl-6' : undefined}>
             {record.kind === 'good' && (
               <span className="mr-2 text-(--color-text-disabled)">Товар</span>
             )}
@@ -137,14 +137,17 @@ export const TmzCategoriesPage = () => {
       .replace(':storageId', String(record.storageId))
       .replace(':catId', String(record.categoryId));
 
-    navigate(
-      record.goodId
-        ? routes.inventoryGoodsDetails
-            .replace(':storageId', String(record.storageId))
-            .replace(':catId', String(record.categoryId))
-            .replace(':goodId', String(record.goodId))
-        : categoryPath,
-    );
+    if (record.goodId) {
+      navigate(
+        routes.inventoryGoodsDetails
+          .replace(':storageId', String(record.storageId))
+          .replace(':catId', String(record.categoryId))
+          .replace(':goodId', String(record.goodId)),
+      );
+      return;
+    }
+
+    navigate(categoryPath);
   };
 
   return (

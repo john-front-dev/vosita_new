@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Button, Modal, OutlineSystemFilterFromLessToMore, Select, Switch } from 'alif-ui';
 
+import { useTmzCategoryOptions } from '@entities/category';
 import { useBuildings, useCities } from '@entities/location';
 import { normalizeSelectValue } from '@shared/lib';
 
 import type { TmzCategoriesFilters as TmzCategoriesFiltersValues } from '../model/tmz-categories-filters';
-import { useTmzFilterCategories } from '../model/use-tmz-filter-categories';
 
 type TmzCategoriesFiltersProps = {
   filters: TmzCategoriesFiltersValues;
@@ -28,7 +28,7 @@ const TmzCategoriesFiltersModal = ({
   const [localFilters, setLocalFilters] = useState<TmzCategoriesFiltersValues>(filters);
   const citiesQuery = useCities();
   const buildingsQuery = useBuildings(localFilters.CITY_ID[0]);
-  const categoriesQuery = useTmzFilterCategories();
+  const categoriesQuery = useTmzCategoryOptions();
 
   const cityOptions = useMemo(
     () => citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
