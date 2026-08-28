@@ -11,6 +11,19 @@ declare global {
       message?: string;
     };
   };
+
+  type PaginationMeta = {
+    current_page?: number;
+    page?: number;
+    per_page?: number;
+    total_count?: number;
+    total_pages?: number;
+  };
+
+  type PaginatedPayload<T> = Omit<PaginationMeta, 'per_page' | 'total_pages'> & {
+    data: T[];
+    total_pages: number;
+  };
 }
 
 export {};

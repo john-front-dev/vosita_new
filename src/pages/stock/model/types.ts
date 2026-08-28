@@ -59,14 +59,6 @@ export type StockRecord = {
   status_id?: number;
 };
 
-export type StockListPayload = {
-  current_page?: number;
-  data?: StockRecord[];
-  items?: StockRecord[];
-  page?: number;
-  per_page?: number;
-  total_count?: number;
-  total_pages?: number;
-};
+export type StockListPayload = PaginatedPayload<StockRecord>;
 
 export type StockListResponse = ApiResponse<StockListPayload>;

@@ -32,9 +32,7 @@ export const useAmortizationList = ({
     url: amortizationListEndpoints[type],
   });
   const payload = query.data?.payload;
-  const records: AmortizationRecord[] = Array.isArray(payload)
-    ? payload
-    : (payload?.data ?? payload?.items ?? payload?.payload ?? []);
+  const records: AmortizationRecord[] = Array.isArray(payload) ? payload : (payload?.data ?? []);
 
   return { ...query, records };
 };

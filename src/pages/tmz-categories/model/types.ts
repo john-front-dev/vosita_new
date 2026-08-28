@@ -7,13 +7,11 @@ export type TmzCategory = {
   total_qty: number;
 };
 
-export type TmzCategoriesPayload = {
-  page: number;
-  tmz: TmzCategory[];
-  total_categories_sum: number;
-  total_count?: number;
-  total_pages: number;
-};
+export type TmzCategoriesPayload = Required<Pick<PaginationMeta, 'page' | 'total_pages'>> &
+  Pick<PaginationMeta, 'total_count'> & {
+    tmz: TmzCategory[];
+    total_categories_sum: number;
+  };
 
 export type TmzCategoriesResponse = ApiResponse<TmzCategoriesPayload>;
 

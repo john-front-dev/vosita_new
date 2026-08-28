@@ -34,7 +34,7 @@ export const useFixedAssetsList = ({
 
   return {
     ...query,
-    records: payload?.data ?? payload?.items ?? [],
+    records: payload?.data ?? [],
     totalCount: payload?.total_count ?? (payload?.total_pages ?? 0) * limit,
   };
 };

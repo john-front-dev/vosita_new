@@ -25,12 +25,6 @@ export type UseAmortizationListParams = {
   type: AmortizationType;
 };
 
-export type AmortizationPayload = {
-  data?: AmortizationRecord[];
-  items?: AmortizationRecord[];
-  payload?: AmortizationRecord[];
-  total_count?: number;
-  total_pages?: number;
-};
+export type AmortizationPayload = PaginatedPayload<AmortizationRecord>;
 
 export type AmortizationResponse = ApiResponse<AmortizationPayload | AmortizationRecord[]>;

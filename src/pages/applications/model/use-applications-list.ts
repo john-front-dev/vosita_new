@@ -46,7 +46,7 @@ export const useApplicationsList = ({
   });
 
   const payload = query.data?.payload;
-  const records = payload?.data ?? payload?.items ?? [];
+  const records = payload?.data ?? [];
   const totalPages = payload?.total_pages ?? 0;
   const totalCount = payload?.total_count ?? totalPages * limit;
 

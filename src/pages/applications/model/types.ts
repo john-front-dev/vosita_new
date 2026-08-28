@@ -37,15 +37,7 @@ export type ApplicationRecord = {
   title?: string;
 };
 
-export type ApplicationListPayload = {
-  current_page?: number;
-  data?: ApplicationRecord[];
-  items?: ApplicationRecord[];
-  page?: number;
-  per_page?: number;
-  total_count?: number;
-  total_pages?: number;
-};
+export type ApplicationListPayload = PaginatedPayload<ApplicationRecord>;
 
 export type ApplicationListResponse = ApiResponse<ApplicationListPayload>;
 
@@ -80,7 +72,7 @@ export type ApplicationObjectRecord = {
   unit?: string;
 };
 
-export type ApplicationDetailsPayload = {
+export type ApplicationDetailsPayload = Pick<PaginationMeta, 'total_pages'> & {
   applicant?: {
     id: number;
     name: string;
@@ -102,7 +94,6 @@ export type ApplicationDetailsPayload = {
   storage_name?: string;
   title: string;
   tmz_cat_name?: string;
-  total_pages?: number;
 };
 
 export type ApplicationDetailsResponse = ApiResponse<ApplicationDetailsPayload>;

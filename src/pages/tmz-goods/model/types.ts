@@ -9,12 +9,6 @@ export type TmzGood = {
   unit: string;
 };
 
-export type TmzGoodsPayload = {
-  current_page?: number;
-  data: TmzGood[];
-  page?: number;
-  total_count?: number;
-  total_pages: number;
-};
+export type TmzGoodsPayload = PaginatedPayload<TmzGood>;
 
 export type TmzGoodsResponse = ApiResponse<TmzGoodsPayload>;
