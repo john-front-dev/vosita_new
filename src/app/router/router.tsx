@@ -14,6 +14,7 @@ import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
 import { StockAssetDetailsPage } from '@pages/stock-asset-details';
 import { TmzCategoriesPage } from '@pages/tmz-categories';
+import { TmzGoodDetailsPage } from '@pages/tmz-good-details';
 import { TmzGoodsPage } from '@pages/tmz-goods';
 import { TmzReportPage } from '@pages/tmz-report';
 
@@ -117,7 +118,7 @@ const appRoutes = [
   },
   {
     path: routes.inventoryGoodsDetails,
-    element: withAccess(<PlaceholderPage title="Товар" />, accessRules.tmz),
+    element: withAccess(<TmzGoodDetailsPage />, accessRules.tmz),
   },
   {
     path: routes.amortizationFixedAssets,

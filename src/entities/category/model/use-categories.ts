@@ -18,3 +18,14 @@ export const useCategories = (searchText = '', enabled = true) => {
     categories: query.data?.payload.data ?? [],
   };
 };
+
+export const useMbpCategories = (searchText = '', enabled = true) => {
+  const search = useDebouncedValue(searchText);
+  const query = useGetQuery<CategoriesResponse>({
+    queryKey: ['mbp-categories', search],
+    url: categoryEndpoints.mbpList,
+    params: { limit: 0, page: 1, search },
+    options: { enabled },
+  });
+  return { ...query, categories: query.data?.payload.data ?? [] };
+};

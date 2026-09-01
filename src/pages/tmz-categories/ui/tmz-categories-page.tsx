@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react';
 import { Button, Search, Surface, Tag, Typography } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { TmzCartDrawer } from '@features/tmz-good-actions';
 import { useTmzCategoryOptions } from '@entities/category';
 import { useBuildings, useCities } from '@entities/location';
 import { routes } from '@shared/config';
-import { formatMoney, useUrlListState } from '@shared/lib';
+import { formatMoney, getStoredUser, useUrlListState } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
 import {
@@ -20,6 +21,7 @@ export const TmzCategoriesPage = () => {
   const navigate = useNavigate();
   const { storageId: storageIdParam } = useParams();
   const storageId = Number(storageIdParam) || 0;
+  const isWarehouseManager = Boolean(getStoredUser()?.is_warehouse_manager);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const {
     clearFilters,
@@ -173,6 +175,7 @@ export const TmzCategoriesPage = () => {
             {categories.totalSum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} сомони
           </Typography>
         </div>
+        {isWarehouseManager && <TmzCartDrawer />}
       </div>
 
       <Surface className="flex flex-1 flex-col gap-4" p="6" rounded="12">

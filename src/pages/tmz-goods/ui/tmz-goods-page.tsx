@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { Button, OutlineNavigationLeftArrow, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { TmzCartDrawer } from '@features/tmz-good-actions';
 import { useTmzCategoryOptions } from '@entities/category';
 import { routes } from '@shared/config';
-import { formatMoney, useUrlListState } from '@shared/lib';
+import { formatMoney, getStoredUser, useUrlListState } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
 import type { TmzGood } from '../model/types';
@@ -15,6 +16,7 @@ export const TmzGoodsPage = () => {
   const { catId: categoryIdParam, storageId: storageIdParam } = useParams();
   const categoryId = Number(categoryIdParam) || 0;
   const storageId = Number(storageIdParam) || 0;
+  const isWarehouseManager = Boolean(getStoredUser()?.is_warehouse_manager);
   const { pagination, queryParams, searchText, setSearchText } = useUrlListState();
   const categoryQuery = useTmzCategoryOptions(Boolean(categoryId));
   const categoryName =
@@ -75,7 +77,7 @@ export const TmzGoodsPage = () => {
         >
           <OutlineNavigationLeftArrow />
         </Button>
-        <div>
+        <div className="min-w-0 flex-1">
           <Typography
             element="div"
             role="heading"
@@ -94,6 +96,7 @@ export const TmzGoodsPage = () => {
             Общее количество остатков: {goodsQuery.totalQuantity.toLocaleString('ru-RU')} шт
           </Typography>
         </div>
+        {isWarehouseManager && <TmzCartDrawer />}
       </div>
 
       <Surface className="flex flex-1 flex-col gap-4" p="6" rounded="12">
@@ -108,6 +111,7 @@ export const TmzGoodsPage = () => {
         />
 
         <DataTable
+          accessorId="goods_id"
           columns={columns}
           records={goodsQuery.goods}
           isFetching={goodsQuery.isFetching}
