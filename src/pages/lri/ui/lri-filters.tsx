@@ -37,7 +37,7 @@ const LriFiltersModal = ({
 
   return (
     <Modal
-      className="w-150 max-w-[calc(100vw-32px)]"
+      className="w-150"
       isOpen
       onClose={onClose}
       isCentered

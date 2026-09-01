@@ -80,7 +80,7 @@ export const AddStockAssetCapitalizationModal = ({
 
   return (
     <Modal
-      className="w-120 max-w-[calc(100vw-32px)]"
+      className="w-120"
       isOpen={isOpen}
       onClose={handleClose}
       isCentered

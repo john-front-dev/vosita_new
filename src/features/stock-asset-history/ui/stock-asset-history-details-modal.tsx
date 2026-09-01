@@ -233,7 +233,7 @@ export const StockAssetHistoryDetailsModal = ({
 
   return (
     <Modal
-      className="w-[500px] max-w-[calc(100vw-32px)]"
+      className="w-[500px]"
       isOpen={historyId !== null}
       onClose={onClose}
       isCentered

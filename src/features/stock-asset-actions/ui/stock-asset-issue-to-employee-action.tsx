@@ -40,7 +40,7 @@ export const StockAssetIssueToEmployeeAction = ({ asset, type }: Props) => {
         {isAccepting ? 'В ожидании' : 'Выдать сотруднику'}
       </Button>
       <Modal
-        className="w-[560px] max-w-[calc(100vw-32px)]"
+        className="w-[560px]"
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         isCentered

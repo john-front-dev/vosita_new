@@ -65,7 +65,7 @@ export const StockFiltersModal = ({
 
   return (
     <Modal
-      className="w-[720px] max-w-[calc(100vw-32px)]"
+      className="w-[720px]"
       isOpen={isOpen}
       onClose={onClose}
       isCentered

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, OutlineSystemListView, snackbar, Typography } from 'alif-ui';
 
 import type { StockRecord } from '@pages/stock/model/types';
+
 import { httpClient, queryClient } from '@shared/api';
 
 type FixedAssetsInventoryButtonProps = {

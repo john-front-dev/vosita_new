@@ -89,7 +89,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
         Изменить
       </Button>
       <Modal
-        className="w-[560px] max-w-[calc(100vw-32px)]"
+        className="w-[560px]"
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         isCentered

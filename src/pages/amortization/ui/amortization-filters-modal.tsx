@@ -37,7 +37,7 @@ export const AmortizationFiltersModal = ({
       isCentered
       withCloseButton
       isCloseOutside={false}
-      className="w-180 max-w-[calc(100vw-32px)]"
+      className="w-180"
     >
       <Modal.Header title="Фильтрация амортизации" />
       <Modal.Content className="grid grid-cols-1 gap-4 md:grid-cols-2">

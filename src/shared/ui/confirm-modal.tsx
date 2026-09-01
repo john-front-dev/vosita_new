@@ -31,8 +31,8 @@ export const ConfirmModal = ({
   <Modal
     className={
       width === 'large'
-        ? 'w-[560px] max-w-[calc(100vw-32px)]'
-        : 'w-[420px] max-w-[calc(100vw-32px)]'
+        ? 'w-[560px]'
+        : 'w-[420px]'
     }
     isOpen={isOpen}
     onClose={onClose}

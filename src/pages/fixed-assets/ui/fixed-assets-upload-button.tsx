@@ -70,7 +70,7 @@ export const FixedAssetsUploadButton = () => {
 
       {isOpen && (
         <Modal
-          className="w-125 max-w-[calc(100vw-32px)]"
+          className="w-125"
           isOpen={isOpen}
           onClose={handleClose}
           isCentered
