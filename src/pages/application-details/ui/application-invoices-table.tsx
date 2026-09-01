@@ -3,7 +3,7 @@ import { Button, OutlineSystemDownload, snackbar, Surface, Typography } from 'al
 
 import { applicationEndpoints } from '@entities/application';
 import { httpClient, useGetQuery } from '@shared/api';
-import { formatDate, formatMoney } from '@shared/lib';
+import { downloadBlob, formatDate, formatMoney } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
 import type {
@@ -119,15 +119,7 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
           responseType: 'blob',
         },
       );
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download = `invoice-${invoice.invoice_number}.pdf`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      downloadBlob(response.data, `invoice-${invoice.invoice_number}.pdf`);
     } catch {
       snackbar.show({
         title: 'Не удалось скачать накладную',

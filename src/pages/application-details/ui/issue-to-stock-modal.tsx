@@ -3,6 +3,7 @@ import { Button, Input, Modal, snackbar } from 'alif-ui';
 
 import { applicationEndpoints } from '@entities/application';
 import { useMutationQuery } from '@shared/api';
+import { downloadBlob } from '@shared/lib';
 
 import type { ApplicationListType, IssueApplicationObjectsRequest } from '../model/types';
 
@@ -32,14 +33,7 @@ export const IssueToStockModal = ({
     },
     options: {
       onSuccess: (response) => {
-        const url = URL.createObjectURL(response);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'issue-to-stock.pdf';
-        document.body.append(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(response, 'issue-to-stock.pdf');
 
         snackbar.show({
           title: 'Объекты отправлены на склад',

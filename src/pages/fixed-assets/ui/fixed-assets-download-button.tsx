@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, OutlineSystemDownload, snackbar } from 'alif-ui';
 
 import { httpClient } from '@shared/api';
+import { downloadBlob } from '@shared/lib';
 
 import { fixedAssetsEndpoints } from '../api/fixed-assets-api';
 import { buildFixedAssetsListParams } from '../model/build-fixed-assets-list-params';
@@ -30,15 +31,7 @@ export const FixedAssetsDownloadButton = ({
         params: buildFixedAssetsListParams(filters, page, limit, searchText),
         responseType: 'blob',
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download = 'fixed-assets.xlsx';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlob(response.data, 'fixed-assets.xlsx');
     } catch {
       snackbar.show({ title: 'Не удалось скачать файл', type: 'error' });
     } finally {

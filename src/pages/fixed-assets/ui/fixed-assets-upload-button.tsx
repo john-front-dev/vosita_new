@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, FileUploader, Modal, OutlineSystemFileAdd, snackbar } from 'alif-ui';
 
 import { httpClient, queryClient } from '@shared/api';
+import { downloadBlob } from '@shared/lib';
 
 const fixedAssetsUploadEndpoint = '/upload_os';
 const fixedAssetsTemplateEndpoint = '/template_os';
@@ -24,15 +25,7 @@ export const FixedAssetsUploadButton = () => {
       const response = await httpClient.get<Blob>(fixedAssetsTemplateEndpoint, {
         responseType: 'blob',
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download = 'template_os.xlsx';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlob(response.data, 'template_os.xlsx');
     } catch {
       snackbar.show({ title: 'Не удалось скачать шаблон', type: 'error' });
     } finally {

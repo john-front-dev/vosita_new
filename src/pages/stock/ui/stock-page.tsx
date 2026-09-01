@@ -19,7 +19,13 @@ import { useAccessibleWarehouses } from '@entities/location';
 import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
 import { httpClient } from '@shared/api';
 import { routes } from '@shared/config';
-import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
+import {
+  downloadBlob,
+  formatDate,
+  getStoredAccesses,
+  getStoredUser,
+  useUrlListState,
+} from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
 import { getStockRequestConfig, stockDownloadEndpoint } from '../api/stock-api';
@@ -126,16 +132,7 @@ export const StockPage = () => {
         ...getStockRequestConfig(params),
         responseType: 'blob',
       });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.setAttribute('download', `stock-${type}.xlsx`);
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlob(response.data, `stock-${type}.xlsx`);
     } catch {
       snackbar.show({
         title: 'Не удалось скачать файл',

@@ -2,6 +2,7 @@ export * from './auth-access';
 export * from './auth-session-events';
 export * from './auth-storage';
 export * from './build-clean-query-params';
+export * from './download-blob';
 export * from './format-date';
 export * from './format-money';
 export * from './normalize-select-value';

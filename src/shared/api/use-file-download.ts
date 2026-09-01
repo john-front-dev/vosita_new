@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import type { AxiosRequestConfig } from 'axios';
 
+import { downloadBlob } from '@shared/lib';
+
 import { httpClient } from './http-client';
 
 type UseFileDownloadParams = {
@@ -18,15 +20,7 @@ export const useFileDownload = ({ filename, params, url }: UseFileDownloadParams
       setIsDownloading(true);
 
       const response = await httpClient.get<Blob>(url, { params, responseType: 'blob' });
-      const objectUrl = URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-
-      link.href = objectUrl;
-      link.download = filename;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
+      downloadBlob(response.data, filename);
       return true;
     } catch {
       return false;
