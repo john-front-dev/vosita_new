@@ -8,7 +8,6 @@ import {
   SegmentedControl,
   snackbar,
   Surface,
-  Tag,
   Typography,
 } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +25,7 @@ import {
   getStoredUser,
   useUrlListState,
 } from '@shared/lib';
-import { DataTable, type DataTableProps } from '@shared/ui';
+import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
 import { getStockRequestConfig, stockDownloadEndpoint } from '../api/stock-api';
 import { buildStockListParams } from '../lib/build-stock-list-params';
@@ -271,23 +270,12 @@ export const StockPage = () => {
           </div>
         </div>
 
-        {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {appliedFilters.map((filter) => (
-              <Tag
-                key={`${filter.key}-${filter.id}`}
-                variant="primary"
-                size="s"
-                onClose={() => setFilter(filter.key, [])}
-              >
-                {filter.label}
-              </Tag>
-            ))}
-            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
-              Сбросить
-            </Button>
-          </div>
-        )}
+        <AppliedFilterTags
+          filters={appliedFilters}
+          getKey={(filter) => `${filter.key}-${filter.id}`}
+          onClear={clearFilters}
+          onRemove={(filter) => setFilter(filter.key, [])}
+        />
 
         <DataTable
           columns={columns}

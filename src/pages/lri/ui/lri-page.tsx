@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Search, Surface, Tag, Typography } from 'alif-ui';
+import { Badge, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
 import type { StockRecord } from '@pages/stock/model/types';
@@ -8,7 +8,7 @@ import { useBuildings, useCities } from '@entities/location';
 import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
 import { routes } from '@shared/config';
 import { formatDate, formatMoney, useUrlListState } from '@shared/lib';
-import { DataTable, type DataTableProps } from '@shared/ui';
+import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
 import { getAppliedLriFilters } from '../lib/lri-filter-tags';
 import {
@@ -134,23 +134,12 @@ export const LriPage = () => {
           />
         </div>
 
-        {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {appliedFilters.map((filter) => (
-              <Tag
-                key={filter.key}
-                variant="primary"
-                size="s"
-                onClose={() => setFilter(filter.key, [])}
-              >
-                {filter.label}
-              </Tag>
-            ))}
-            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
-              Сбросить
-            </Button>
-          </div>
-        )}
+        <AppliedFilterTags
+          filters={appliedFilters}
+          getKey={(filter) => filter.key}
+          onClear={clearFilters}
+          onRemove={(filter) => setFilter(filter.key, [])}
+        />
 
         <DataTable
           columns={columns}

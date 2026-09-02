@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Search, Surface, Tag, Typography } from 'alif-ui';
+import { Badge, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
 import type { StockRecord } from '@pages/stock/model/types';
@@ -9,7 +9,7 @@ import { useBuildings, useCabinets, useCities } from '@entities/location';
 import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
 import { routes } from '@shared/config';
 import { formatDate, formatMoney, useUrlListState } from '@shared/lib';
-import { DataTable, type DataTableProps } from '@shared/ui';
+import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
 import { getAppliedFixedAssetsFilters } from '../lib/fixed-assets-filter-tags';
 import { fixedAssetsDefaultFilters } from '../model/fixed-assets-filters';
@@ -37,7 +37,10 @@ export const FixedAssetsPage = () => {
     setFilters,
     setSearchText,
   } = useUrlListState({ filterKeys: Object.keys(fixedAssetsDefaultFilters) });
-  const fixedAssetsFilters = { ...fixedAssetsDefaultFilters, ...filters };
+  const fixedAssetsFilters = useMemo(
+    () => ({ ...fixedAssetsDefaultFilters, ...filters }),
+    [filters],
+  );
   const citiesQuery = useCities('', Boolean(fixedAssetsFilters.CITY_ID[0]));
   const categoriesQuery = useCategories('', Boolean(fixedAssetsFilters.CATEGORY_ID[0]));
   const buildingsQuery = useBuildings(
@@ -164,13 +167,7 @@ export const FixedAssetsPage = () => {
   return (
     <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Typography
-          element="div"
-          role="heading"
-          aria-level={1}
-          category="heading"
-          proportions="h3"
-        >
+        <Typography element="div" role="heading" aria-level={1} category="heading" proportions="h3">
           ОС
         </Typography>
         <div className="flex items-center gap-3">
@@ -214,23 +211,12 @@ export const FixedAssetsPage = () => {
           />
         </div>
 
-        {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {appliedFilters.map((filter) => (
-              <Tag
-                key={filter.key}
-                variant="primary"
-                size="s"
-                onClose={() => setFilter(filter.key, [])}
-              >
-                {filter.label}
-              </Tag>
-            ))}
-            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
-              Сбросить
-            </Button>
-          </div>
-        )}
+        <AppliedFilterTags
+          filters={appliedFilters}
+          getKey={(filter) => filter.key}
+          onClear={clearFilters}
+          onRemove={(filter) => setFilter(filter.key, [])}
+        />
 
         {isInventoryMode && (
           <FixedAssetsInventoryActions

@@ -1,6 +1,7 @@
 export * from './auth-access';
 export * from './auth-session-events';
 export * from './auth-storage';
+export * from './build-applied-filter-tags';
 export * from './build-clean-query-params';
 export * from './download-blob';
 export * from './format-date';

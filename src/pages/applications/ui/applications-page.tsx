@@ -6,7 +6,6 @@ import {
   Search,
   SegmentedControl,
   Surface,
-  Tag,
   Typography,
 } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +14,7 @@ import { useAccessibleWarehouses } from '@entities/location';
 import { queryClient } from '@shared/api';
 import { routes } from '@shared/config';
 import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
-import { DataTable, type DataTableProps } from '@shared/ui';
+import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
 import {
   getAvailableApplicationTabs,
@@ -201,28 +200,17 @@ export const ApplicationsPage = () => {
           </div>
         </div>
 
-        {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {appliedFilters.map((filter) => (
-              <Tag
-                key={`${filter.key}-${filter.id}`}
-                variant="primary"
-                size="s"
-                onClose={() =>
-                  setFilter(
-                    filter.key,
-                    applicationFilters[filter.key].filter((id) => id !== filter.id),
-                  )
-                }
-              >
-                {filter.label}
-              </Tag>
-            ))}
-            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
-              Сбросить
-            </Button>
-          </div>
-        )}
+        <AppliedFilterTags
+          filters={appliedFilters}
+          getKey={(filter) => `${filter.key}-${filter.id}`}
+          onClear={clearFilters}
+          onRemove={(filter) =>
+            setFilter(
+              filter.key,
+              applicationFilters[filter.key].filter((id) => id !== filter.id),
+            )
+          }
+        />
 
         <DataTable
           columns={columns}

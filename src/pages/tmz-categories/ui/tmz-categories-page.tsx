@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Search, Surface, Tag, Typography } from 'alif-ui';
+import { Search, Surface, Typography } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { TmzCartDrawer } from '@features/tmz-good-actions';
@@ -7,7 +7,7 @@ import { useTmzCategoryOptions } from '@entities/category';
 import { useBuildings, useCities } from '@entities/location';
 import { routes } from '@shared/config';
 import { formatMoney, getStoredUser, useUrlListState } from '@shared/lib';
-import { DataTable, type DataTableProps } from '@shared/ui';
+import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
 import {
   tmzCategoriesDefaultFilters,
@@ -37,11 +37,7 @@ export const TmzCategoriesPage = () => {
   });
   const filters = { ...tmzCategoriesDefaultFilters, ...urlFilters };
   const citiesQuery = useCities('', Boolean(filters.CITY_ID[0]));
-  const buildingsQuery = useBuildings(
-    filters.CITY_ID[0],
-    '',
-    Boolean(filters.BUILDING_ID[0]),
-  );
+  const buildingsQuery = useBuildings(filters.CITY_ID[0], '', Boolean(filters.BUILDING_ID[0]));
   const filterCategoriesQuery = useTmzCategoryOptions(Boolean(filters.CATEGORY_ID[0]));
   const categories = useTmzCategories({
     filters,
@@ -201,30 +197,19 @@ export const TmzCategoriesPage = () => {
           />
         </div>
 
-        {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {appliedFilters.map((filter) => (
-              <Tag
-                key={filter.key}
-                variant="primary"
-                size="s"
-                onClose={() => {
-                  if (filter.key === 'CITY_ID') {
-                    setFilters({ ...filters, BUILDING_ID: [], CITY_ID: [] });
-                    return;
-                  }
+        <AppliedFilterTags
+          filters={appliedFilters}
+          getKey={(filter) => filter.key}
+          onClear={clearFilters}
+          onRemove={(filter) => {
+            if (filter.key === 'CITY_ID') {
+              setFilters({ ...filters, BUILDING_ID: [], CITY_ID: [] });
+              return;
+            }
 
-                  setFilter(filter.key, []);
-                }}
-              >
-                {filter.label}
-              </Tag>
-            ))}
-            <Button type="button" variant="secondary" size="s" onClick={clearFilters}>
-              Сбросить
-            </Button>
-          </div>
-        )}
+            setFilter(filter.key, []);
+          }}
+        />
 
         <DataTable
           columns={columns}
