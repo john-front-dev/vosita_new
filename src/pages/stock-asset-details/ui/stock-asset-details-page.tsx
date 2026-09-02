@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, OutlineNavigationLeftArrow, Surface, TabMenuNew, Typography } from 'alif-ui';
+import { Button, Loader, OutlineNavigationLeftArrow, Surface, TabMenuNew, Typography } from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { StockAssetActions } from '@features/stock-asset-actions';
@@ -23,9 +23,8 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [tab, setTab] = useState<StockAssetDetailsTab>('description');
-  const assetQuery = useStockAsset(id);
-  const commentsQuery = useStockAssetComments(id, type === 'fixed-assets');
-  const asset = assetQuery.asset;
+  const { asset, isError, isLoading } = useStockAsset(id);
+  const { comments } = useStockAssetComments(id, type === 'fixed-assets');
   const tabs = useMemo(
     () => [
       { label: 'Описание', value: 'description' },
@@ -38,27 +37,25 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
       ...(type === 'fixed-assets'
         ? [
             {
-              counter: commentsQuery.comments.length,
+              counter: comments.length,
               label: 'Комментарии',
               value: 'comments',
             },
           ]
         : []),
     ],
-    [asset?.capitalization?.length, commentsQuery.comments.length, type],
+    [asset?.capitalization?.length, comments.length, type],
   );
 
-  if (assetQuery.isLoading)
+  if (isLoading)
     return (
       <section className="min-h-[calc(100vh-48px)]">
-        <Surface p="6" rounded="12">
-          <Typography category="body" proportions="s" className="text-(--color-text-secondary)">
-            Загрузка объекта…
-          </Typography>
+        <Surface className="flex justify-center" p="6" rounded="12">
+          <Loader />
         </Surface>
       </section>
     );
-  if (assetQuery.isError || !asset || !id) return <EmptyPage title="Объект не найден" />;
+  if (isError || !asset || !id) return <EmptyPage title="Объект не найден" />;
 
   const status = getStockAssetStatusPresentation(asset.is_repair, asset.status_id);
   return (

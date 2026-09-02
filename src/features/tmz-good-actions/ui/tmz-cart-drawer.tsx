@@ -3,6 +3,7 @@ import {
   Button,
   Checkbox,
   Drawer,
+  Loader,
   OutlineSystemCheck,
   OutlineSystemDelete,
   OutlineSystemShoppingBasket,
@@ -98,9 +99,9 @@ export const TmzCartDrawer = () => {
       >
         <div className="flex h-full flex-col gap-4">
           {cart.isLoading ? (
-            <Typography category="body" proportions="s">
-              Загрузка корзины…
-            </Typography>
+            <div className="flex flex-1 items-center justify-center">
+              <Loader />
+            </div>
           ) : !cart.items.length ? (
             <div className="flex flex-1 items-center justify-center text-(--color-text-secondary)">
               Ваша корзина пуста

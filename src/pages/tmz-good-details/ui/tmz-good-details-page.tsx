@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Button,
+  Loader,
   OutlineNavigationLeftArrow,
   OutlineSystemPlus,
   Surface,
@@ -79,10 +80,8 @@ export const TmzGoodDetailsPage = () => {
 
   if (query.isLoading) {
     return (
-      <Surface p="6" rounded="12">
-        <Typography category="body" proportions="s">
-          Загрузка товара…
-        </Typography>
+      <Surface className="flex justify-center" p="6" rounded="12">
+        <Loader />
       </Surface>
     );
   }

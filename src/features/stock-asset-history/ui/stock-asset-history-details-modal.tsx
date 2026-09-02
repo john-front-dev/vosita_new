@@ -1,4 +1,4 @@
-import { Modal, Typography } from 'alif-ui';
+import { Loader, Modal, Typography } from 'alif-ui';
 
 import { useStockAssetHistoryDetails } from '@entities/stock-asset';
 import { formatDate, formatMoney } from '@shared/lib';
@@ -224,9 +224,9 @@ export const StockAssetHistoryDetailsModal = ({
       <Modal.Header title="История изменений" />
       <Modal.Content className="max-h-[70vh] overflow-y-auto">
         {isLoading && (
-          <Typography category="body" proportions="s" className="text-(--color-text-secondary)">
-            Загрузка истории…
-          </Typography>
+          <div className="flex justify-center py-4">
+            <Loader />
+          </div>
         )}
         {isError && (
           <Typography category="body" proportions="s" className="text-(--color-danger)">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pagination, Surface, Typography } from 'alif-ui';
+import { Loader, Pagination, Surface, Typography } from 'alif-ui';
 
 import { type AssetResource, useStockAssetHistory } from '@entities/stock-asset';
 import { formatDate } from '@shared/lib';
@@ -14,17 +14,22 @@ export const StockAssetHistory = ({
   resource?: AssetResource;
 }) => {
   const [page, setPage] = useState(1);
-  const historyQuery = useStockAssetHistory(assetId, true, resource, page);
+  const { currentPage, history, isLoading, totalCount, totalPages } = useStockAssetHistory(
+    assetId,
+    true,
+    resource,
+    page,
+  );
   const [selectedHistoryId, setSelectedHistoryId] = useState<number | string | null>(null);
 
   return (
     <Surface className="flex flex-col gap-3" p="4" rounded="12">
-      {historyQuery.isLoading && (
-        <Typography category="body" proportions="s" className="text-(--color-text-secondary)">
-          Загрузка истории…
-        </Typography>
+      {isLoading && (
+        <div className="flex justify-center py-4">
+          <Loader />
+        </div>
       )}
-      {!historyQuery.isLoading && historyQuery.history.length === 0 && (
+      {!isLoading && history.length === 0 && (
         <Typography
           category="body"
           proportions="s"
@@ -33,7 +38,7 @@ export const StockAssetHistory = ({
           Нет истории событий
         </Typography>
       )}
-      {historyQuery.history.map((item) => (
+      {history.map((item) => (
         <button
           key={item.history_id}
           type="button"
@@ -96,12 +101,12 @@ export const StockAssetHistory = ({
           </div>
         </button>
       ))}
-      {resource === 'mbp' && historyQuery.totalPages > 1 && (
+      {resource === 'mbp' && totalPages > 1 && (
         <Pagination
           className="mt-3 flex justify-center"
-          currentPage={historyQuery.currentPage}
+          currentPage={currentPage}
           pageSize={10}
-          totalCount={historyQuery.totalCount}
+          totalCount={totalCount}
           onPageChange={setPage}
           size="m"
           variant="default"

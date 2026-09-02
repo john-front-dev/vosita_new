@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Surface, TextArea, Typography } from 'alif-ui';
+import { Button, Loader, Surface, TextArea, Typography } from 'alif-ui';
 
 import type { AssetResource, StockAssetComment } from '@entities/stock-asset';
 import { useStockAssetComments } from '@entities/stock-asset';
@@ -28,7 +28,7 @@ export const StockAssetComments = ({
   const [replyTarget, setReplyTarget] = useState<CommentTarget | null>(null);
   const [editingTarget, setEditingTarget] = useState<CommentTarget | null>(null);
   const [removingComment, setRemovingComment] = useState<StockAssetComment | null>(null);
-  const commentsQuery = useStockAssetComments(assetId, true, resource);
+  const { comments, isLoading } = useStockAssetComments(assetId, true, resource);
   const isMbp = resource === 'mbp';
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ['asset-comments', resource, assetId] });
@@ -172,12 +172,12 @@ export const StockAssetComments = ({
           >
             Последние комментарии
           </Typography>
-          {commentsQuery.isLoading && (
-            <Typography category="body" proportions="s" className="text-(--color-text-secondary)">
-              Загрузка комментариев…
-            </Typography>
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <Loader />
+            </div>
           )}
-          {!commentsQuery.isLoading && commentsQuery.comments.length === 0 && (
+          {!isLoading && comments.length === 0 && (
             <Typography
               category="body"
               proportions="s"
@@ -186,7 +186,7 @@ export const StockAssetComments = ({
               Пока комментариев нет
             </Typography>
           )}
-          {commentsQuery.comments.map((comment) => (
+          {comments.map((comment) => (
             <StockAssetCommentItem
               key={comment.id}
               canReply={!isMbp}
