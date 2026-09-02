@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button, Surface, TextArea, Typography } from 'alif-ui';
 
-import type { StockAssetComment } from '@entities/stock-asset';
+import type { AssetResource, StockAssetComment } from '@entities/stock-asset';
 import { useStockAssetComments } from '@entities/stock-asset';
-import { queryClient, useMutationQuery } from '@shared/api';
+import { type MutationVariables, queryClient, useMutationQuery } from '@shared/api';
 import { ConfirmModal } from '@shared/ui';
 
 import { StockAssetCommentItem } from './stock-asset-comment-item';
@@ -17,27 +17,27 @@ type CommentTarget = {
 
 const emptyTarget: CommentTarget = { comment: '', id: '', parentId: null, subCommentId: null };
 
-export const StockAssetComments = ({ assetId }: { assetId: string }) => {
+export const StockAssetComments = ({
+  assetId,
+  resource = 'stock-asset',
+}: {
+  assetId: string;
+  resource?: AssetResource;
+}) => {
   const [commentText, setCommentText] = useState('');
   const [replyTarget, setReplyTarget] = useState<CommentTarget | null>(null);
   const [editingTarget, setEditingTarget] = useState<CommentTarget | null>(null);
   const [removingComment, setRemovingComment] = useState<StockAssetComment | null>(null);
-  const commentsQuery = useStockAssetComments(assetId);
+  const commentsQuery = useStockAssetComments(assetId, true, resource);
+  const isMbp = resource === 'mbp';
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['stock-asset-comments', assetId] });
+    queryClient.invalidateQueries({ queryKey: ['asset-comments', resource, assetId] });
   const createComment = useMutationQuery<
     ApiResponse<unknown>,
-    {
-      body: {
-        comment: string;
-        parent_id: number | string | null;
-        sub_com_id: number | string | null;
-        warehouse_id: number;
-      };
-    }
+    MutationVariables<Record<string, unknown>>
   >({
     method: 'post',
-    url: '/os/comment/',
+    url: isMbp ? '/mbp/item/comment' : '/os/comment/',
     options: {
       onSuccess: () => {
         setCommentText('');
@@ -48,7 +48,7 @@ export const StockAssetComments = ({ assetId }: { assetId: string }) => {
   });
   const updateComment = useMutationQuery<
     ApiResponse<unknown>,
-    { body: { comment: string; id: number | string; warehouse_id: number } }
+    MutationVariables<Record<string, unknown>>
   >({
     method: 'put',
     url: '/os/comment/',
@@ -62,7 +62,7 @@ export const StockAssetComments = ({ assetId }: { assetId: string }) => {
   });
   const deleteComment = useMutationQuery<
     ApiResponse<unknown>,
-    { body: { id: number | string; warehouse_id: number } }
+    MutationVariables<Record<string, unknown>>
   >({
     method: 'delete',
     url: '/os/comment/',
@@ -99,17 +99,22 @@ export const StockAssetComments = ({ assetId }: { assetId: string }) => {
     if (!comment) return;
     if (editingTarget) {
       updateComment.mutate({
-        body: { comment, id: editingTarget.id, warehouse_id: Number(assetId) },
+        body: isMbp
+          ? { comment, id: editingTarget.id }
+          : { comment, id: editingTarget.id, warehouse_id: Number(assetId) },
+        url: isMbp ? `/mbp/comment/${editingTarget.id}` : undefined,
       });
       return;
     }
     createComment.mutate({
-      body: {
-        comment,
-        parent_id: replyTarget?.parentId ?? null,
-        sub_com_id: replyTarget?.subCommentId ?? null,
-        warehouse_id: Number(assetId),
-      },
+      body: isMbp
+        ? { comment, item_id: Number(assetId) }
+        : {
+            comment,
+            parent_id: replyTarget?.parentId ?? null,
+            sub_com_id: replyTarget?.subCommentId ?? null,
+            warehouse_id: Number(assetId),
+          },
     });
   };
 
@@ -184,6 +189,7 @@ export const StockAssetComments = ({ assetId }: { assetId: string }) => {
           {commentsQuery.comments.map((comment) => (
             <StockAssetCommentItem
               key={comment.id}
+              canReply={!isMbp}
               comment={comment}
               onReply={startReply}
               onEdit={startEdit}
@@ -202,7 +208,10 @@ export const StockAssetComments = ({ assetId }: { assetId: string }) => {
         onClose={() => setRemovingComment(null)}
         onConfirm={() =>
           removingComment &&
-          deleteComment.mutate({ body: { id: removingComment.id, warehouse_id: Number(assetId) } })
+          deleteComment.mutate({
+            body: isMbp ? undefined : { id: removingComment.id, warehouse_id: Number(assetId) },
+            url: isMbp ? `/mbp/comment/${removingComment.id}` : undefined,
+          })
         }
       />
     </>

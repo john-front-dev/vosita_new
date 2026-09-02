@@ -1,5 +1,4 @@
-import { Modal, OutlineSystemAlertCircle, Typography } from 'alif-ui';
-import type { ReactNode } from 'react';
+import { Modal, Typography } from 'alif-ui';
 
 import { useStockAssetHistoryDetails } from '@entities/stock-asset';
 import { formatDate, formatMoney } from '@shared/lib';
@@ -20,7 +19,6 @@ type HistoryField = {
 };
 
 type HistoryGroup = {
-  marker: ReactNode;
   fields: HistoryField[];
 };
 
@@ -83,15 +81,10 @@ const HistoryGroupValues = ({ group }: { group: HistoryGroup }) => {
   if (visibleFields.length === 0) return null;
 
   return (
-    <div className="flex items-start gap-3">
-      <div aria-hidden className="flex size-5 shrink-0 items-center justify-center">
-        {group.marker}
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
-        {visibleFields.map((field) => (
-          <HistoryFieldValues key={field.label} field={field} />
-        ))}
-      </div>
+    <div className="flex min-w-0 flex-col gap-3 border-t border-(--color-border-default) pt-4">
+      {visibleFields.map((field) => (
+        <HistoryFieldValues key={field.label} field={field} />
+      ))}
     </div>
   );
 };
@@ -107,7 +100,6 @@ export const StockAssetHistoryDetailsModal = ({
   const groups: HistoryGroup[] = history
     ? [
         {
-          marker: '₽',
           fields: [
             {
               label: 'Цена',
@@ -119,13 +111,6 @@ export const StockAssetHistoryDetailsModal = ({
           ],
         },
         {
-          marker: (
-            <OutlineSystemAlertCircle
-              width="20"
-              height="20"
-              className="fill-(--color-text-secondary)"
-            />
-          ),
           fields: [
             {
               label: 'Название',
@@ -165,7 +150,6 @@ export const StockAssetHistoryDetailsModal = ({
           ],
         },
         {
-          marker: '◯',
           fields: [
             {
               label: 'Сотрудник',
@@ -191,7 +175,6 @@ export const StockAssetHistoryDetailsModal = ({
           ],
         },
         {
-          marker: '⌖',
           fields: [
             {
               label: 'Здание',
@@ -217,7 +200,6 @@ export const StockAssetHistoryDetailsModal = ({
           ],
         },
         {
-          marker: '□',
           fields: [
             {
               label: 'Комментарий',
@@ -313,33 +295,23 @@ export const StockAssetHistoryDetailsModal = ({
               <HistoryGroupValues key={index} group={group} />
             ))}
             {hasValue(history.description) && (
-              <div className="flex items-start gap-3">
+              <div className="border-t border-(--color-border-default) pt-4">
                 <Typography
                   element="div"
                   category="body"
-                  proportions="sStrong"
-                  className="flex size-5 shrink-0 items-center justify-center text-(--color-text-disabled)"
+                  proportions="xsStrong"
+                  className="text-(--color-text-disabled)"
                 >
-                  □
+                  Описание
                 </Typography>
-                <div>
-                  <Typography
-                    element="div"
-                    category="body"
-                    proportions="xsStrong"
-                    className="text-(--color-text-disabled)"
-                  >
-                    Описание
-                  </Typography>
-                  <Typography
-                    element="div"
-                    category="body"
-                    proportions="s"
-                    className="mt-0.5 whitespace-pre-wrap text-(--color-text-body)"
-                  >
-                    {history.description}
-                  </Typography>
-                </div>
+                <Typography
+                  element="div"
+                  category="body"
+                  proportions="s"
+                  className="mt-0.5 whitespace-pre-wrap text-(--color-text-body)"
+                >
+                  {history.description}
+                </Typography>
               </div>
             )}
             {hasValue(history.last_image_update) && (

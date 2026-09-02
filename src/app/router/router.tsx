@@ -10,6 +10,7 @@ import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { LriPage } from '@pages/lri';
 import { MbpPage } from '@pages/mbp';
+import { MbpDetailsPage } from '@pages/mbp-details';
 import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
@@ -73,7 +74,7 @@ const appRoutes = [
   { path: routes.mbp, element: withAccess(<MbpPage />, accessRules.mbp) },
   {
     path: routes.mbpDetails,
-    element: withAccess(<PlaceholderPage title="МБП" />, accessRules.mbp),
+    element: withAccess(<MbpDetailsPage />, accessRules.mbp),
   },
   {
     path: routes.categories,

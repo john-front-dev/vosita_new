@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { Surface, Typography } from 'alif-ui';
+import { Pagination, Surface, Typography } from 'alif-ui';
 
-import { useStockAssetHistory } from '@entities/stock-asset';
+import { type AssetResource, useStockAssetHistory } from '@entities/stock-asset';
 import { formatDate } from '@shared/lib';
 
 import { StockAssetHistoryDetailsModal } from './stock-asset-history-details-modal';
 
-export const StockAssetHistory = ({ assetId }: { assetId: string }) => {
-  const historyQuery = useStockAssetHistory(assetId);
+export const StockAssetHistory = ({
+  assetId,
+  resource = 'stock-asset',
+}: {
+  assetId: string;
+  resource?: AssetResource;
+}) => {
+  const [page, setPage] = useState(1);
+  const historyQuery = useStockAssetHistory(assetId, true, resource, page);
   const [selectedHistoryId, setSelectedHistoryId] = useState<number | string | null>(null);
 
   return (
@@ -31,7 +38,7 @@ export const StockAssetHistory = ({ assetId }: { assetId: string }) => {
           key={item.history_id}
           type="button"
           onClick={() => setSelectedHistoryId(item.history_id)}
-          className="grid w-full cursor-pointer gap-4 rounded-lg border border-(--color-border-default) bg-white px-5 py-4 text-left transition-colors hover:border-(--color-primary) hover:bg-(--color-bg-subtle) sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto] sm:items-center"
+          className="grid w-full cursor-pointer grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-(--color-border-default) bg-white px-5 py-4 text-left transition-colors hover:border-(--color-primary) hover:bg-(--color-bg-subtle)"
         >
           <div className="min-w-0">
             <Typography
@@ -69,7 +76,7 @@ export const StockAssetHistory = ({ assetId }: { assetId: string }) => {
               {item.initiator_name || '-'}
             </Typography>
           </div>
-          <div className="sm:text-right">
+          <div className="text-right">
             <Typography
               element="div"
               category="body"
@@ -89,6 +96,20 @@ export const StockAssetHistory = ({ assetId }: { assetId: string }) => {
           </div>
         </button>
       ))}
+      {resource === 'mbp' && historyQuery.totalPages > 1 && (
+        <Pagination
+          className="mt-3 flex justify-center"
+          currentPage={historyQuery.currentPage}
+          pageSize={10}
+          totalCount={historyQuery.totalCount}
+          onPageChange={setPage}
+          size="m"
+          variant="default"
+          rounded
+          showFirstLastButton
+          showPages
+        />
+      )}
       <StockAssetHistoryDetailsModal
         historyId={selectedHistoryId}
         onClose={() => setSelectedHistoryId(null)}

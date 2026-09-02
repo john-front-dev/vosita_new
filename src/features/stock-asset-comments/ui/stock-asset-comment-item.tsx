@@ -5,6 +5,7 @@ import type { StockAssetComment } from '@entities/stock-asset';
 import { formatDate } from '@shared/lib';
 
 type StockAssetCommentItemProps = {
+  canReply?: boolean;
   comment: StockAssetComment;
   parentComment?: StockAssetComment;
   onDelete: (comment: StockAssetComment) => void;
@@ -14,6 +15,7 @@ type StockAssetCommentItemProps = {
 
 export const StockAssetCommentItem = ({
   comment,
+  canReply = true,
   parentComment,
   onDelete,
   onEdit,
@@ -77,16 +79,18 @@ export const StockAssetCommentItem = ({
           >
             {comment.comment}
           </Typography>
-          <div className="mt-3 flex flex-wrap gap-1">
-            <Button
-              type="button"
-              variant="tertiary"
-              size="s"
-              onClick={() => onReply(comment, parentComment)}
-            >
-              Ответить
-            </Button>
-          </div>
+          {canReply && (
+            <div className="mt-3 flex flex-wrap gap-1">
+              <Button
+                type="button"
+                variant="tertiary"
+                size="s"
+                onClick={() => onReply(comment, parentComment)}
+              >
+                Ответить
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       {repliesCount > 0 && (
@@ -105,6 +109,7 @@ export const StockAssetCommentItem = ({
                 <StockAssetCommentItem
                   key={reply.id}
                   comment={reply}
+                  canReply={canReply}
                   parentComment={parentComment ?? comment}
                   onReply={onReply}
                   onEdit={onEdit}

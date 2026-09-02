@@ -55,13 +55,18 @@ export type StockAssetComment = {
   childrenID?: Array<number | string>;
   comment: string;
   date?: number | string;
+  created_at?: number | string;
+  employee_name?: string;
   full_name?: string;
   id: number | string;
   is_edit?: boolean;
+  is_edited?: boolean;
   parent_id?: number | string | null;
   replies?: StockAssetComment[];
   sub_com_id?: number | string | null;
 };
+
+export type AssetResource = 'mbp' | 'stock-asset';
 
 export type StockAsset = {
   application_id?: number | string;
@@ -98,7 +103,10 @@ export type StockAsset = {
 export type StockAssetResponse = ApiResponse<StockAsset>;
 export type StockAssetHistoryResponse = ApiResponse<{
   historyList?: StockAssetHistoryItem[];
+  page?: number;
   payload?: StockAssetHistoryItem[];
+  totalItems?: number;
+  totalPages?: number;
 }> & {
   historyList?: StockAssetHistoryItem[];
 };
