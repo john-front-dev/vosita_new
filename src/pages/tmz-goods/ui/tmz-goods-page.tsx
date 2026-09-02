@@ -18,10 +18,10 @@ export const TmzGoodsPage = () => {
   const storageId = Number(storageIdParam) || 0;
   const isWarehouseManager = Boolean(getStoredUser()?.is_warehouse_manager);
   const { pagination, queryParams, searchText, setSearchText } = useUrlListState();
-  const categoryQuery = useTmzCategoryOptions(Boolean(categoryId));
+  const { categories } = useTmzCategoryOptions(Boolean(categoryId));
   const categoryName =
-    categoryQuery.categories.find((category) => Number(category.id) === categoryId)?.name ?? '';
-  const goodsQuery = useTmzGoods({
+    categories.find((category) => Number(category.id) === categoryId)?.name ?? '';
+  const { goods, isFetching, isLoading, totalCount, totalQuantity } = useTmzGoods({
     categoryId,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -93,7 +93,7 @@ export const TmzGoodsPage = () => {
             proportions="s"
             className="mt-1 text-(--color-text-secondary)"
           >
-            Общее количество остатков: {goodsQuery.totalQuantity.toLocaleString('ru-RU')} шт
+            Общее количество остатков: {totalQuantity.toLocaleString('ru-RU')} шт
           </Typography>
         </div>
         {isWarehouseManager && <TmzCartDrawer />}
@@ -113,16 +113,16 @@ export const TmzGoodsPage = () => {
         <DataTable
           accessorId="goods_id"
           columns={columns}
-          records={goodsQuery.goods}
-          isFetching={goodsQuery.isFetching}
-          isLoading={goodsQuery.isLoading}
+          records={goods}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={handleRowClick}
           emptyPlaceholder={
             queryParams.searchText
               ? `По поиску «${queryParams.searchText}» ничего не найдено.`
               : 'Список товаров ТМЗ пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: goodsQuery.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>

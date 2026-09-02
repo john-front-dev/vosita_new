@@ -135,15 +135,13 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     typeParamKey: 'status',
   });
 
-  const detailsQuery = useApplicationDetails({
+  const { details, isFetching, isLoading, records, totalCount } = useApplicationDetails({
     id,
     limit: queryParams.limit,
     page: queryParams.page,
     status,
   });
 
-  const details = detailsQuery.details;
-  const records = detailsQuery.records;
   const canManage = getCanManage(user, accesses);
   const canIssueToStock = getCanIssueToStock(user, accesses);
   const selectable =
@@ -400,12 +398,12 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
                 selectedRecords={selectable ? selectedIds : undefined}
                 onSelectedRecordsChange={selectable ? setSelectedIds : undefined}
                 onRowClick={selectable ? handleRowClick : undefined}
-                isFetching={detailsQuery.isFetching}
-                isLoading={detailsQuery.isLoading}
+                isFetching={isFetching}
+                isLoading={isLoading}
                 emptyPlaceholder="Пока нет объектов."
                 pagination={{
                   ...pagination,
-                  totalCount: detailsQuery.totalCount,
+                  totalCount,
                 }}
                 tableClassNames={{
                   root: 'min-w-full',

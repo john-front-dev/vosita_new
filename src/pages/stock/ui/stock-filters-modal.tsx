@@ -49,8 +49,16 @@ export const StockFiltersModal = ({
   warehouses,
 }: StockFiltersModalProps) => {
   const [localFilters, setLocalFilters] = useState<StockFilters>(filters);
-  const categoriesQuery = useCategories('', isOpen);
-  const warehouseManagersQuery = useWarehouseManagers(localFilters.BUILDING_ID[0], '', isOpen);
+  const {
+    categories,
+    isFetching: isCategoriesFetching,
+    isLoading: isCategoriesLoading,
+  } = useCategories('', isOpen);
+  const {
+    warehouseManagers,
+    isFetching: isManagersFetching,
+    isLoading: isManagersLoading,
+  } = useWarehouseManagers(localFilters.BUILDING_ID[0], '', isOpen);
 
   const cityOptions = useMemo(() => buildDepartmentOptions(warehouses), [warehouses]);
   const buildingOptions = useMemo(
@@ -112,7 +120,7 @@ export const StockFiltersModal = ({
           label="Категория"
           className="order-2"
           value={localFilters.CATEGORY_ID[0] || null}
-          options={categoriesQuery.categories.map((category) => ({
+          options={categories.map((category) => ({
             label: category.name,
             value: String(category.id),
           }))}
@@ -123,13 +131,13 @@ export const StockFiltersModal = ({
             }))
           }
           fullWidth
-          isLoading={categoriesQuery.isLoading || categoriesQuery.isFetching}
+          isLoading={isCategoriesLoading || isCategoriesFetching}
         />
         <Select
           label="Заведующий складом"
           className="order-1"
           value={localFilters.WAREHOUSE_MANAGER_ID[0] || null}
-          options={warehouseManagersQuery.warehouseManagers.map((manager) => ({
+          options={warehouseManagers.map((manager) => ({
             label: manager.user_name,
             value: manager.user_id,
           }))}
@@ -142,7 +150,7 @@ export const StockFiltersModal = ({
             }))
           }
           fullWidth
-          isLoading={warehouseManagersQuery.isLoading || warehouseManagersQuery.isFetching}
+          isLoading={isManagersLoading || isManagersFetching}
           disabled={!localFilters.BUILDING_ID.length}
         />
         <Select

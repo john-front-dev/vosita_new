@@ -41,9 +41,9 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
       ]),
     );
   });
-  const employeesQuery = useEmployees('', !isTmz);
-  const categoriesQuery = useCategories('', !isTmz && !isMbp);
-  const mbpCategoriesQuery = useMbpCategories('', !isTmz && isMbp);
+  const { employees } = useEmployees('', !isTmz);
+  const { categories: fixedAssetCategories } = useCategories('', !isTmz && !isMbp);
+  const { categories: mbpCategories } = useMbpCategories('', !isTmz && isMbp);
   const operation = useTmzGoodOperation('cart', undefined, onSuccess);
   const sourceSubdivisions = useMemo(
     () =>
@@ -53,7 +53,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
       ),
     [items],
   );
-  const categories = isMbp ? mbpCategoriesQuery.categories : categoriesQuery.categories;
+  const categories = isMbp ? mbpCategories : fixedAssetCategories;
 
   const updatePartyField = (itemId: number, index: number, patch: Partial<PartyField>) =>
     setPartyFields((current) => ({
@@ -168,7 +168,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
                 <Select
                   label="Ответственное лицо"
                   value={field.responsibleId || null}
-                  options={employeesQuery.employees.map((employee) => ({
+                  options={employees.map((employee) => ({
                     label: employee.full_name,
                     value: String(employee.id),
                   }))}
@@ -182,7 +182,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
                 <Select
                   label="Пользователь"
                   value={field.exploiterId || null}
-                  options={employeesQuery.employees.map((employee) => ({
+                  options={employees.map((employee) => ({
                     label: employee.full_name,
                     value: String(employee.id),
                   }))}

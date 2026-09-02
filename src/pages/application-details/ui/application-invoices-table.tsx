@@ -41,7 +41,7 @@ const getInvoiceItems = (invoice: ApplicationInvoice): InvoiceItemRecord[] =>
 export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTableProps) => {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
-  const invoicesQuery = useGetQuery<ApplicationInvoicesResponse>({
+  const { data, isFetching, isLoading } = useGetQuery<ApplicationInvoicesResponse>({
     queryKey: ['application-invoices', requestId],
     url: requestId ? applicationEndpoints.invoices(requestId) : '',
     options: {
@@ -49,7 +49,7 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
     },
   });
 
-  const invoices = invoicesQuery.data?.payload ?? [];
+  const invoices = data?.payload ?? [];
 
   const invoiceColumns = useMemo<DataTableProps<ApplicationInvoice>['columns']>(
     () => [
@@ -135,8 +135,8 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
       className="flex flex-1 flex-col"
       columns={invoiceColumns}
       records={invoices}
-      isFetching={invoicesQuery.isFetching}
-      isLoading={invoicesQuery.isLoading}
+      isFetching={isFetching}
+      isLoading={isLoading}
       emptyPlaceholder="Пока нет накладных."
       rowExpansion={{
         content: (invoice) => {

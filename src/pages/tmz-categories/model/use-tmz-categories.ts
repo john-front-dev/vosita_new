@@ -45,19 +45,27 @@ export const useTmzCategories = ({
       storageId,
     ],
   );
-  const listQuery = useGetQuery<TmzCategoriesResponse>({
+  const {
+    data: listData,
+    isFetching: isListFetching,
+    isLoading: isListLoading,
+  } = useGetQuery<TmzCategoriesResponse>({
     queryKey: ['tmz-categories'],
     url: tmzCategoriesEndpoints.list,
     params: listParams,
     options: { enabled: Boolean(storageId) },
   });
-  const searchQuery = useGetQuery<TmzSearchResponse>({
+  const {
+    data: searchData,
+    isFetching: isSearchFetching,
+    isLoading: isSearchLoading,
+  } = useGetQuery<TmzSearchResponse>({
     queryKey: ['tmz-categories-search'],
     url: tmzCategoriesEndpoints.search,
     params: { search: normalizedSearch, storage_id: storageId },
     options: { enabled: Boolean(storageId && normalizedSearch) },
   });
-  const payload = listQuery.data?.payload;
+  const payload = listData?.payload;
 
   const listRows = useMemo<TmzCategoryRow[]>(
     () =>
@@ -76,7 +84,7 @@ export const useTmzCategories = ({
 
   const searchRows = useMemo<TmzCategoryRow[]>(
     () =>
-      (searchQuery.data?.payload ?? []).flatMap((category) => [
+      (searchData?.payload ?? []).flatMap((category) => [
         {
           categoryId: category.category_id,
           displayId: category.category_id,
@@ -107,12 +115,12 @@ export const useTmzCategories = ({
           unit: good.unit,
         })),
       ]),
-    [searchQuery.data?.payload, storageId],
+    [searchData?.payload, storageId],
   );
 
   return {
-    isFetching: normalizedSearch ? searchQuery.isFetching : listQuery.isFetching,
-    isLoading: normalizedSearch ? searchQuery.isLoading : listQuery.isLoading,
+    isFetching: normalizedSearch ? isSearchFetching : isListFetching,
+    isLoading: normalizedSearch ? isSearchLoading : isListLoading,
     isSearching: Boolean(normalizedSearch),
     rows: normalizedSearch ? searchRows : listRows,
     totalCount: payload?.total_count ?? (payload?.total_pages ?? 0) * limit,

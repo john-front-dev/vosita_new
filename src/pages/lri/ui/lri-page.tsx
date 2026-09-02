@@ -37,15 +37,15 @@ export const LriPage = () => {
     () => ({ ...lriDefaultFilters, ...filters }),
     [filters],
   );
-  const citiesQuery = useCities('', Boolean(lriFilters.CITY_ID[0]));
-  const buildingsQuery = useBuildings(
+  const { cities } = useCities('', Boolean(lriFilters.CITY_ID[0]));
+  const { buildings } = useBuildings(
     lriFilters.CITY_ID[0],
     '',
     Boolean(lriFilters.BUILDING_ID[0]),
   );
   const appliedFilters = useMemo(
-    () => getAppliedLriFilters(lriFilters, citiesQuery.cities, buildingsQuery.buildings),
-    [buildingsQuery.buildings, citiesQuery.cities, lriFilters],
+    () => getAppliedLriFilters(lriFilters, cities, buildings),
+    [buildings, cities, lriFilters],
   );
   const lriList = useLriList({
     filters: lriFilters,

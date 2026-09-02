@@ -36,10 +36,11 @@ export const MbpPage = () => {
     () => ({ ...mbpDefaultFilters, ...filters }),
     [filters],
   );
-  const filterOptionsQuery = useMbpFilterOptions();
+  const { records, isFetching: isFiltersFetching, isLoading: isFiltersLoading } =
+    useMbpFilterOptions();
   const appliedFilters = useMemo(
-    () => getAppliedMbpFilters(mbpFilters, filterOptionsQuery.records),
-    [filterOptionsQuery.records, mbpFilters],
+    () => getAppliedMbpFilters(mbpFilters, records),
+    [mbpFilters, records],
   );
   const mbpList = useMbpList({
     filters: mbpFilters,
@@ -138,7 +139,7 @@ export const MbpPage = () => {
           />
           <MbpFilters
             filters={mbpFilters}
-            isLoading={filterOptionsQuery.isLoading || filterOptionsQuery.isFetching}
+            isLoading={isFiltersLoading || isFiltersFetching}
             isOpen={isFiltersOpen}
             onClick={() => setIsFiltersOpen(true)}
             onApply={(nextFilters) => {
@@ -146,7 +147,7 @@ export const MbpPage = () => {
               setIsFiltersOpen(false);
             }}
             onClose={() => setIsFiltersOpen(false)}
-            records={filterOptionsQuery.records}
+            records={records}
           />
         </div>
 

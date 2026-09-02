@@ -22,18 +22,20 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
   const [warehouseId, setWarehouseId] = useState('');
   const remain = remains[0];
   const amount = Number(quantity);
-  const citiesQuery = useCities('', isOpen);
-  const buildingsQuery = useBuildings(cityId, '', isOpen);
-  const warehousesQuery = useAllWarehouses(isOpen && Boolean(buildingId));
+  const { cities, isLoading: isCitiesLoading } = useCities('', isOpen);
+  const { buildings, isLoading: isBuildingsLoading } = useBuildings(cityId, '', isOpen);
+  const { warehouses, isLoading: isWarehousesLoading } = useAllWarehouses(
+    isOpen && Boolean(buildingId),
+  );
   const operation = useTmzGoodOperation('move', goodsId, onClose);
   const targetWarehouses = useMemo(
     () =>
-      warehousesQuery.warehouses.filter((warehouse) =>
+      warehouses.filter((warehouse) =>
         buildingId
           ? Number(warehouse.subdivision_id ?? warehouse.sub_id) === Number(buildingId)
           : true,
       ),
-    [buildingId, warehousesQuery.warehouses],
+    [buildingId, warehouses],
   );
   const hasInvalidQuantity = !remain || !amount || amount <= 0 || amount > remain.total_qty;
   const isInvalid = !cityId || !buildingId || !warehouseId || hasInvalidQuantity;
@@ -91,7 +93,7 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
         <Select
           label="В город"
           value={cityId || null}
-          options={citiesQuery.cities.map((city) => ({
+          options={cities.map((city) => ({
             label: city.name,
             value: String(city.id),
           }))}
@@ -100,13 +102,13 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
             setBuildingId('');
             setWarehouseId('');
           }}
-          isLoading={citiesQuery.isLoading}
+          isLoading={isCitiesLoading}
           fullWidth
         />
         <Select
           label="В здание"
           value={buildingId || null}
-          options={buildingsQuery.buildings.map((building) => ({
+          options={buildings.map((building) => ({
             label: building.name ?? building.build ?? '',
             value: String(building.id),
           }))}
@@ -114,7 +116,7 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
             setBuildingId(normalizeSelectValue(value));
             setWarehouseId('');
           }}
-          isLoading={buildingsQuery.isLoading}
+          isLoading={isBuildingsLoading}
           disabled={!cityId}
           fullWidth
         />
@@ -126,7 +128,7 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
             value: String(warehouse.storage_id ?? warehouse.id),
           }))}
           onChange={(value) => setWarehouseId(normalizeSelectValue(value))}
-          isLoading={warehousesQuery.isLoading}
+          isLoading={isWarehousesLoading}
           disabled={!buildingId}
           fullWidth
         />

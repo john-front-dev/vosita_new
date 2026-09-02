@@ -49,7 +49,9 @@ export const SubrequestModal = ({
   subrequest,
 }: SubrequestModalProps) => {
   const isEditMode = Boolean(subrequest);
-  const categoriesQuery = useTmzCategories({ enabled: isOpen && !isEditMode });
+  const { categories, isLoading: isCategoriesLoading } = useTmzCategories({
+    enabled: isOpen && !isEditMode,
+  });
   const formDefaultValues = useMemo<SubrequestFormValues>(
     () => ({
       categoryId: subrequest?.tmz_cat_id ? String(subrequest.tmz_cat_id) : '',
@@ -194,7 +196,7 @@ export const SubrequestModal = ({
                   <Select
                     label="Категория"
                     value={field.value || null}
-                    options={categoriesQuery.categories.map((category) => ({
+                    options={categories.map((category) => ({
                       label: category.name,
                       value: String(category.id),
                     }))}
@@ -202,7 +204,7 @@ export const SubrequestModal = ({
                     hasError={Boolean(errors.categoryId)}
                     hintText={errors.categoryId?.message}
                     isHintAlwaysShown={Boolean(errors.categoryId)}
-                    isLoading={categoriesQuery.isLoading}
+                    isLoading={isCategoriesLoading}
                     fullWidth
                   />
                 )}

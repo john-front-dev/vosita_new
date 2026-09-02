@@ -20,19 +20,20 @@ const LriFiltersModal = ({
   onClose,
 }: Omit<LriFiltersProps, 'isOpen' | 'onClick'>) => {
   const [localFilters, setLocalFilters] = useState<LriFiltersValues>(filters);
-  const citiesQuery = useCities();
-  const buildingsQuery = useBuildings(localFilters.CITY_ID[0]);
+  const { cities, isFetching: isCitiesFetching, isLoading: isCitiesLoading } = useCities();
+  const { buildings, isFetching: isBuildingsFetching, isLoading: isBuildingsLoading } =
+    useBuildings(localFilters.CITY_ID[0]);
   const cityOptions = useMemo(
-    () => citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
-    [citiesQuery.cities],
+    () => cities.map((city) => ({ label: city.name, value: String(city.id) })),
+    [cities],
   );
   const buildingOptions = useMemo(
     () =>
-      buildingsQuery.buildings.map((building) => ({
+      buildings.map((building) => ({
         label: building.name ?? building.build ?? '-',
         value: String(building.id),
       })),
-    [buildingsQuery.buildings],
+    [buildings],
   );
 
   return (
@@ -59,7 +60,7 @@ const LriFiltersModal = ({
             }));
           }}
           fullWidth
-          isLoading={citiesQuery.isLoading || citiesQuery.isFetching}
+          isLoading={isCitiesLoading || isCitiesFetching}
         />
         <Select
           label="Здание"
@@ -74,7 +75,7 @@ const LriFiltersModal = ({
           }}
           fullWidth
           disabled={!localFilters.CITY_ID.length}
-          isLoading={buildingsQuery.isLoading || buildingsQuery.isFetching}
+          isLoading={isBuildingsLoading || isBuildingsFetching}
         />
       </Modal.Content>
       <Modal.Actions className="flex justify-end">

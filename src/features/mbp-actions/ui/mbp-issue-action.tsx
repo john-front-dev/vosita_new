@@ -19,8 +19,8 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
     resolver: zodResolver(mbpIssueSchema),
   });
   const values = useWatch({ control: form.control });
-  const employeesQuery = useEmployees('', isOpen);
-  const cabinetsQuery = useCabinets(String(mbp.subdivision_id ?? ''), '', isOpen);
+  const { employees } = useEmployees('', isOpen);
+  const { cabinets } = useCabinets(String(mbp.subdivision_id ?? ''), '', isOpen);
   const action = useMbpIssueToEmployee({ id: mbp.id, onSuccess: () => setIsOpen(false) });
 
   return (
@@ -49,7 +49,7 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
           <Select
             label="Ответственное лицо"
             value={values.responsibleId || null}
-            options={employeesQuery.employees.map((employee) => ({
+            options={employees.map((employee) => ({
               label: employee.full_name,
               value: String(employee.id),
             }))}
@@ -61,7 +61,7 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
           <Select
             label="Сотрудник"
             value={values.employeeId || null}
-            options={employeesQuery.employees.map((employee) => ({
+            options={employees.map((employee) => ({
               label: employee.full_name,
               value: String(employee.id),
             }))}
@@ -73,7 +73,7 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
           <Select
             label="Кабинет"
             value={values.roomId || null}
-            options={cabinetsQuery.cabinets.map((room) => ({
+            options={cabinets.map((room) => ({
               label: room.room,
               value: String(room.id),
             }))}

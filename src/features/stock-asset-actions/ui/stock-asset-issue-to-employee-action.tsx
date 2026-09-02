@@ -20,7 +20,7 @@ export const StockAssetIssueToEmployeeAction = ({ asset, type }: Props) => {
     resolver: zodResolver(issueSchema),
   });
   const values = useWatch({ control: form.control });
-  const employeesQuery = useEmployees('', isOpen);
+  const { employees } = useEmployees('', isOpen);
   const action = useStockAssetIssue({ assetId: asset.id, type, onSuccess: () => setIsOpen(false) });
   const isAccepting = asset.status_id === 19;
   const open = () => {
@@ -51,7 +51,7 @@ export const StockAssetIssueToEmployeeAction = ({ asset, type }: Props) => {
           <Select
             label="Ответственное лицо"
             value={values.userId || null}
-            options={employeesQuery.employees.map((item) => ({
+            options={employees.map((item) => ({
               label: item.full_name,
               value: String(item.id),
             }))}

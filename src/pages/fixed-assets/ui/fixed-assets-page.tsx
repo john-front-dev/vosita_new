@@ -41,14 +41,14 @@ export const FixedAssetsPage = () => {
     () => ({ ...fixedAssetsDefaultFilters, ...filters }),
     [filters],
   );
-  const citiesQuery = useCities('', Boolean(fixedAssetsFilters.CITY_ID[0]));
-  const categoriesQuery = useCategories('', Boolean(fixedAssetsFilters.CATEGORY_ID[0]));
-  const buildingsQuery = useBuildings(
+  const { cities } = useCities('', Boolean(fixedAssetsFilters.CITY_ID[0]));
+  const { categories } = useCategories('', Boolean(fixedAssetsFilters.CATEGORY_ID[0]));
+  const { buildings } = useBuildings(
     fixedAssetsFilters.CITY_ID[0],
     '',
     Boolean(fixedAssetsFilters.BUILDING_ID[0]),
   );
-  const cabinetsQuery = useCabinets(
+  const { cabinets } = useCabinets(
     fixedAssetsFilters.BUILDING_ID[0],
     '',
     Boolean(fixedAssetsFilters.CABINET_ID[0]),
@@ -57,16 +57,16 @@ export const FixedAssetsPage = () => {
     () =>
       getAppliedFixedAssetsFilters(
         fixedAssetsFilters,
-        citiesQuery.cities,
-        buildingsQuery.buildings,
-        cabinetsQuery.cabinets,
-        categoriesQuery.categories,
+        cities,
+        buildings,
+        cabinets,
+        categories,
       ),
     [
-      buildingsQuery.buildings,
-      cabinetsQuery.cabinets,
-      categoriesQuery.categories,
-      citiesQuery.cities,
+      buildings,
+      cabinets,
+      categories,
+      cities,
       fixedAssetsFilters,
     ],
   );

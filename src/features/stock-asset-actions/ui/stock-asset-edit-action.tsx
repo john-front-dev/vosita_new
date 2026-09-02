@@ -48,11 +48,11 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
   const fixedValues = useWatch({ control: fixedAssetForm.control });
   const lriValues = useWatch({ control: lriForm.control });
   const isFixedAsset = type === 'fixed-assets';
-  const categoriesQuery = useCategories('', isOpen && isFixedAsset);
-  const citiesQuery = useCities('', isOpen && isFixedAsset);
-  const buildingsQuery = useBuildings(cityId, '', isOpen && isFixedAsset);
-  const cabinetsQuery = useCabinets(buildingId, '', isOpen && isFixedAsset);
-  const employeesQuery = useEmployees('', isOpen && isFixedAsset);
+  const { categories } = useCategories('', isOpen && isFixedAsset);
+  const { cities } = useCities('', isOpen && isFixedAsset);
+  const { buildings } = useBuildings(cityId, '', isOpen && isFixedAsset);
+  const { cabinets } = useCabinets(buildingId, '', isOpen && isFixedAsset);
+  const { employees } = useEmployees('', isOpen && isFixedAsset);
   const action = useStockAssetEdit({ assetId: asset.id, type, onSuccess: () => setIsOpen(false) });
 
   const submitFixedAsset: SubmitHandler<FixedAssetEditFormValues> = (values) =>
@@ -131,7 +131,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               <Select
                 label="Категория"
                 value={fixedValues.categoryId || null}
-                options={categoriesQuery.categories.map((item) => ({
+                options={categories.map((item) => ({
                   label: item.name,
                   value: String(item.id),
                 }))}
@@ -146,7 +146,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                 <Select
                   label="Заведующий складом"
                   value={fixedValues.responsiblePersonId || null}
-                  options={employeesQuery.employees.map((item) => ({
+                  options={employees.map((item) => ({
                     label: item.full_name,
                     value: String(item.id),
                   }))}
@@ -160,7 +160,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                   <Select
                     label="Ответственное лицо"
                     value={fixedValues.responsiblePersonId || null}
-                    options={employeesQuery.employees.map((item) => ({
+                    options={employees.map((item) => ({
                       label: item.full_name,
                       value: String(item.id),
                     }))}
@@ -172,7 +172,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                   <Select
                     label="Пользователь"
                     value={fixedValues.exploiterId || null}
-                    options={employeesQuery.employees.map((item) => ({
+                    options={employees.map((item) => ({
                       label: item.full_name,
                       value: String(item.id),
                     }))}
@@ -186,7 +186,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               <Select
                 label="Город"
                 value={cityId || null}
-                options={citiesQuery.cities.map((item) => ({
+                options={cities.map((item) => ({
                   label: item.name,
                   value: String(item.id),
                 }))}
@@ -202,7 +202,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               <Select
                 label="Здание"
                 value={buildingId || null}
-                options={buildingsQuery.buildings.map((item) => ({
+                options={buildings.map((item) => ({
                   label: item.name ?? item.build ?? '',
                   value: String(item.id),
                 }))}
@@ -218,7 +218,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               <Select
                 label="Кабинет"
                 value={fixedValues.cabinetId || null}
-                options={cabinetsQuery.cabinets.map((item) => ({
+                options={cabinets.map((item) => ({
                   label: item.room,
                   value: String(item.id),
                 }))}

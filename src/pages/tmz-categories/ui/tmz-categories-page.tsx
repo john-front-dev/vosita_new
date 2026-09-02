@@ -36,9 +36,15 @@ export const TmzCategoriesPage = () => {
     filterKeys: Object.keys(tmzCategoriesDefaultFilters) as TmzCategoriesFilterKey[],
   });
   const filters = { ...tmzCategoriesDefaultFilters, ...urlFilters };
-  const citiesQuery = useCities('', Boolean(filters.CITY_ID[0]));
-  const buildingsQuery = useBuildings(filters.CITY_ID[0], '', Boolean(filters.BUILDING_ID[0]));
-  const filterCategoriesQuery = useTmzCategoryOptions(Boolean(filters.CATEGORY_ID[0]));
+  const { cities } = useCities('', Boolean(filters.CITY_ID[0]));
+  const { buildings } = useBuildings(
+    filters.CITY_ID[0],
+    '',
+    Boolean(filters.BUILDING_ID[0]),
+  );
+  const { categories: filterCategories } = useTmzCategoryOptions(
+    Boolean(filters.CATEGORY_ID[0]),
+  );
   const categories = useTmzCategories({
     filters,
     limit: queryParams.limit,
@@ -52,16 +58,16 @@ export const TmzCategoriesPage = () => {
         filters.CITY_ID[0] && {
           key: 'CITY_ID' as const,
           label:
-            citiesQuery.cities.find((city) => String(city.id) === filters.CITY_ID[0])?.name ??
+            cities.find((city) => String(city.id) === filters.CITY_ID[0])?.name ??
             filters.CITY_ID[0],
         },
         filters.BUILDING_ID[0] && {
           key: 'BUILDING_ID' as const,
           label:
-            buildingsQuery.buildings.find(
+            buildings.find(
               (building) => String(building.id) === filters.BUILDING_ID[0],
             )?.name ??
-            buildingsQuery.buildings.find(
+            buildings.find(
               (building) => String(building.id) === filters.BUILDING_ID[0],
             )?.build ??
             filters.BUILDING_ID[0],
@@ -69,7 +75,7 @@ export const TmzCategoriesPage = () => {
         filters.CATEGORY_ID[0] && {
           key: 'CATEGORY_ID' as const,
           label:
-            filterCategoriesQuery.categories.find(
+            filterCategories.find(
               (category) => String(category.id) === filters.CATEGORY_ID[0],
             )?.name ?? filters.CATEGORY_ID[0],
         },
@@ -81,9 +87,9 @@ export const TmzCategoriesPage = () => {
         Boolean(filter),
       ),
     [
-      buildingsQuery.buildings,
-      citiesQuery.cities,
-      filterCategoriesQuery.categories,
+      buildings,
+      cities,
+      filterCategories,
       filters.BUILDING_ID,
       filters.CATEGORY_ID,
       filters.CITY_ID,

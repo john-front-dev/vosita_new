@@ -26,21 +26,26 @@ const TmzCategoriesFiltersModal = ({
   onClose,
 }: TmzCategoriesFiltersModalProps) => {
   const [localFilters, setLocalFilters] = useState<TmzCategoriesFiltersValues>(filters);
-  const citiesQuery = useCities();
-  const buildingsQuery = useBuildings(localFilters.CITY_ID[0]);
-  const categoriesQuery = useTmzCategoryOptions();
+  const { cities, isFetching: isCitiesFetching, isLoading: isCitiesLoading } = useCities();
+  const { buildings, isFetching: isBuildingsFetching, isLoading: isBuildingsLoading } =
+    useBuildings(localFilters.CITY_ID[0]);
+  const {
+    categories,
+    isFetching: isCategoriesFetching,
+    isLoading: isCategoriesLoading,
+  } = useTmzCategoryOptions();
 
   const cityOptions = useMemo(
-    () => citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
-    [citiesQuery.cities],
+    () => cities.map((city) => ({ label: city.name, value: String(city.id) })),
+    [cities],
   );
   const buildingOptions = useMemo(
     () =>
-      buildingsQuery.buildings.map((building) => ({
+      buildings.map((building) => ({
         label: building.name ?? building.build ?? '-',
         value: String(building.id),
       })),
-    [buildingsQuery.buildings],
+    [buildings],
   );
 
   return (
@@ -68,7 +73,7 @@ const TmzCategoriesFiltersModal = ({
             }));
           }}
           fullWidth
-          isLoading={citiesQuery.isLoading || citiesQuery.isFetching}
+          isLoading={isCitiesLoading || isCitiesFetching}
           proportions="m"
         />
         <Select
@@ -84,14 +89,14 @@ const TmzCategoriesFiltersModal = ({
             }));
           }}
           fullWidth
-          isLoading={buildingsQuery.isLoading || buildingsQuery.isFetching}
+          isLoading={isBuildingsLoading || isBuildingsFetching}
           disabled={!localFilters.CITY_ID.length}
           proportions="m"
         />
         <Select
           label="Категория"
           value={localFilters.CATEGORY_ID[0] || null}
-          options={categoriesQuery.categories.map((category) => ({
+          options={categories.map((category) => ({
             label: category.name,
             value: String(category.id),
           }))}
@@ -104,7 +109,7 @@ const TmzCategoriesFiltersModal = ({
             }));
           }}
           fullWidth
-          isLoading={categoriesQuery.isLoading || categoriesQuery.isFetching}
+          isLoading={isCategoriesLoading || isCategoriesFetching}
           proportions="m"
         />
         <div className="flex items-center pt-5">

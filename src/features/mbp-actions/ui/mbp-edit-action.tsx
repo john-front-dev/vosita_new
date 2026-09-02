@@ -60,40 +60,41 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
     resolver: zodResolver(mbpEditSchema),
   });
   const values = useWatch({ control: form.control });
-  const categoriesQuery = useMbpCategories('', isOpen);
-  const employeesQuery = useEmployees('', isOpen);
-  const citiesQuery = useCities('', isOpen);
-  const buildingsQuery = useBuildings(values.cityId, '', isOpen);
-  const cabinetsQuery = useCabinets(values.buildingId, '', isOpen);
-  const warehousesQuery = useAllWarehouses(isOpen && Boolean(values.buildingId), values.buildingId);
+  const { categories } = useMbpCategories('', isOpen);
+  const { employees } = useEmployees('', isOpen);
+  const { cities } = useCities('', isOpen);
+  const { buildings } = useBuildings(values.cityId, '', isOpen);
+  const { cabinets } = useCabinets(values.buildingId, '', isOpen);
+  const { warehouses, isLoading: isWarehousesLoading, isFetching: isWarehousesFetching } =
+    useAllWarehouses(isOpen && Boolean(values.buildingId), values.buildingId);
   const action = useMbpEdit({ id: mbp.id, onSuccess: () => setIsOpen(false) });
   const responsibleOptions = includeCurrentOption(
-    employeesQuery.employees.map((employee) => ({
+    employees.map((employee) => ({
       label: employee.full_name,
       value: String(employee.id),
     })),
     getCurrentOption(values.responsibleId, mbp.responsible_id, mbp.responsible_name),
   );
   const categoryOptions = includeCurrentOption(
-    categoriesQuery.categories.map((category) => ({
+    categories.map((category) => ({
       label: category.name,
       value: String(category.id),
     })),
     getCurrentOption(values.categoryId, mbp.category_id, mbp.category_name),
   );
   const cityOptions = includeCurrentOption(
-    citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
+    cities.map((city) => ({ label: city.name, value: String(city.id) })),
     getCurrentOption(values.cityId, mbp.department_id, mbp.department_name),
   );
   const buildingOptions = includeCurrentOption(
-    buildingsQuery.buildings.map((building) => ({
+    buildings.map((building) => ({
       label: building.name ?? building.build ?? '',
       value: String(building.id),
     })),
     getCurrentOption(values.buildingId, mbp.subdivision_id, mbp.subdivision_name),
   );
   const warehouseOptions = includeCurrentOption(
-    warehousesQuery.warehouses
+    warehouses
       .map((warehouse) => ({
         label: getStorageName(warehouse) ?? '',
         value: String(getStorageId(warehouse) ?? ''),
@@ -102,7 +103,7 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
     getCurrentOption(values.storageId, mbp.storage_id, mbp.storage_name),
   );
   const roomOptions = includeCurrentOption(
-    cabinetsQuery.cabinets.map((room) => ({ label: room.room, value: String(room.id) })),
+    cabinets.map((room) => ({ label: room.room, value: String(room.id) })),
     getCurrentOption(values.roomId, mbp.rooms_id, mbp.rooms_name),
   );
 
@@ -244,7 +245,7 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
             onChange={(value) =>
               form.setValue('storageId', normalizeSelectValue(value), { shouldValidate: true })
             }
-            isLoading={warehousesQuery.isLoading || warehousesQuery.isFetching}
+            isLoading={isWarehousesLoading || isWarehousesFetching}
             disabled={!values.buildingId}
             fullWidth
           />

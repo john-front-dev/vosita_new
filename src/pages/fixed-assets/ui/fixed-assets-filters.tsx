@@ -28,27 +28,34 @@ type FixedAssetsFiltersModalProps = Pick<
 const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFiltersModalProps) => {
   const [localFilters, setLocalFilters] = useState<FixedAssetsFiltersValues>(filters);
 
-  const citiesQuery = useCities();
-  const categoriesQuery = useCategories();
-  const buildingsQuery = useBuildings(localFilters.CITY_ID[0]);
-  const cabinetsQuery = useCabinets(localFilters.BUILDING_ID[0]);
+  const { cities, isFetching: isCitiesFetching, isLoading: isCitiesLoading } = useCities();
+  const {
+    categories,
+    isFetching: isCategoriesFetching,
+    isLoading: isCategoriesLoading,
+  } = useCategories();
+  const { buildings, isFetching: isBuildingsFetching, isLoading: isBuildingsLoading } =
+    useBuildings(localFilters.CITY_ID[0]);
+  const { cabinets, isFetching: isCabinetsFetching, isLoading: isCabinetsLoading } = useCabinets(
+    localFilters.BUILDING_ID[0],
+  );
 
   const cityOptions = useMemo(
-    () => citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
-    [citiesQuery.cities],
+    () => cities.map((city) => ({ label: city.name, value: String(city.id) })),
+    [cities],
   );
   const buildingOptions = useMemo(
     () =>
-      buildingsQuery.buildings.map((building) => ({
+      buildings.map((building) => ({
         label: building.name ?? building.build ?? '-',
         value: String(building.id),
       })),
-    [buildingsQuery.buildings],
+    [buildings],
   );
   const cabinetOptions = useMemo(
     () =>
-      cabinetsQuery.cabinets.map((cabinet) => ({ label: cabinet.room, value: String(cabinet.id) })),
-    [cabinetsQuery.cabinets],
+      cabinets.map((cabinet) => ({ label: cabinet.room, value: String(cabinet.id) })),
+    [cabinets],
   );
 
   return (
@@ -77,7 +84,7 @@ const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFilte
             }));
           }}
           fullWidth
-          isLoading={citiesQuery.isLoading || citiesQuery.isFetching}
+          isLoading={isCitiesLoading || isCitiesFetching}
             proportions="m"
         />
         <Select
@@ -94,14 +101,14 @@ const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFilte
             }));
           }}
           fullWidth
-          isLoading={buildingsQuery.isLoading || buildingsQuery.isFetching}
+          isLoading={isBuildingsLoading || isBuildingsFetching}
           disabled={!localFilters.CITY_ID.length}
             proportions="m"
         />
         <Select
           label="Категория"
           value={localFilters.CATEGORY_ID[0] || null}
-          options={categoriesQuery.categories.map((category) => ({
+          options={categories.map((category) => ({
             label: category.name,
             value: String(category.id),
           }))}
@@ -114,7 +121,7 @@ const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFilte
             }));
           }}
           fullWidth
-          isLoading={categoriesQuery.isLoading || categoriesQuery.isFetching}
+          isLoading={isCategoriesLoading || isCategoriesFetching}
             proportions="m"
         />
         <Select
@@ -130,7 +137,7 @@ const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFilte
             }));
           }}
           fullWidth
-          isLoading={cabinetsQuery.isLoading || cabinetsQuery.isFetching}
+          isLoading={isCabinetsLoading || isCabinetsFetching}
           disabled={!localFilters.BUILDING_ID.length}
             proportions="m"
         />

@@ -88,22 +88,22 @@ export const StockPage = () => {
       ),
     [filters],
   );
-  const categoriesQuery = useCategories();
-  const warehouseManagersQuery = useWarehouseManagers(stockFilters.BUILDING_ID[0]);
+  const { categories } = useCategories();
+  const { warehouseManagers } = useWarehouseManagers(stockFilters.BUILDING_ID[0]);
 
   const appliedFilters = useMemo(
     () =>
       getAppliedStockFilters(
         stockFilters,
         accessibleWarehouses.warehouses,
-        categoriesQuery.categories,
-        warehouseManagersQuery.warehouseManagers,
+        categories,
+        warehouseManagers,
       ),
     [
       accessibleWarehouses.warehouses,
-      categoriesQuery.categories,
+      categories,
       stockFilters,
-      warehouseManagersQuery.warehouseManagers,
+      warehouseManagers,
     ],
   );
 

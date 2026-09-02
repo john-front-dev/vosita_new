@@ -17,11 +17,11 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
   const [cityId, setCityId] = useState('');
   const [buildingId, setBuildingId] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
-  const citiesQuery = useCities('');
-  const buildingsQuery = useBuildings(cityId);
-  const warehousesQuery = useAllWarehouses(Boolean(buildingId));
+  const { cities, isLoading: isCitiesLoading } = useCities('');
+  const { buildings, isLoading: isBuildingsLoading } = useBuildings(cityId);
+  const { warehouses, isLoading: isWarehousesLoading } = useAllWarehouses(Boolean(buildingId));
   const operation = useTmzGoodOperation('cart', undefined, onSuccess);
-  const targetWarehouses = warehousesQuery.warehouses.filter(
+  const targetWarehouses = warehouses.filter(
     (warehouse) => Number(warehouse.subdivision_id ?? warehouse.sub_id) === Number(buildingId),
   );
   const isInvalid = !cityId || !buildingId || !warehouseId;
@@ -49,7 +49,7 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
         <Select
           label="В город"
           value={cityId || null}
-          options={citiesQuery.cities.map((city) => ({
+          options={cities.map((city) => ({
             label: city.name,
             value: String(city.id),
           }))}
@@ -58,13 +58,13 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
             setBuildingId('');
             setWarehouseId('');
           }}
-          isLoading={citiesQuery.isLoading}
+          isLoading={isCitiesLoading}
           fullWidth
         />
         <Select
           label="В здание"
           value={buildingId || null}
-          options={buildingsQuery.buildings.map((building) => ({
+          options={buildings.map((building) => ({
             label: building.name ?? building.build ?? '',
             value: String(building.id),
           }))}
@@ -72,7 +72,7 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
             setBuildingId(normalizeSelectValue(value));
             setWarehouseId('');
           }}
-          isLoading={buildingsQuery.isLoading}
+          isLoading={isBuildingsLoading}
           disabled={!cityId}
           fullWidth
         />
@@ -84,7 +84,7 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
             value: String(warehouse.storage_id ?? warehouse.id),
           }))}
           onChange={(value) => setWarehouseId(normalizeSelectValue(value))}
-          isLoading={warehousesQuery.isLoading}
+          isLoading={isWarehousesLoading}
           disabled={!buildingId}
           fullWidth
         />

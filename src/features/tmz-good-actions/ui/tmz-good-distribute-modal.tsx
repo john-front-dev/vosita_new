@@ -48,12 +48,22 @@ export const TmzGoodDistributeModal = ({
     needsPartyItems ? [emptyPartyItem()] : [],
   );
   const amount = Number(quantity);
-  const cabinetsQuery = useCabinets(String(remain?.from_subdivision ?? ''), '', isOpen);
-  const categoriesQuery = useCategories('', isOpen && needsPartyItems && !isMbp);
-  const mbpCategoriesQuery = useMbpCategories('', isOpen && needsPartyItems && isMbp);
-  const employeesQuery = useEmployees('', isOpen && needsPartyItems);
+  const { cabinets, isLoading: isCabinetsLoading } = useCabinets(
+    String(remain?.from_subdivision ?? ''),
+    '',
+    isOpen,
+  );
+  const { categories: fixedAssetCategories } = useCategories(
+    '',
+    isOpen && needsPartyItems && !isMbp,
+  );
+  const { categories: mbpCategories } = useMbpCategories(
+    '',
+    isOpen && needsPartyItems && isMbp,
+  );
+  const { employees } = useEmployees('', isOpen && needsPartyItems);
   const operation = useTmzGoodOperation('distribute', goodsId, onClose);
-  const categories = isMbp ? mbpCategoriesQuery.categories : categoriesQuery.categories;
+  const categories = isMbp ? mbpCategories : fixedAssetCategories;
 
   const changeQuantity = (rawValue: string) => {
     const normalized = rawValue.replace(',', '.').replace(/[^0-9.]/g, '');
@@ -133,12 +143,12 @@ export const TmzGoodDistributeModal = ({
         <Select
           label="В кабинет"
           value={cabinetId || null}
-          options={cabinetsQuery.cabinets.map((cabinet) => ({
+          options={cabinets.map((cabinet) => ({
             label: cabinet.room,
             value: String(cabinet.id),
           }))}
           onChange={(value) => setCabinetId(normalizeSelectValue(value))}
-          isLoading={cabinetsQuery.isLoading}
+          isLoading={isCabinetsLoading}
           fullWidth
         />
         <Input
@@ -189,7 +199,7 @@ export const TmzGoodDistributeModal = ({
               <Select
                 label="Ответственное лицо"
                 value={item.responsibleId || null}
-                options={employeesQuery.employees.map((employee) => ({
+                options={employees.map((employee) => ({
                   label: employee.full_name,
                   value: String(employee.id),
                 }))}
@@ -201,7 +211,7 @@ export const TmzGoodDistributeModal = ({
               <Select
                 label="Пользователь"
                 value={item.exploiterId || null}
-                options={employeesQuery.employees.map((employee) => ({
+                options={employees.map((employee) => ({
                   label: employee.full_name,
                   value: String(employee.id),
                 }))}
