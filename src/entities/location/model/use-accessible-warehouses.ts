@@ -27,10 +27,11 @@ export const useAccessibleWarehouses = () => {
   };
 };
 
-export const useAllWarehouses = (enabled: boolean) => {
+export const useAllWarehouses = (enabled: boolean, subdivisionId = '') => {
   const query = useGetQuery<AccessibleWarehousesResponse>({
-    queryKey: ['all-warehouses'],
+    queryKey: ['all-warehouses', subdivisionId],
     url: locationEndpoints.allWarehouses,
+    params: { limit: 0, name: '', page: 1, subdivision_id: subdivisionId },
     options: { enabled },
   });
 

@@ -1,5 +1,5 @@
 export const locationEndpoints = {
-  allWarehouses: '/storages?limit=0&name=&subdivision_id=&page=0',
+  allWarehouses: '/storages',
   accessibleWarehouses: '/warehouse_accesses/employee/',
   buildings: '/subdivision/',
   cabinets: '/rooms/',

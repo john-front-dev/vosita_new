@@ -34,7 +34,12 @@ export const useCabinets = (buildingId?: string, searchText = '', enabled = true
   const query = useGetQuery<LocationListResponse<Cabinet>>({
     queryKey: ['cabinets', buildingId, search],
     url: locationEndpoints.cabinets,
-    params: { limit: 0, name: search, page: 1, subdivision_id: buildingId ?? '' },
+    params: {
+      LIMIT: 0,
+      NAME: search || undefined,
+      PAGE: 1,
+      SUBDIVISION_ID: buildingId ?? '',
+    },
     options: { enabled: enabled && Boolean(buildingId) },
   });
   return { ...query, cabinets: listFromPayload(query.data?.payload) };
