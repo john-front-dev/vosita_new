@@ -12,20 +12,12 @@ import {
   useStockAsset,
   useStockAssetComments,
 } from '@entities/stock-asset';
-import { EmptyPage } from '@shared/ui';
+import { EmptyPage, StatusBanner } from '@shared/ui';
 
 import type { StockAssetDetailsTab } from '../model/types';
 import { StockAssetDescription } from './stock-asset-description';
 
 type StockAssetDetailsPageProps = { type: StockAssetType };
-
-const statusClasses = {
-  blue: 'border-(--color-primary) bg-(--color-primary-soft) text-(--color-primary)',
-  green: 'border-(--color-success) bg-(--color-success-soft) text-(--color-success)',
-  grey: 'border-(--color-text-disabled) bg-(--color-border-default) text-(--color-text-disabled)',
-  red: 'border-(--color-danger) bg-(--color-danger-soft) text-(--color-danger)',
-  yellow: 'border-(--color-warning) bg-(--color-warning-soft) text-(--color-warning)',
-} as const;
 
 export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
   const { id } = useParams();
@@ -92,14 +84,7 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
       </div>
       <div className="grid flex-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <main className="mx-auto flex w-full max-w-140 min-w-0 flex-col gap-5 xl:mx-0 xl:justify-self-center">
-          <Typography
-            element="div"
-            category="body"
-            proportions="sStrong"
-            className={`rounded-lg border-2 px-4 py-2 text-center ${statusClasses[status.color]}`}
-          >
-            {status.label}
-          </Typography>
+          <StatusBanner label={status.label} tone={status.color} />
           <TabMenuNew
             tabs={tabs}
             value={tab}
