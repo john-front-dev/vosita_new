@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Badge, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
+import { getMbpStatusPresentation, type MbpRecord } from '@entities/mbp';
 import { routes } from '@shared/config';
 import { formatDate, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
@@ -13,24 +14,10 @@ import {
   mbpFilterKeys,
   type MbpFilters as MbpFiltersValues,
 } from '../model/mbp-filters';
-import type { MbpRecord } from '../model/types';
 import { useMbpFilterOptions } from '../model/use-mbp-filter-options';
 import { useMbpList } from '../model/use-mbp-list';
 import { MbpExcelUpload } from './mbp-excel-upload';
 import { MbpFilters } from './mbp-filters';
-
-const getStatusVariant = (
-  statusName?: string,
-): 'error' | 'info' | 'neutral' | 'success' | 'warning' => {
-  const status = statusName?.trim().toLowerCase() ?? '';
-
-  if (status.includes('утилиз') || status.includes('списан')) return 'error';
-  if (status.includes('продан')) return 'info';
-  if (status.includes('ожида')) return 'warning';
-  if (status.includes('эксплуат')) return 'success';
-
-  return 'neutral';
-};
 
 export const MbpPage = () => {
   const navigate = useNavigate();
@@ -118,7 +105,7 @@ export const MbpPage = () => {
             className="whitespace-nowrap"
             size="m"
             type="secondary"
-            variant={getStatusVariant(record.status_name)}
+            variant={getMbpStatusPresentation(false, record.status_name).badgeVariant}
           >
             {record.status_name || '-'}
           </Badge>

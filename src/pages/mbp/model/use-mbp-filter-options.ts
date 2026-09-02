@@ -1,7 +1,7 @@
+import type { MbpListResponse } from '@entities/mbp';
 import { useGetQuery } from '@shared/api';
 
 import { mbpEndpoints } from '../api/mbp-api';
-import type { MbpListResponse } from './types';
 
 export const useMbpFilterOptions = () => {
   const query = useGetQuery<MbpListResponse>({

@@ -1,7 +1,7 @@
+import type { MbpRecord } from '@entities/mbp';
 import { buildAppliedFilterTags } from '@shared/lib';
 
 import type { MbpFilterKey, MbpFilters } from '../model/mbp-filters';
-import type { MbpRecord } from '../model/types';
 
 const getUniqueOptions = (
   records: MbpRecord[],
