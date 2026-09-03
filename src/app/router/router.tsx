@@ -4,6 +4,7 @@ import { MainLayout } from '@app/layouts';
 import { AmortizationPage } from '@pages/amortization';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
+import { ApprovalPage } from '@pages/approval';
 import { ChangePasswordPage } from '@pages/change-password';
 import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HomePage } from '@pages/home';
@@ -171,7 +172,7 @@ const appRoutes = [
   },
   {
     path: routes.approval,
-    element: withAccess(<PlaceholderPage title="Одобрение" />, accessRules.approval),
+    element: withAccess(<ApprovalPage />, accessRules.approval),
   },
 ];
 
