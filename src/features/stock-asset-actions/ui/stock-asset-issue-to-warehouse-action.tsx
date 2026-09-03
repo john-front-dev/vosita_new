@@ -39,7 +39,7 @@ export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
         Отправить на склад
       </Button>
       <Modal
-        className="w-[560px]"
+        className="w-140"
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         isCentered

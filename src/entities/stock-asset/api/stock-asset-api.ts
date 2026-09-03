@@ -5,5 +5,5 @@ export const stockAssetEndpoints = {
   details: (id: number | string) => `/accountant/os/${id}`,
   history: (id: number | string, resource: 'mbp' | 'stock-asset' = 'stock-asset') =>
     resource === 'mbp' ? `/histories/mbp/${id}` : `/histories/warehouse/${id}`,
-  historyDetails: (id: number | string) => `/histories/object/${id}`,
+  historyDetails: (id: number | string) => `/histories/object/${id}/`,
 } as const;

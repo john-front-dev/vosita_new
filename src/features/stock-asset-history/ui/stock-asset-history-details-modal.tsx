@@ -47,7 +47,7 @@ const HistoryFieldValues = ({ field }: { field: HistoryField }) => {
             element="div"
             category="body"
             proportions="m"
-            className="max-w-60 text-right break-words text-(--color-text-secondary)"
+            className="max-w-60 text-right wrap-break-word text-(--color-text-secondary)"
           >
             {String(field.oldValue)}
           </Typography>
@@ -215,7 +215,7 @@ export const StockAssetHistoryDetailsModal = ({
 
   return (
     <Modal
-      className="w-[500px]"
+      className="w-125"
       isOpen={historyId !== null}
       onClose={onClose}
       isCentered

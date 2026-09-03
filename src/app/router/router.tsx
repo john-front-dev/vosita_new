@@ -7,6 +7,7 @@ import { ApplicationsPage } from '@pages/applications';
 import { ApprovalPage } from '@pages/approval';
 import { ChangePasswordPage } from '@pages/change-password';
 import { FixedAssetsPage } from '@pages/fixed-assets';
+import { HistoryPage } from '@pages/history';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
 import { LriPage } from '@pages/lri';
@@ -146,7 +147,7 @@ const appRoutes = [
   },
   {
     path: routes.history,
-    element: withAccess(<PlaceholderPage title="История" />, accessRules.history),
+    element: withAccess(<HistoryPage />, accessRules.history),
   },
   {
     path: routes.locations,
