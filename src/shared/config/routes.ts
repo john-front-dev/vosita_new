@@ -23,6 +23,7 @@ export const routes = {
   fixedAssetsStock: '/fixed-assets/stock',
   fixedAssetsDetails: '/fixed-assets/:id',
   others: '/others',
+  othersDetails: '/others/:id',
   tmzReport: '/tmz-report',
   inventory: '/inventory',
   inventoryStorage: '/inventory/:storageId',

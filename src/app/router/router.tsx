@@ -11,6 +11,7 @@ import { LoginPage } from '@pages/login';
 import { LriPage } from '@pages/lri';
 import { MbpPage } from '@pages/mbp';
 import { MbpDetailsPage } from '@pages/mbp-details';
+import { OthersPage } from '@pages/others';
 import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
@@ -103,7 +104,14 @@ const appRoutes = [
   },
   {
     path: routes.others,
-    element: withAccess(<PlaceholderPage title="Другие" />, accessRules.responsibleOrAccountant),
+    element: withAccess(<OthersPage />, accessRules.responsibleOrAccountant),
+  },
+  {
+    path: routes.othersDetails,
+    element: withAccess(
+      <StockAssetDetailsPage type="fixed-assets" />,
+      accessRules.responsibleOrAccountant,
+    ),
   },
   { path: routes.tmzReport, element: withAccess(<TmzReportPage />, accessRules.tmz) },
   {
