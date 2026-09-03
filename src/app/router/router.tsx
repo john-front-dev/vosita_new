@@ -12,6 +12,7 @@ import { LoginPage } from '@pages/login';
 import { LriPage } from '@pages/lri';
 import { MbpPage } from '@pages/mbp';
 import { MbpDetailsPage } from '@pages/mbp-details';
+import { MyFixedAssetsPage } from '@pages/my-fixed-assets';
 import { OthersPage } from '@pages/others';
 import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
@@ -97,7 +98,7 @@ const appRoutes = [
     path: routes.fixedAssets,
     element: withAccess(<FixedAssetsPage />, accessRules.fixedAssets),
   },
-  { path: routes.fixedAssetsMine, element: withAccess(<PlaceholderPage title="Мои ОС" />) },
+  { path: routes.fixedAssetsMine, element: withAccess(<MyFixedAssetsPage />) },
   { path: routes.fixedAssetsStock, element: withAccess(<StockPage />, accessRules.warehouseData) },
   {
     path: routes.fixedAssetsDetails,
