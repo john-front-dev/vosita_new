@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import { Button, OutlineSystemSend, OutlineSystemSettings } from 'alif-ui';
 
-import type { StockAsset } from '@entities/stock-asset';
+import type { StockAsset, StockAssetType } from '@entities/stock-asset';
 import { ConfirmModal } from '@shared/ui';
 
 import { useStockAssetRepair } from '../model/use-stock-asset-action-mutations';
 
-export const StockAssetRepairAction = ({ asset }: { asset: StockAsset }) => {
+export const StockAssetRepairAction = ({
+  asset,
+  type,
+}: {
+  asset: StockAsset;
+  type: StockAssetType;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const action = useStockAssetRepair({ assetId: asset.id, onSuccess: () => setIsOpen(false) });
+  const action = useStockAssetRepair({
+    assetId: asset.id,
+    type,
+    onSuccess: () => setIsOpen(false),
+  });
   const isReturning = asset.is_repair === 1;
 
   return (
@@ -24,7 +34,7 @@ export const StockAssetRepairAction = ({ asset }: { asset: StockAsset }) => {
       </Button>
       <ConfirmModal
         isOpen={isOpen}
-        title={`Вы уверены, что хотите ${isReturning ? 'вернуть ОС с ремонта' : 'отправить ОС в ремонт'}?`}
+        title={`Вы уверены, что хотите ${isReturning ? 'вернуть объект с ремонта' : 'отправить объект в ремонт'}?`}
         confirmText="Уверен"
         isConfirmLoading={action.isRepairing}
         onClose={() => setIsOpen(false)}

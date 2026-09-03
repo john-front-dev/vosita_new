@@ -114,4 +114,6 @@ export type StockAssetCommentsResponse = ApiResponse<StockAssetComment[]>;
 export type StockAssetHistoryDetailsResponse = ApiResponse<{
   payload?: StockAssetHistoryDetails[];
 }>;
-export type StockAssetType = 'fixed-assets' | 'lri';
+export type StockAssetType = 'fixed-assets' | 'lri' | 'other';
+
+export const isOsLikeStockAssetType = (type: StockAssetType) => type !== 'lri';

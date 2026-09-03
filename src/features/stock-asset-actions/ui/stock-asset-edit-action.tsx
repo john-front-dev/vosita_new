@@ -6,7 +6,11 @@ import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useCategories } from '@entities/category';
 import { useEmployees } from '@entities/employee';
 import { useBuildings, useCabinets, useCities } from '@entities/location';
-import type { StockAsset, StockAssetType } from '@entities/stock-asset';
+import {
+  isOsLikeStockAssetType,
+  type StockAsset,
+  type StockAssetType,
+} from '@entities/stock-asset';
 import { normalizeSelectValue } from '@shared/lib';
 
 import {
@@ -47,7 +51,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
   const buildingId = useWatch({ control: fixedAssetForm.control, name: 'buildingId' });
   const fixedValues = useWatch({ control: fixedAssetForm.control });
   const lriValues = useWatch({ control: lriForm.control });
-  const isFixedAsset = type === 'fixed-assets';
+  const isFixedAsset = isOsLikeStockAssetType(type);
   const { categories } = useCategories('', isOpen && isFixedAsset);
   const { cities } = useCities('', isOpen && isFixedAsset);
   const { buildings } = useBuildings(cityId, '', isOpen && isFixedAsset);
@@ -95,7 +99,9 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
         isCentered
         withCloseButton
       >
-        <Modal.Header title={`Редактирование ${isFixedAsset ? 'ОС' : 'ПАУ'}`} />
+        <Modal.Header
+          title={`Редактирование ${type === 'other' ? 'объекта' : isFixedAsset ? 'ОС' : 'ПАУ'}`}
+        />
         <Modal.Content className="flex flex-col gap-4">
           {isFixedAsset ? (
             <>

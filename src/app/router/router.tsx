@@ -109,7 +109,7 @@ const appRoutes = [
   {
     path: routes.othersDetails,
     element: withAccess(
-      <StockAssetDetailsPage type="fixed-assets" />,
+      <StockAssetDetailsPage type="other" />,
       accessRules.responsibleOrAccountant,
     ),
   },

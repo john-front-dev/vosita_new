@@ -1,11 +1,12 @@
 import { Button, OutlineSystemDownload, Typography } from 'alif-ui';
 
-import type { StockAsset } from '@entities/stock-asset';
+import type { StockAsset, StockAssetType } from '@entities/stock-asset';
 import { QrCode } from '@shared/ui';
 
 type StockAssetQrProps = { asset: StockAsset };
+type StockAssetQrActionProps = StockAssetQrProps & { type: StockAssetType };
 
-const downloadQr = (asset: StockAsset) => {
+const downloadQr = (asset: StockAsset, type: StockAssetType) => {
   const image = document.querySelector<HTMLImageElement>('.stock-asset-qr');
 
   if (!image?.src) return;
@@ -13,7 +14,9 @@ const downloadQr = (asset: StockAsset) => {
   const link = document.createElement('a');
 
   link.href = image.src;
-  link.download = `ОС-${asset.inventory_number ?? asset.id}.png`;
+  const prefix = type === 'other' ? 'Другое' : type === 'lri' ? 'ПАУ' : 'ОС';
+
+  link.download = `${prefix}-${asset.inventory_number ?? asset.id}.png`;
   link.click();
 };
 
@@ -35,14 +38,14 @@ export const StockAssetQr = ({ asset }: StockAssetQrProps) => (
   </div>
 );
 
-export const StockAssetQrAction = ({ asset }: StockAssetQrProps) => {
+export const StockAssetQrAction = ({ asset, type }: StockAssetQrActionProps) => {
   return (
     <Button
       type="button"
       variant="outline-neutral"
       size="m"
       leftSection={<OutlineSystemDownload />}
-      onClick={() => downloadQr(asset)}
+      onClick={() => downloadQr(asset, type)}
     >
       Загрузить QR
     </Button>

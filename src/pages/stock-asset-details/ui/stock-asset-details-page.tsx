@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Button, Loader, OutlineNavigationLeftArrow, Surface, TabMenuNew, Typography } from 'alif-ui';
+import {
+  Button,
+  Loader,
+  OutlineNavigationLeftArrow,
+  Surface,
+  TabMenuNew,
+  Typography,
+} from 'alif-ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { StockAssetActions } from '@features/stock-asset-actions';
@@ -8,6 +15,7 @@ import { StockAssetComments } from '@features/stock-asset-comments';
 import { StockAssetHistory } from '@features/stock-asset-history';
 import {
   getStockAssetStatusPresentation,
+  isOsLikeStockAssetType,
   type StockAssetType,
   useStockAsset,
   useStockAssetComments,
@@ -23,8 +31,9 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [tab, setTab] = useState<StockAssetDetailsTab>('description');
+  const isOsLike = isOsLikeStockAssetType(type);
   const { asset, isError, isLoading } = useStockAsset(id);
-  const { comments } = useStockAssetComments(id, type === 'fixed-assets');
+  const { comments } = useStockAssetComments(id, isOsLike);
   const tabs = useMemo(
     () => [
       { label: 'Описание', value: 'description' },
@@ -34,7 +43,7 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
         label: 'Капитализация',
         value: 'capitalization',
       },
-      ...(type === 'fixed-assets'
+      ...(isOsLike
         ? [
             {
               counter: comments.length,
@@ -44,7 +53,7 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
           ]
         : []),
     ],
-    [asset?.capitalization?.length, comments.length, type],
+    [asset?.capitalization?.length, comments.length, isOsLike],
   );
 
   if (isLoading)
@@ -93,7 +102,7 @@ export const StockAssetDetailsPage = ({ type }: StockAssetDetailsPageProps) => {
           {tab === 'capitalization' && (
             <StockAssetCapitalization assetId={id} capitalization={asset.capitalization} />
           )}
-          {tab === 'comments' && type === 'fixed-assets' && <StockAssetComments assetId={id} />}
+          {tab === 'comments' && isOsLike && <StockAssetComments assetId={id} />}
         </main>
         <aside className="flex h-fit flex-col gap-4 xl:sticky xl:top-6">
           <StockAssetActions asset={asset} type={type} />

@@ -15,7 +15,13 @@ type TypedActionParams = ActionParams & {
 const invalidateStockAsset = (assetId: number | string) =>
   queryClient.invalidateQueries({ queryKey: ['stock-asset', String(assetId)] });
 
-export const useStockAssetRepair = ({ assetId, onSuccess }: ActionParams) => {
+const invalidateAssetList = (type: StockAssetType) => {
+  const queryKey = type === 'other' ? ['others'] : type === 'lri' ? ['lri'] : ['fixed-assets'];
+
+  queryClient.invalidateQueries({ queryKey });
+};
+
+export const useStockAssetRepair = ({ assetId, onSuccess, type }: TypedActionParams) => {
   const mutation = useMutationQuery<ApiResponse<unknown>>({
     method: 'post',
     url: stockAssetActionEndpoints.repair(assetId),
@@ -23,6 +29,7 @@ export const useStockAssetRepair = ({ assetId, onSuccess }: ActionParams) => {
       onSuccess: () => {
         onSuccess?.();
         invalidateStockAsset(assetId);
+        invalidateAssetList(type);
       },
     },
   });
@@ -30,11 +37,16 @@ export const useStockAssetRepair = ({ assetId, onSuccess }: ActionParams) => {
   return { isRepairing: mutation.isPending, repair: () => mutation.mutate({}) };
 };
 
-export const useStockAssetDelete = ({ assetId, onSuccess }: ActionParams) => {
+export const useStockAssetDelete = ({ assetId, onSuccess, type }: TypedActionParams) => {
   const mutation = useMutationQuery<ApiResponse<unknown>>({
     method: 'delete',
     url: stockAssetActionEndpoints.delete(assetId),
-    options: { onSuccess },
+    options: {
+      onSuccess: () => {
+        invalidateAssetList(type);
+        onSuccess?.();
+      },
+    },
   });
 
   return { deleteAsset: () => mutation.mutate({}), isDeleting: mutation.isPending };
@@ -48,6 +60,7 @@ export const useStockAssetEdit = ({ assetId, onSuccess, type }: TypedActionParam
       onSuccess: () => {
         onSuccess?.();
         invalidateStockAsset(assetId);
+        invalidateAssetList(type);
       },
     },
   });
@@ -66,6 +79,7 @@ export const useStockAssetIssue = ({ assetId, onSuccess, type }: TypedActionPara
       onSuccess: () => {
         onSuccess?.();
         invalidateStockAsset(assetId);
+        invalidateAssetList(type);
       },
     },
   });

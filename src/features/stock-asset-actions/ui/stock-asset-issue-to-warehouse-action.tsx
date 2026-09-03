@@ -45,7 +45,9 @@ export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
         isCentered
         withCloseButton
       >
-        <Modal.Header title={`Выдача ${type === 'fixed-assets' ? 'ОС' : 'ПАУ'} на склад`} />
+        <Modal.Header
+          title={`Выдача ${type === 'other' ? 'объекта' : type === 'fixed-assets' ? 'ОС' : 'ПАУ'} на склад`}
+        />
         <Modal.Content>
           <Select
             label="Заведующий складом"
