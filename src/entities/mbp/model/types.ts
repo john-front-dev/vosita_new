@@ -1,9 +1,11 @@
 export type MbpRecord = {
+  currency?: string;
   department_id?: number | string;
   department_name?: string;
   id: number;
   inventory_number?: string;
   name?: string;
+  price?: number;
   responsible_id?: number | string;
   responsible_name?: string;
   rooms_id?: number | string;

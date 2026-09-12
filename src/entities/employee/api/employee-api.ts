@@ -1,4 +1,17 @@
 export const employeeEndpoints = {
+  create: '/employees/create',
+  consumables: (userId: number | string) => `/consumables/${userId}`,
+  deactivate: (id: number | string) => `/employees/${id}`,
+  details: (id: number | string) => `/employees/${id}`,
+  delegateAssets: '/os/delegate',
+  edit: (userId: number | string) => `/employees/edit/${userId}`,
+  fixedAssetHistory: '/user/warehouses/history',
   list: '/employees/',
+  mbpHistory: (id: number | string) => `/mbp/user-items/${id}`,
+  refresh: '/hremployees/',
+  reactivate: (id: number | string) => `/employees/reactivate/${id}`,
+  userActions: '/user/actions/history',
+  warehouseAccess: '/warehouse-accesses/employee',
+  warehouseAccessDetails: (id: number | string) => `/warehouse-accesses/employee/${id}`,
   warehouseManagers: '/empty/warehouse-accesses/employee',
 } as const;

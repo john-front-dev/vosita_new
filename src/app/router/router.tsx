@@ -6,6 +6,8 @@ import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
 import { ApprovalPage } from '@pages/approval';
 import { ChangePasswordPage } from '@pages/change-password';
+import { EmployeeDetailsPage } from '@pages/employee-details';
+import { EmployeesPage } from '@pages/employees';
 import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HistoryPage } from '@pages/history';
 import { HomePage } from '@pages/home';
@@ -86,14 +88,11 @@ const appRoutes = [
   },
   {
     path: routes.employees,
-    element: withAccess(
-      <PlaceholderPage title="Сотрудники" />,
-      accessRules.responsibleOrAccountant,
-    ),
+    element: withAccess(<EmployeesPage />, accessRules.responsibleOrAccountant),
   },
   {
     path: routes.employeeDetails,
-    element: withAccess(<PlaceholderPage title="Сотрудник" />, accessRules.responsibleOrAccountant),
+    element: withAccess(<EmployeeDetailsPage />, accessRules.responsibleOrAccountant),
   },
   {
     path: routes.fixedAssets,
