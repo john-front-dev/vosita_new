@@ -10,6 +10,7 @@ import {
 import type { MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { NotificationCenter } from '@features/notification-center';
 import { useAllWarehouses } from '@entities/location';
 import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
@@ -20,7 +21,7 @@ import { getTmzNavigationItems } from '../model/tmz-navigation';
 
 const LogoFull = () => {
   return (
-    <div className="flex items-center gap-3 pl-4">
+    <div className="flex h-full items-center gap-3 px-4">
       <AlifIcon className="h-7 w-7 text-(--brand-value-default)" />
       <Typography
         category="display"
@@ -29,6 +30,9 @@ const LogoFull = () => {
       >
         VOSITA
       </Typography>
+      <div className="ml-auto">
+        <NotificationCenter />
+      </div>
     </div>
   );
 };
