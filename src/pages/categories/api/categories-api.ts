@@ -1,0 +1,17 @@
+export const categoriesEndpoints = {
+  osList: '/alif/categories/',
+  createOs: '/categories/create',
+  editOs: (id: number) => `/categories/edit/${id}`,
+  removeOs: (id: number) => `/categories/remove/${id}`,
+  tmzList: '/tmz_categories',
+  tmzDetails: (id: number) => `/expense_type/category/${id}`,
+  createTmz: '/reserve/expense-types',
+  updateTmz: '/expense_type/category',
+  expenseTypes: '/managers/expense-types',
+  storages: '/storages',
+  mbpList: '/mbp/categories',
+  createMbp: '/mbp/category',
+  updateMbp: (id: number) => `/mbp/category/${id}`,
+  updateMbpStatus: (id: number) => `/mbp/category/${id}/status`,
+  removeMbp: (id: number) => `/mbp/category/${id}`,
+} as const;
