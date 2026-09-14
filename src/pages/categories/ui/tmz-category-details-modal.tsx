@@ -35,7 +35,7 @@ export const TmzCategoryDetailsModal = ({ categoryId, canManage, onClose, onSucc
       }]);
       snackbar.show({ title: 'Тип расхода обновлён', type: 'success' });
       setEditingId(null);
-      void details.refetch();
+      details.refetch();
       onSuccess();
     } catch {
       snackbar.show({ title: 'Не удалось обновить тип расхода', type: 'error' });
@@ -62,7 +62,7 @@ export const TmzCategoryDetailsModal = ({ categoryId, canManage, onClose, onSucc
                 <Select label="Склад" value={storageId || String(item.storage_id)} options={options.storages.map((option) => ({ label: option.name, value: String(option.id) }))} onChange={(value) => setStorageId(normalizeSelectValue(value))} fullWidth />
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline-neutral" onClick={() => setEditingId(null)}>Отмена</Button>
-                  <Button type="button" variant="primary" isLoading={isSubmitting} onClick={() => void save(item)}>Сохранить</Button>
+                  <Button type="button" variant="primary" isLoading={isSubmitting} onClick={() => save(item)}>Сохранить</Button>
                 </div>
               </div>
             ) : canManage ? (
