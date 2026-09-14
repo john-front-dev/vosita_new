@@ -496,8 +496,10 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
 
       {isIssueOpen && (
         <IssueToStockModal
-          ids={selectedIds}
+          categoryId={details?.tmz_cat_id}
           isOpen={isIssueOpen}
+          records={records.filter((record) => selectedIds.includes(record.id))}
+          storageId={details?.storage_id}
           type={type}
           onClose={() => setIsIssueOpen(false)}
           onSuccess={() => {

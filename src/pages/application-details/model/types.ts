@@ -66,6 +66,7 @@ export type ApplicationObjectRecord = {
   receipt?: string;
   status?: string;
   storage_name?: string;
+  storage_id?: number;
   subdivision_name?: string;
   total_sum?: number;
   tmz_cat_id?: number;
@@ -91,9 +92,11 @@ export type ApplicationDetailsPayload = Pick<PaginationMeta, 'total_pages'> & {
   id: number;
   objects?: ApplicationObjectRecord[];
   status?: string;
+  storage_id?: number;
   storage_name?: string;
   title: string;
   tmz_cat_name?: string;
+  tmz_cat_id?: number;
 };
 
 export type ApplicationDetailsResponse = ApiResponse<ApplicationDetailsPayload>;
@@ -129,9 +132,13 @@ export type UpdateSubrequestRequest = Pick<CreateSubrequestRequest, 'name' | 'pr
 
 export type IssueApplicationObjectsRequest = {
   objects: {
+    category_id?: number;
     id: number;
+    min_qty?: number;
+    notify?: boolean;
   }[];
   registration_date: string;
+  storage_id?: number;
 };
 
 export type TmzCategory = {
