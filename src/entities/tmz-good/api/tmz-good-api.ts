@@ -6,7 +6,8 @@ export const tmzGoodEndpoints = {
   distribute: '/remains',
   history: (goodsId: number | string, storageId: number | string) =>
     `/remains/history/${goodsId}/${storageId}`,
-  historyReport: '/remains/report/history/',
+  historyReport: (goodsId: number | string, storageId: number | string) =>
+    `/remains/history/${goodsId}/${storageId}`,
   invoice: (remainId: number | string) => `/invoice/remains/${remainId}`,
   move: '/remains_move',
 } as const;

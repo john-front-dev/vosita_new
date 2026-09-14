@@ -40,11 +40,7 @@ export const TmzGoodActions = ({ goodsId, remains, storageId }: Props) => {
           </>
         )}
         <div className="[&>button]:w-full">
-          <TmzGoodHistoryDownloadButton
-            goodsId={goodsId}
-            iconOnly={false}
-            subdivisionId={remains[0]?.from_subdivision}
-          />
+          <TmzGoodHistoryDownloadButton goodsId={goodsId} iconOnly={false} storageId={storageId} />
         </div>
       </div>
       {operation === 'distribute' && (

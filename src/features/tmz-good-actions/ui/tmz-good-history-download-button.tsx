@@ -6,18 +6,13 @@ import { useFileDownload } from '@shared/api';
 type Props = {
   goodsId: number | string;
   iconOnly?: boolean;
-  subdivisionId?: number | string;
+  storageId?: number | string;
 };
 
-export const TmzGoodHistoryDownloadButton = ({
-  goodsId,
-  iconOnly = true,
-  subdivisionId,
-}: Props) => {
+export const TmzGoodHistoryDownloadButton = ({ goodsId, iconOnly = true, storageId }: Props) => {
   const report = useFileDownload({
     filename: `history_${goodsId}.xlsx`,
-    params: { goods_id: goodsId, sub_id: subdivisionId },
-    url: tmzGoodEndpoints.historyReport,
+    url: tmzGoodEndpoints.historyReport(goodsId, storageId ?? ''),
   });
 
   return (

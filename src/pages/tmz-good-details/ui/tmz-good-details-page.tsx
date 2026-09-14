@@ -69,7 +69,7 @@ export const TmzGoodDetailsPage = () => {
             )}
             <TmzGoodHistoryDownloadButton
               goodsId={remain.goods_id}
-              subdivisionId={remain.from_subdivision}
+              storageId={remain.from_storage}
             />
           </div>
         ),
