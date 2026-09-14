@@ -53,9 +53,14 @@ export const UploadSubrequestsModal = ({
     uploadMutation.mutate({ body: formData });
   };
 
+  const handleClose = () => {
+    setFile(null);
+    onClose();
+  };
+
   return (
-    <Modal className="w-150" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
-      <Modal.Header className="relative" title="Массовое добавление запросов" />
+    <Modal className="w-150" isOpen={isOpen} onClose={handleClose} isCentered withCloseButton>
+      <Modal.Header title="Массовое добавление запросов" />
       <Modal.Content className="flex flex-col gap-4">
         <div className="absolute top-7 right-20">
           <Tooltip label="Пример Excel">
@@ -63,6 +68,7 @@ export const UploadSubrequestsModal = ({
               className="inline-flex h-8 w-8 items-center justify-center rounded-full text-(--color-text-body) transition-colors hover:bg-(--color-bg-subtle)"
               href={subrequestTemplate.url}
               download={subrequestTemplate.fileName}
+              aria-label="Скачать пример Excel"
             >
               <OutlineSystemDownload className="h-5 w-5 fill-black" />
             </a>
@@ -85,7 +91,7 @@ export const UploadSubrequestsModal = ({
         />
       </Modal.Content>
       <Modal.Actions className="flex justify-end gap-4">
-        <Button type="button" variant="outline-neutral" onClick={onClose}>
+        <Button type="button" variant="outline-neutral" onClick={handleClose}>
           Отмена
         </Button>
         <Button

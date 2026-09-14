@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button, Input, Modal, snackbar, Switch, Typography } from 'alif-ui';
+import { Button, DatePicker, Input, Modal, snackbar, Switch, Typography } from 'alif-ui';
 
 import { applicationEndpoints } from '@entities/application';
 import { useMutationQuery } from '@shared/api';
-import { downloadBlob } from '@shared/lib';
+import { downloadBlob, formatDateOnly, parseDateOnly } from '@shared/lib';
 
 import type {
   ApplicationListType,
@@ -21,19 +21,6 @@ type IssueToStockModalProps = {
   type: ApplicationListType;
 };
 
-const getMaxDate = () => new Date().toISOString().split('T')[0];
-
-const getBlobBusinessError = async (response: Blob) => {
-  if (!response.type.includes('json')) return null;
-
-  try {
-    const result = JSON.parse(await response.text()) as ApiResponse<unknown>;
-    return result.code >= 400 ? (result.message ?? 'Не удалось отправить объекты на склад') : null;
-  } catch {
-    return 'Сервер вернул некорректный ответ';
-  }
-};
-
 export const IssueToStockModal = ({
   categoryId,
   isOpen,
@@ -46,6 +33,7 @@ export const IssueToStockModal = ({
   const [registrationDate, setRegistrationDate] = useState('');
   const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [minQuantity, setMinQuantity] = useState('');
+  const registrationDateValue = parseDateOnly(registrationDate);
   const isTmz = type === 'tmz';
   const maximumThreshold = records.length
     ? Math.min(...records.map((record) => Number(record.quantity) || 0)) - 1
@@ -58,13 +46,7 @@ export const IssueToStockModal = ({
       responseType: 'blob',
     },
     options: {
-      onSuccess: async (response) => {
-        const businessError = await getBlobBusinessError(response);
-        if (businessError) {
-          snackbar.show({ title: businessError, type: 'error' });
-          return;
-        }
-
+      onSuccess: (response) => {
         downloadBlob(response, 'issue-to-stock.pdf');
 
         snackbar.show({
@@ -116,17 +98,30 @@ export const IssueToStockModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
+    <Modal className="w-130" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
       <Modal.Header title="Отправка на склад" />
       <Modal.Content>
-        <Input
+        <DatePicker
           label="Дата оформления"
-          type="date"
-          value={registrationDate}
-          max={getMaxDate()}
-          onChange={(event) => setRegistrationDate(event.target.value)}
+          values={registrationDateValue}
+          onDateChange={(date) => {
+            if (!(date instanceof Date)) {
+              setRegistrationDate('');
+              return;
+            }
+
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            if (date > today) {
+              snackbar.show({ title: 'Дата оформления не может быть в будущем', type: 'error' });
+              return;
+            }
+
+            setRegistrationDate(formatDateOnly(date));
+          }}
+          onClear={() => setRegistrationDate('')}
+          allowTime={false}
           fullWidth
-          bordered
         />
         {isTmz && (
           <div className="mt-5 flex flex-col gap-4">
@@ -161,7 +156,7 @@ export const IssueToStockModal = ({
           </div>
         )}
       </Modal.Content>
-      <Modal.Actions className="justify-end">
+      <Modal.Actions className="flex justify-end gap-3">
         <Button type="button" variant="outline-neutral" onClick={onClose}>
           Отмена
         </Button>

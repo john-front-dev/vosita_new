@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Button, Input, Modal, Select, snackbar } from 'alif-ui';
+import { Button, DatePicker, Input, Modal, Select, snackbar } from 'alif-ui';
 
 import { useMutationQuery } from '@shared/api';
-import { normalizeSelectValue } from '@shared/lib';
+import { formatDateOnly, normalizeSelectValue, parseDateOnly } from '@shared/lib';
 
 import { locationsEndpoints } from '../api/locations-api';
 import { locationTypeLabels } from '../model/location-tabs';
@@ -44,12 +44,6 @@ const emptyForm: LocationFormValues = {
   storageTypeId: '',
 };
 
-const toDateInputValue = (value?: string | null) => {
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value.slice(0, 10) : date.toISOString().slice(0, 10);
-};
-
 const getInitialForm = (type: LocationType, record: LocationRecord | null): LocationFormValues => {
   if (!record) return emptyForm;
   if (type === 'cities') return { ...emptyForm, name: (record as CityRecord).name };
@@ -59,10 +53,10 @@ const getInitialForm = (type: LocationType, record: LocationRecord | null): Loca
       ...emptyForm,
       cityId: String(building.city_id),
       crmId: building.crm_id ?? '',
-      endDate: toDateInputValue(building.end_date),
+      endDate: building.end_date?.slice(0, 10) ?? '',
       name: building.name,
       responsibleText: building.responsible ?? '',
-      startDate: toDateInputValue(building.start_date),
+      startDate: building.start_date?.slice(0, 10) ?? '',
     };
   }
   if (type === 'cabinets') {
@@ -138,9 +132,10 @@ const isFormValid = (type: LocationType, values: LocationFormValues, isEdit: boo
   if (type === 'cities') return true;
   if (!values.cityId) return false;
   if (type === 'buildings') {
-    return Boolean(
-      values.responsibleText.trim() && values.startDate && values.endDate,
-    );
+    const startDate = parseDateOnly(values.startDate);
+    const endDate = parseDateOnly(values.endDate);
+
+    return Boolean(values.responsibleText.trim() && startDate && endDate && startDate <= endDate);
   }
   if (!values.buildingId) return false;
   if (type === 'cabinets') return isEdit || Boolean(values.responsibleId);
@@ -169,12 +164,11 @@ export const LocationFormModal = ({
   const itemTypesQuery = useItemTypes(isOpen && type === 'warehouses' && !isEdit);
   const endpoint = getEndpoint(type, record);
   const mutationOptions = {
-    onSuccess: (response: ApiResponse<unknown>) => {
-      if (response.code !== 200) {
-        snackbar.show({ title: response.message || 'Не удалось сохранить местоположение', type: 'error' });
-        return;
-      }
-      snackbar.show({ title: isEdit ? 'Изменения сохранены' : 'Местоположение добавлено', type: 'success' });
+    onSuccess: () => {
+      snackbar.show({
+        title: isEdit ? 'Изменения сохранены' : 'Местоположение добавлено',
+        type: 'success',
+      });
       onSuccess();
       onClose();
     },
@@ -190,6 +184,9 @@ export const LocationFormModal = ({
     options: mutationOptions,
   });
   const isSubmitting = postMutation.isPending || putMutation.isPending;
+  const startDate = parseDateOnly(values.startDate);
+  const endDate = parseDateOnly(values.endDate);
+  const hasInvalidDateRange = Boolean(startDate && endDate && startDate > endDate);
   const update = (patch: Partial<LocationFormValues>) =>
     setValues((current) => ({ ...current, ...patch }));
   const cityOptions = useMemo(
@@ -229,7 +226,9 @@ export const LocationFormModal = ({
 
   return (
     <Modal className="w-130" isOpen={isOpen} onClose={handleClose} isCentered withCloseButton>
-      <Modal.Header title={`${isEdit ? 'Изменить' : 'Добавить'} ${locationTypeLabels[type].singular}`} />
+      <Modal.Header
+        title={`${isEdit ? 'Изменить' : 'Добавить'} ${locationTypeLabels[type].singular}`}
+      />
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -266,12 +265,32 @@ export const LocationFormModal = ({
           )}
           {type === 'warehouses' && isEdit && (
             <>
-              <Input label="Город" value={(record as WarehouseRecord).department_name} disabled fullWidth bordered />
-              <Input label="Здание" value={(record as WarehouseRecord).subdivision_name} disabled fullWidth bordered />
+              <Input
+                label="Город"
+                value={(record as WarehouseRecord).department_name}
+                disabled
+                fullWidth
+                bordered
+              />
+              <Input
+                label="Здание"
+                value={(record as WarehouseRecord).subdivision_name}
+                disabled
+                fullWidth
+                bordered
+              />
             </>
           )}
           <Input
-            label={type === 'cities' ? 'Название города' : type === 'buildings' ? 'Название здания' : type === 'cabinets' ? 'Название кабинета' : 'Название склада'}
+            label={
+              type === 'cities'
+                ? 'Название города'
+                : type === 'buildings'
+                  ? 'Название здания'
+                  : type === 'cabinets'
+                    ? 'Название кабинета'
+                    : 'Название склада'
+            }
             value={values.name}
             onChange={(event) => update({ name: event.target.value })}
             fullWidth
@@ -279,10 +298,47 @@ export const LocationFormModal = ({
           />
           {type === 'buildings' && (
             <>
-              <Input label="Ответственное лицо" value={values.responsibleText} onChange={(event) => update({ responsibleText: event.target.value })} fullWidth bordered />
-              <Input label="CRM ID" value={values.crmId} onChange={(event) => update({ crmId: event.target.value })} fullWidth bordered />
-              <Input label="Начало договора" type="date" value={values.startDate} max={values.endDate || undefined} onChange={(event) => update({ startDate: event.target.value })} fullWidth bordered />
-              <Input label="Конец договора" type="date" value={values.endDate} min={values.startDate || undefined} onChange={(event) => update({ endDate: event.target.value })} fullWidth bordered />
+              <Input
+                label="Ответственное лицо"
+                value={values.responsibleText}
+                onChange={(event) => update({ responsibleText: event.target.value })}
+                fullWidth
+                bordered
+              />
+              <Input
+                label="CRM ID"
+                value={values.crmId}
+                onChange={(event) => update({ crmId: event.target.value })}
+                fullWidth
+                bordered
+              />
+              <DatePicker
+                label="Начало договора"
+                values={startDate}
+                onDateChange={(date) =>
+                  update({ startDate: date instanceof Date ? formatDateOnly(date) : '' })
+                }
+                onClear={() => update({ startDate: '' })}
+                allowTime={false}
+                fullWidth
+              />
+              <DatePicker
+                label="Конец договора"
+                values={endDate}
+                onDateChange={(date) =>
+                  update({ endDate: date instanceof Date ? formatDateOnly(date) : '' })
+                }
+                onClear={() => update({ endDate: '' })}
+                allowTime={false}
+                hasError={hasInvalidDateRange}
+                hintText={
+                  hasInvalidDateRange
+                    ? 'Дата окончания должна быть не раньше даты начала'
+                    : undefined
+                }
+                isHintAlwaysShown={hasInvalidDateRange}
+                fullWidth
+              />
             </>
           )}
           {needsResponsible && (
@@ -301,7 +357,10 @@ export const LocationFormModal = ({
             <Select
               label="Тип товара"
               value={values.storageTypeId || null}
-              options={itemTypesQuery.itemTypes.map((itemType) => ({ label: itemType.name, value: String(itemType.id) }))}
+              options={itemTypesQuery.itemTypes.map((itemType) => ({
+                label: itemType.name,
+                value: String(itemType.id),
+              }))}
               onChange={(value) => update({ storageTypeId: normalizeSelectValue(value) })}
               isLoading={itemTypesQuery.isLoading}
               fullWidth
@@ -309,8 +368,15 @@ export const LocationFormModal = ({
           )}
         </Modal.Content>
         <Modal.Actions className="mt-4 flex justify-end gap-3">
-          <Button type="button" variant="outline-neutral" onClick={handleClose}>Отмена</Button>
-          <Button type="submit" variant="primary" disabled={!isFormValid(type, values, isEdit)} isLoading={isSubmitting}>
+          <Button type="button" variant="outline-neutral" onClick={handleClose}>
+            Отмена
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!isFormValid(type, values, isEdit)}
+            isLoading={isSubmitting}
+          >
             {isEdit ? 'Сохранить' : 'Добавить'}
           </Button>
         </Modal.Actions>
