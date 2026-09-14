@@ -15,7 +15,7 @@ import {
   TmzGoodActions,
   TmzGoodHistoryDownloadButton,
 } from '@features/tmz-good-actions';
-import { type TmzGoodRemain, useTmzGood } from '@entities/tmz-good';
+import { isLowStock, type TmzGoodRemain, useTmzGood } from '@entities/tmz-good';
 import { formatMoney, getStoredUser } from '@shared/lib';
 import { DataTable, type DataTableProps, EmptyPage } from '@shared/ui';
 
@@ -92,6 +92,7 @@ export const TmzGoodDetailsPage = () => {
     (total, remain) => total + Number(remain.total_qty || 0),
     0,
   );
+  const hasLowStock = isLowStock(totalQuantity, firstRemain?.item_type_name);
 
   return (
     <section className="flex flex-1 flex-col gap-5 pb-10">
@@ -106,9 +107,18 @@ export const TmzGoodDetailsPage = () => {
           <OutlineNavigationLeftArrow />
         </Button>
         <div className="flex-1">
-          <Typography element="div" category="heading" proportions="h3" className="truncate">
-            {firstRemain?.name ?? 'Товар'}
-          </Typography>
+          <div className="flex items-center gap-2">
+            <Typography element="div" category="heading" proportions="h3" className="truncate">
+              {firstRemain?.name ?? 'Товар'}
+            </Typography>
+            {hasLowStock && (
+              <span
+                className="h-3 w-3 shrink-0 rounded-full bg-red-600"
+                title="Критически низкий остаток"
+                aria-label="Критически низкий остаток"
+              />
+            )}
+          </div>
           <Typography
             element="div"
             category="body"

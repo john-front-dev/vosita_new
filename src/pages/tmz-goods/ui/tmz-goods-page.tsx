@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { TmzCartDrawer } from '@features/tmz-good-actions';
 import { useTmzCategoryOptions } from '@entities/category';
+import { isLowStock } from '@entities/tmz-good';
 import { routes } from '@shared/config';
 import { formatMoney, getStoredUser, useUrlListState } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
@@ -31,7 +32,23 @@ export const TmzGoodsPage = () => {
   const columns = useMemo<DataTableProps<TmzGood>['columns']>(
     () => [
       { accessor: 'goods_id', maxWidth: '90px', minWidth: '90px', title: 'ID' },
-      { accessor: 'goods_name', minWidth: '280px', title: 'Название' },
+      {
+        accessor: 'goods_name',
+        minWidth: '280px',
+        renderRowCell: (record) => (
+          <span className="flex items-center gap-2">
+            {record.goods_name}
+            {isLowStock(Number(record.total_qty), record.item_type_name) && (
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-600"
+                title="Критически низкий остаток"
+                aria-label="Критически низкий остаток"
+              />
+            )}
+          </span>
+        ),
+        title: 'Название',
+      },
       {
         accessor: 'total_qty',
         minWidth: '190px',
@@ -123,6 +140,10 @@ export const TmzGoodsPage = () => {
               : 'Список товаров ТМЗ пока пуст.'
           }
           pagination={{ ...pagination, totalCount }}
+          tableClassNames={{
+            row: (record) =>
+              isLowStock(Number(record.total_qty), record.item_type_name) ? 'bg-red-50/70' : '',
+          }}
         />
       </Surface>
     </section>

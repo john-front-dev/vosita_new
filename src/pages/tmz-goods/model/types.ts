@@ -3,6 +3,7 @@ export type TmzGood = {
   date?: string;
   goods_id: number;
   goods_name: string;
+  item_type_name?: string;
   price: number;
   total_price: number;
   total_qty: number;

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { TmzCartDrawer } from '@features/tmz-good-actions';
 import { useTmzCategoryOptions } from '@entities/category';
 import { useBuildings, useCities } from '@entities/location';
+import { isLowStock } from '@entities/tmz-good';
 import { routes } from '@shared/config';
 import { formatMoney, getStoredUser, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
@@ -37,14 +38,8 @@ export const TmzCategoriesPage = () => {
   });
   const filters = { ...tmzCategoriesDefaultFilters, ...urlFilters };
   const { cities } = useCities('', Boolean(filters.CITY_ID[0]));
-  const { buildings } = useBuildings(
-    filters.CITY_ID[0],
-    '',
-    Boolean(filters.BUILDING_ID[0]),
-  );
-  const { categories: filterCategories } = useTmzCategoryOptions(
-    Boolean(filters.CATEGORY_ID[0]),
-  );
+  const { buildings } = useBuildings(filters.CITY_ID[0], '', Boolean(filters.BUILDING_ID[0]));
+  const { categories: filterCategories } = useTmzCategoryOptions(Boolean(filters.CATEGORY_ID[0]));
   const categories = useTmzCategories({
     filters,
     limit: queryParams.limit,
@@ -64,20 +59,15 @@ export const TmzCategoriesPage = () => {
         filters.BUILDING_ID[0] && {
           key: 'BUILDING_ID' as const,
           label:
-            buildings.find(
-              (building) => String(building.id) === filters.BUILDING_ID[0],
-            )?.name ??
-            buildings.find(
-              (building) => String(building.id) === filters.BUILDING_ID[0],
-            )?.build ??
+            buildings.find((building) => String(building.id) === filters.BUILDING_ID[0])?.name ??
+            buildings.find((building) => String(building.id) === filters.BUILDING_ID[0])?.build ??
             filters.BUILDING_ID[0],
         },
         filters.CATEGORY_ID[0] && {
           key: 'CATEGORY_ID' as const,
           label:
-            filterCategories.find(
-              (category) => String(category.id) === filters.CATEGORY_ID[0],
-            )?.name ?? filters.CATEGORY_ID[0],
+            filterCategories.find((category) => String(category.id) === filters.CATEGORY_ID[0])
+              ?.name ?? filters.CATEGORY_ID[0],
         },
         filters.WITH_ZEROS[0] === 'true' && {
           key: 'WITH_ZEROS' as const,
@@ -108,6 +98,13 @@ export const TmzCategoriesPage = () => {
               <span className="mr-2 text-(--color-text-disabled)">Товар</span>
             )}
             {record.name}
+            {record.kind === 'good' && isLowStock(record.totalQty) && (
+              <span
+                className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-red-600"
+                title="Критически низкий остаток"
+                aria-label="Критически низкий остаток"
+              />
+            )}
           </div>
         ),
         title: 'Название',
@@ -235,6 +232,10 @@ export const TmzCategoriesPage = () => {
               ? undefined
               : { ...pagination, totalCount: categories.totalCount }
           }
+          tableClassNames={{
+            row: (record) =>
+              record.kind === 'good' && isLowStock(record.totalQty) ? 'bg-red-50/70' : '',
+          }}
         />
       </Surface>
     </section>
