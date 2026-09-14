@@ -1,47 +1,61 @@
+import { Suspense } from 'react';
+import { Loader } from 'alif-ui';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { MainLayout } from '@app/layouts';
-import { AmortizationPage } from '@pages/amortization';
-import { ApplicationDetailsPage } from '@pages/application-details';
-import { ApplicationsPage } from '@pages/applications';
-import { ApprovalPage } from '@pages/approval';
-import { CapitalizationPage } from '@pages/capitalization';
-import { CategoriesPage } from '@pages/categories';
-import { ChangePasswordPage } from '@pages/change-password';
-import { EmployeeDetailsPage } from '@pages/employee-details';
-import { EmployeesPage } from '@pages/employees';
-import { FixedAssetsPage } from '@pages/fixed-assets';
-import { HistoryPage } from '@pages/history';
-import { HomePage } from '@pages/home';
-import { LocationsPage } from '@pages/locations';
-import { LoginPage } from '@pages/login';
-import { LriPage } from '@pages/lri';
-import { MbpPage } from '@pages/mbp';
-import { MbpDetailsPage } from '@pages/mbp-details';
-import { MyFixedAssetsPage } from '@pages/my-fixed-assets';
-import { OthersPage } from '@pages/others';
-import { PlaceholderPage } from '@pages/placeholder';
-import { ResetPasswordPage } from '@pages/reset-password';
-import { StockPage } from '@pages/stock';
-import { StockAssetDetailsPage } from '@pages/stock-asset-details';
-import { TaxGroupsPage } from '@pages/tax-groups';
-import { TmzCategoriesPage } from '@pages/tmz-categories';
-import { TmzGoodDetailsPage } from '@pages/tmz-good-details';
-import { TmzGoodsPage } from '@pages/tmz-goods';
-import { TmzReportPage } from '@pages/tmz-report';
-import { TrashPage } from '@pages/trash';
 
 import { accessRules, routes } from '@shared/config';
 import type { AccessRule } from '@shared/lib';
 
+import {
+  AmortizationPage,
+  ApplicationDetailsPage,
+  ApplicationsPage,
+  ApprovalPage,
+  CapitalizationPage,
+  CategoriesPage,
+  ChangePasswordPage,
+  EmployeeDetailsPage,
+  EmployeesPage,
+  FixedAssetsPage,
+  HistoryPage,
+  HomePage,
+  LocationsPage,
+  LoginPage,
+  LriPage,
+  MbpDetailsPage,
+  MbpPage,
+  MyFixedAssetsPage,
+  OthersPage,
+  PlaceholderPage,
+  ResetPasswordPage,
+  StockAssetDetailsPage,
+  StockPage,
+  TaxGroupsPage,
+  TmzCategoriesPage,
+  TmzGoodDetailsPage,
+  TmzGoodsPage,
+  TmzReportPage,
+  TrashPage,
+} from './lazy-pages';
 import { PrivateRoute, ProtectedRoute, PublicOnlyRoute } from './route-guards';
 
+const routeFallback = (
+  <div className="flex min-h-48 items-center justify-center">
+    <Loader />
+  </div>
+);
+
+const withSuspense = (element: React.ReactNode) => (
+  <Suspense fallback={routeFallback}>{element}</Suspense>
+);
+
 const withAccess = (element: React.ReactNode, rule?: AccessRule) => (
-  <ProtectedRoute rule={rule}>{element}</ProtectedRoute>
+  <ProtectedRoute rule={rule}>{withSuspense(element)}</ProtectedRoute>
 );
 
 const appRoutes = [
-  { path: routes.home, element: <HomePage /> },
+  { path: routes.home, element: withSuspense(<HomePage />) },
   { path: routes.applications, element: withAccess(<ApplicationsPage />, accessRules.request) },
   {
     path: routes.applicationsFa,
@@ -178,19 +192,19 @@ export const router = createBrowserRouter([
     path: routes.login,
     element: (
       <PublicOnlyRoute>
-        <LoginPage />
+        {withSuspense(<LoginPage />)}
       </PublicOnlyRoute>
     ),
   },
   {
     path: routes.resetPassword,
-    element: <ResetPasswordPage />,
+    element: withSuspense(<ResetPasswordPage />),
   },
   {
     path: routes.changePassword,
     element: (
       <PrivateRoute>
-        <ChangePasswordPage />
+        {withSuspense(<ChangePasswordPage />)}
       </PrivateRoute>
     ),
   },
