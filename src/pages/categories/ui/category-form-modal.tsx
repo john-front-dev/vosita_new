@@ -82,7 +82,7 @@ export const CategoryFormModal = ({ isOpen, onClose, onSuccess, record, type }: 
   return (
     <Modal className="w-125" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
       <Modal.Header title={isEdit ? 'Редактирование категории' : 'Добавление категории'} />
-      <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+      <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
         <Modal.Content className="flex flex-col gap-4">
           <Input label="Название категории" value={name} onChange={(event) => setName(event.target.value)} fullWidth bordered />
           {type === 'os' && (
@@ -95,7 +95,7 @@ export const CategoryFormModal = ({ isOpen, onClose, onSuccess, record, type }: 
             <Switch label="Подлежит уничтожению" checked={isDestroyable} onChange={(event) => setIsDestroyable(event.target.checked)} size="m" />
           )}
         </Modal.Content>
-        <Modal.Actions className="flex justify-end gap-3">
+        <Modal.Actions className="mt-4 flex justify-end gap-3">
           <Button type="button" variant="outline-neutral" onClick={onClose}>Отмена</Button>
           <Button type="submit" variant="primary" disabled={!isValid} isLoading={isSubmitting}>{isEdit ? 'Сохранить' : 'Добавить'}</Button>
         </Modal.Actions>

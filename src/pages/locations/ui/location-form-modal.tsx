@@ -308,7 +308,7 @@ export const LocationFormModal = ({
             />
           )}
         </Modal.Content>
-        <Modal.Actions className="flex justify-end gap-3">
+        <Modal.Actions className="mt-4 flex justify-end gap-3">
           <Button type="button" variant="outline-neutral" onClick={handleClose}>Отмена</Button>
           <Button type="submit" variant="primary" disabled={!isFormValid(type, values, isEdit)} isLoading={isSubmitting}>
             {isEdit ? 'Сохранить' : 'Добавить'}

@@ -81,7 +81,7 @@ export const TmzCategoryAddModal = ({ isOpen, onClose, onSuccess }: Props) => {
   return (
     <Modal className="w-160" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
       <Modal.Header title="Добавить тип расхода" />
-      <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+      <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
         <Modal.Content className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
           {rows.map((row, index) => (
             <div className="flex flex-col gap-3 rounded-lg border border-solid border-neutral-200 p-4" key={row.key}>
@@ -125,7 +125,7 @@ export const TmzCategoryAddModal = ({ isOpen, onClose, onSuccess }: Props) => {
             </Button>
           )}
         </Modal.Content>
-        <Modal.Actions className="flex justify-end gap-3">
+        <Modal.Actions className="mt-4 flex justify-end gap-3">
           <Button type="button" variant="outline-neutral" onClick={onClose}>Отмена</Button>
           <Button type="submit" variant="primary" disabled={!isValid} isLoading={isSubmitting}>Сохранить</Button>
         </Modal.Actions>
