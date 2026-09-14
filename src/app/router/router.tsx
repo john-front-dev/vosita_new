@@ -5,12 +5,15 @@ import { AmortizationPage } from '@pages/amortization';
 import { ApplicationDetailsPage } from '@pages/application-details';
 import { ApplicationsPage } from '@pages/applications';
 import { ApprovalPage } from '@pages/approval';
+import { CapitalizationPage } from '@pages/capitalization';
+import { CategoriesPage } from '@pages/categories';
 import { ChangePasswordPage } from '@pages/change-password';
 import { EmployeeDetailsPage } from '@pages/employee-details';
 import { EmployeesPage } from '@pages/employees';
 import { FixedAssetsPage } from '@pages/fixed-assets';
 import { HistoryPage } from '@pages/history';
 import { HomePage } from '@pages/home';
+import { LocationsPage } from '@pages/locations';
 import { LoginPage } from '@pages/login';
 import { LriPage } from '@pages/lri';
 import { MbpPage } from '@pages/mbp';
@@ -21,10 +24,12 @@ import { PlaceholderPage } from '@pages/placeholder';
 import { ResetPasswordPage } from '@pages/reset-password';
 import { StockPage } from '@pages/stock';
 import { StockAssetDetailsPage } from '@pages/stock-asset-details';
+import { TaxGroupsPage } from '@pages/tax-groups';
 import { TmzCategoriesPage } from '@pages/tmz-categories';
 import { TmzGoodDetailsPage } from '@pages/tmz-good-details';
 import { TmzGoodsPage } from '@pages/tmz-goods';
 import { TmzReportPage } from '@pages/tmz-report';
+import { TrashPage } from '@pages/trash';
 
 import { accessRules, routes } from '@shared/config';
 import type { AccessRule } from '@shared/lib';
@@ -72,10 +77,7 @@ const appRoutes = [
   },
   {
     path: routes.capitalization,
-    element: withAccess(
-      <PlaceholderPage title="Капитализация" />,
-      accessRules.responsibleOrAccountant,
-    ),
+    element: withAccess(<CapitalizationPage />, accessRules.responsibleOrAccountant),
   },
   { path: routes.mbp, element: withAccess(<MbpPage />, accessRules.mbp) },
   {
@@ -84,7 +86,7 @@ const appRoutes = [
   },
   {
     path: routes.categories,
-    element: withAccess(<PlaceholderPage title="Категории" />, accessRules.responsibleOrAccountant),
+    element: withAccess(<CategoriesPage />, accessRules.responsibleOrAccountant),
   },
   {
     path: routes.employees,
@@ -142,7 +144,7 @@ const appRoutes = [
   },
   {
     path: routes.trash,
-    element: withAccess(<PlaceholderPage title="Корзина" />, accessRules.responsibleOrAccountant),
+    element: withAccess(<TrashPage />, accessRules.responsibleOrAccountant),
   },
   {
     path: routes.history,
@@ -150,10 +152,7 @@ const appRoutes = [
   },
   {
     path: routes.locations,
-    element: withAccess(
-      <PlaceholderPage title="Местоположения" />,
-      accessRules.responsibleOrAccountant,
-    ),
+    element: withAccess(<LocationsPage />, accessRules.responsibleOrAccountant),
   },
   { path: routes.lri, element: withAccess(<LriPage />, accessRules.lri) },
   {
@@ -166,10 +165,7 @@ const appRoutes = [
   },
   {
     path: routes.taxGroups,
-    element: withAccess(
-      <PlaceholderPage title="Группа налогов" />,
-      accessRules.responsibleOrAccountant,
-    ),
+    element: withAccess(<TaxGroupsPage />, accessRules.responsibleOrAccountant),
   },
   {
     path: routes.approval,
