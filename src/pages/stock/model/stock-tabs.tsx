@@ -1,4 +1,10 @@
-import type { AuthAccess, AuthUser } from '@shared/lib';
+import {
+  type AuthAccess,
+  type AuthUser,
+  isAccountant,
+  isResponsible,
+  isWarehouseManager,
+} from '@shared/lib';
 
 import type { StockListType, StockTab } from './types';
 
@@ -17,10 +23,8 @@ export const stockTabs: StockTab[] = [
 
 const stockListTypes = stockTabs.map((tab) => tab.value);
 
-const isAccountant = (accesses: AuthAccess[]) => accesses[0]?.storage_type === 'Accountant';
-
 const hasFullAccess = (user: AuthUser | null, accesses: AuthAccess[]) =>
-  Boolean(user?.is_responsible_person && !user.is_warehouse_manager) || isAccountant(accesses);
+  (isResponsible(user) && !isWarehouseManager(user)) || isAccountant(accesses);
 
 export const getAvailableStockTabs = (user: AuthUser | null, accesses: AuthAccess[]) => {
   if (hasFullAccess(user, accesses)) {

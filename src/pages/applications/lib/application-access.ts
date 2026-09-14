@@ -1,4 +1,10 @@
-import type { AuthAccess, AuthUser } from '@shared/lib';
+import {
+  type AuthAccess,
+  type AuthUser,
+  isAccountant,
+  isResponsible,
+  isWarehouseManager,
+} from '@shared/lib';
 
 import { applicationTabs } from '../model/application-tabs';
 import type { ApplicationListType } from '../model/types';
@@ -11,15 +17,13 @@ const storageTypeToListType: Record<string, ApplicationListType> = {
   TMZ: 'tmz',
 };
 
-export const isAccountant = (accesses: AuthAccess[]) => accesses[0]?.storage_type === 'Accountant';
-
 export const isResponsibleAndWarehouseManager = (user: AuthUser | null) =>
-  Boolean(user?.is_warehouse_manager && user.is_responsible_person);
+  isWarehouseManager(user) && isResponsible(user);
 
 export const getAvailableApplicationTabs = (user: AuthUser | null, accesses: AuthAccess[]) => {
   const userStorageTypes = accesses.map((access) => access.storage_type);
   const hasFullAccess =
-    Boolean(user?.is_responsible_person && !user.is_warehouse_manager) || isAccountant(accesses);
+    (isResponsible(user) && !isWarehouseManager(user)) || isAccountant(accesses);
 
   return applicationTabs.filter((tab) => {
     if (hasFullAccess || !isResponsibleAndWarehouseManager(user)) {

@@ -21,6 +21,9 @@ import {
   formatMoney,
   getStoredAccesses,
   getStoredUser,
+  isAccountant,
+  isResponsible,
+  isWarehouseManager,
   useUrlListState,
 } from '@shared/lib';
 import { ConfirmModal, DataTable, type DataTableProps } from '@shared/ui';
@@ -98,13 +101,11 @@ const getSelectedTotalTjs = (records: ApplicationObjectRecord[], selectedIds: nu
   }, 0);
 
 const getCanManage = (user: AuthUser | null, accesses: AuthAccess[]) => {
-  const isAccountant = accesses.some((access) => access.storage_type === 'Accountant');
-
-  return Boolean((user?.is_responsible_person && !user.is_warehouse_manager) || isAccountant);
+  return (isResponsible(user) && !isWarehouseManager(user)) || isAccountant(accesses);
 };
 
 const getCanIssueToStock = (user: AuthUser | null, accesses: AuthAccess[]) =>
-  getCanManage(user, accesses) || Boolean(user?.is_warehouse_manager);
+  getCanManage(user, accesses) || isWarehouseManager(user);
 
 const getDetailsStatusCounts = (details?: ApplicationDetailsPayload) => ({
   accepted: details?.count?.accepted_count ?? 0,

@@ -10,7 +10,7 @@ import {
   type EmployeeWarehouseAccessResponse,
 } from '@entities/employee';
 import { queryClient, useGetQuery, useMutationQuery } from '@shared/api';
-import { getStoredAccesses, getStoredUser } from '@shared/lib';
+import { getStoredAccesses, getStoredUser, isAccountant } from '@shared/lib';
 import { DetailsGroup, DetailsRow } from '@shared/ui';
 
 import { EmployeeWarehouseAccessSettings } from './employee-warehouse-access-settings';
@@ -19,7 +19,7 @@ type EmployeeDetailsSidebarProps = { employee: EmployeeDetails };
 
 export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps) => {
   const canManage = getStoredUser()?.access === 'редактор';
-  const isCurrentUserAccountant = getStoredAccesses()[0]?.storage_type === 'Accountant';
+  const isCurrentUserAccountant = isAccountant(getStoredAccesses());
   const canEditPermissions = canManage && !isCurrentUserAccountant;
   const [roleId, setRoleId] = useState(String(employee.role_id ?? ''));
   const [accessId, setAccessId] = useState(
@@ -150,19 +150,17 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
 
   const saveEmployeeSettings = async () => {
     try {
-      const editResponse = await editEmployee.mutateAsync({
+      await editEmployee.mutateAsync({
         body: { role_id: Number(roleId), access_id: Number(accessId || 2) },
       });
-      if (editResponse.code !== 200) throw new Error(editResponse.message);
 
       if (roleSupportsWarehouseAccess) {
-        const accessResponse = await saveWarehouseAccess.mutateAsync({
+        await saveWarehouseAccess.mutateAsync({
           body: {
             user_id: String(employee.id),
             location_access: warehouseAccessDraft.accesses,
           },
         });
-        if (accessResponse.code !== 200) throw new Error(accessResponse.message);
       }
 
       snackbar.show({ title: 'Настройки сотрудника сохранены', type: 'success' });

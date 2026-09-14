@@ -11,7 +11,13 @@ import {
   buildSubdivisionOptions,
 } from '@entities/location';
 import { useMutationQuery } from '@shared/api';
-import { getStoredAccesses, getStoredUser } from '@shared/lib';
+import {
+  getStoredAccesses,
+  getStoredUser,
+  isAccountant,
+  isResponsible,
+  isWarehouseManager,
+} from '@shared/lib';
 
 import { createApplicationOptions } from '../model/create-application-options';
 import {
@@ -47,18 +53,15 @@ export const CreateApplicationModal = ({
 }: CreateApplicationModalProps) => {
   const user = getStoredUser();
   const accesses = getStoredAccesses();
-  const isAccountant = accesses[0]?.storage_type === 'Accountant';
-  const hasFullAccess = Boolean(user?.is_responsible_person && !user.is_warehouse_manager);
-
-  const categoryOptions = useMemo(() => {
-    if (hasFullAccess || isAccountant) {
-      return createApplicationOptions;
-    }
-
-    const allowedStorageTypes = new Set(accesses.map((access) => access.storage_type));
-
-    return createApplicationOptions.filter((option) => allowedStorageTypes.has(option.storageType));
-  }, [accesses, hasFullAccess, isAccountant]);
+  const hasAccountantRole = isAccountant(accesses);
+  const hasFullAccess = isResponsible(user) && !isWarehouseManager(user);
+  const allowedStorageTypes = new Set(accesses.map((access) => access.storage_type));
+  const categoryOptions =
+    hasFullAccess || hasAccountantRole
+      ? createApplicationOptions
+      : createApplicationOptions.filter((option) =>
+          allowedStorageTypes.has(option.storageType),
+        );
 
   const {
     control,

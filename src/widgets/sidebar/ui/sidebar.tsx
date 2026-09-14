@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NotificationCenter } from '@features/notification-center';
 import { useAllWarehouses } from '@entities/location';
+import { queryClient } from '@shared/api';
 import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
 import { canAccess, clearAuthSession, getStoredAccesses, getStoredUser } from '@shared/lib';
@@ -113,6 +114,7 @@ export const Sidebar = () => {
 
   const logout = () => {
     clearAuthSession();
+    queryClient.clear();
     navigate(routes.login, { replace: true });
   };
 

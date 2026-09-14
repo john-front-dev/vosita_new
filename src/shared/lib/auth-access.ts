@@ -10,12 +10,17 @@ export type AccessRule = {
   storageTypes?: string[];
 };
 
-const isAccountant = (accesses: AuthAccess[]) => accesses[0]?.storage_type === 'Accountant';
+export const isResponsible = (user: AuthUser | null) => Boolean(user?.is_responsible_person);
+
+export const isWarehouseManager = (user: AuthUser | null) => Boolean(user?.is_warehouse_manager);
+
+export const isAccountant = (accesses: AuthAccess[]) =>
+  accesses.some((access) => access.storage_type === 'Accountant');
 
 const hasRole = (role: AccessRole, user: AuthUser, accesses: AuthAccess[]) => {
   const roleMap: Record<AccessRole, boolean> = {
-    responsible: Boolean(user.is_responsible_person),
-    warehouseManager: Boolean(user.is_warehouse_manager),
+    responsible: isResponsible(user),
+    warehouseManager: isWarehouseManager(user),
     accountant: isAccountant(accesses),
   };
 
@@ -50,7 +55,7 @@ export const getDefaultAuthorizedPath = (user: AuthUser | null, accesses: AuthAc
     return routes.login;
   }
 
-  if (user.is_responsible_person || user.is_warehouse_manager || isAccountant(accesses)) {
+  if (isResponsible(user) || isWarehouseManager(user) || isAccountant(accesses)) {
     return routes.applications;
   }
 

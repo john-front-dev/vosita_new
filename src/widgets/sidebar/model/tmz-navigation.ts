@@ -3,7 +3,13 @@ import { OutlineSystemHome } from 'alif-ui';
 
 import type { AccessibleWarehouse } from '@entities/location';
 import { routes } from '@shared/config';
-import type { AuthAccess, AuthUser } from '@shared/lib';
+import {
+  type AuthAccess,
+  type AuthUser,
+  isAccountant,
+  isResponsible,
+  isWarehouseManager,
+} from '@shared/lib';
 
 import type { SidebarNavItem } from './navigation';
 
@@ -34,12 +40,13 @@ export const getTmzNavigationItems = (
 ): SidebarNavItem[] => {
   if (!user) return [];
 
-  const isAccountant = accesses[0]?.storage_type === 'Accountant';
   const warehouses: WarehouseSource[] =
-    user.is_responsible_person && !user.is_warehouse_manager
+    isResponsible(user) && !isWarehouseManager(user)
       ? allWarehouses
-      : isAccountant
-        ? (accesses[0]?.storages ?? [])
+      : isAccountant(accesses)
+        ? accesses.flatMap((access) =>
+            access.storage_type === 'Accountant' ? access.storages : [],
+          )
         : (accesses.find((access) => access.storage_type === 'TMZ')?.storages ?? []);
   const uniqueItems = new Map<string, SidebarNavItem>();
 
