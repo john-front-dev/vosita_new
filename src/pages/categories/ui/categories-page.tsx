@@ -27,7 +27,7 @@ export const CategoriesPage = () => {
   const removeMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
     method: 'delete',
     url: '',
-    options: { onSuccess: (response) => { if (response.code !== 200) { snackbar.show({ title: response.message || 'Не удалось удалить категорию', type: 'error' }); return; } setRemovingRecord(null); snackbar.show({ title: 'Категория удалена', type: 'success' }); void invalidate(); } },
+    options: { onSuccess: () => { setRemovingRecord(null); snackbar.show({ title: 'Категория удалена', type: 'success' }); void invalidate(); } },
   });
   const columns = useMemo<DataTableProps<CategoryRecord>['columns']>(() => {
     const result: DataTableProps<CategoryRecord>['columns'] = type === 'os'

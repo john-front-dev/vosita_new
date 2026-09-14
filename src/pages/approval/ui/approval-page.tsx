@@ -107,8 +107,7 @@ export const ApprovalPage = () => {
   const runAction = async (action: 'approve' | 'reject') => {
     if (!selectedIds.length) return;
     try {
-      const response = await actions[action](selectedIds);
-      if (response.code !== 200) throw new Error(response.message);
+      await actions[action](selectedIds);
       snackbar.show({
         title: action === 'approve' ? 'Операции приняты' : 'Операции отклонены',
         type: 'success',

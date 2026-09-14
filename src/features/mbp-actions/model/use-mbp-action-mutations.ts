@@ -1,5 +1,5 @@
 import { queryClient, useMutationQuery } from '@shared/api';
-import { notify, notifyError } from '@shared/lib';
+import { notify } from '@shared/lib';
 
 import { mbpActionEndpoints } from '../api/mbp-actions-api';
 
@@ -29,12 +29,7 @@ const useMbpMutation = ({
     method,
     url,
     options: {
-      onSuccess: (response) => {
-        if (response.code !== 200) {
-          notifyError('Не удалось выполнить действие', response.message);
-          return;
-        }
-
+      onSuccess: () => {
         notify({ title: successMessage, type: 'success' });
         invalidateMbp(id);
         onSuccess?.();
@@ -84,7 +79,7 @@ export const useMbpIssueToWarehouse = ({ id, onSuccess }: ActionParams) => {
   return {
     isPending: mutation.isPending,
     run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: (response) => response.code === 200 && afterSuccess?.() }),
+      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };
 
@@ -100,7 +95,7 @@ export const useMbpWriteOff = ({ id, onSuccess }: ActionParams) => {
   return {
     isPending: mutation.isPending,
     run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: (response) => response.code === 200 && afterSuccess?.() }),
+      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };
 
@@ -116,6 +111,6 @@ export const useMbpDestroy = ({ id, onSuccess }: ActionParams) => {
   return {
     isPending: mutation.isPending,
     run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: (response) => response.code === 200 && afterSuccess?.() }),
+      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };

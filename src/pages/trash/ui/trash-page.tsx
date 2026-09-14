@@ -36,14 +36,7 @@ export const TrashPage = () => {
     method: 'post',
     url: '',
     options: {
-      onSuccess: (response) => {
-        if (response?.code !== undefined && response.code !== 200) {
-          snackbar.show({
-            title: response.message || 'Не удалось восстановить объект',
-            type: 'error',
-          });
-          return;
-        }
+      onSuccess: () => {
         setRestoringRecord(null);
         snackbar.show({ title: 'Объект восстановлен', type: 'success' });
         void queryClient.invalidateQueries({ queryKey: ['trash-list', type] });

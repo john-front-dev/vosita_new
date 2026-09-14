@@ -20,11 +20,6 @@ export const useEmployeeAssetTransfer = (employeeId: number | string, onSuccess:
     options: {
       onError: () => notifyError('Не удалось передать ОС'),
       onSuccess: (response) => {
-        if (response.code !== 200) {
-          notifyError('Не удалось передать ОС', response.message);
-          return;
-        }
-
         notify({ title: response.message || 'ОС успешно переданы', type: 'success' });
         void queryClient.invalidateQueries({
           queryKey: ['employee-details', String(employeeId)],

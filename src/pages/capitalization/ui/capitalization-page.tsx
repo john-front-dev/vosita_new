@@ -24,15 +24,7 @@ export const CapitalizationPage = () => {
     method: 'delete',
     url: capitalizationEndpoints.list,
     options: {
-      onSuccess: (response) => {
-        if (response.code !== 200) {
-          snackbar.show({
-            title: response.message || 'Не удалось удалить запись капитализации',
-            type: 'error',
-          });
-          return;
-        }
-
+      onSuccess: () => {
         setRemovingId(null);
         snackbar.show({ title: 'Запись капитализации удалена', type: 'success' });
         void queryClient.invalidateQueries({ queryKey: ['capitalization-list'] });

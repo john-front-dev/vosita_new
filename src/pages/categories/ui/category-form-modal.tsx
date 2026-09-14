@@ -43,30 +43,26 @@ export const CategoryFormModal = ({ isOpen, onClose, onSuccess, record, type }: 
           name: name.trim(),
           parent_id: Number(taxGroupId),
         };
-        const response = isEdit
-          ? await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.editOs(record!.id), body)
-          : await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createOs, body);
-        if (response.data.code !== 200) throw new Error(response.data.message);
+        await (isEdit
+          ? httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.editOs(record!.id), body)
+          : httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createOs, body));
       } else if (!isEdit) {
-        const response = await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createMbp, {
+        await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createMbp, {
           is_destroyable: isDestroyable,
           name: name.trim(),
         });
-        if (response.data.code !== 200) throw new Error(response.data.message);
       } else {
         if (name.trim() !== mbpRecord?.name) {
-          const response = await httpClient.put<ApiResponse<unknown>>(categoriesEndpoints.updateMbp(record!.id), {
+          await httpClient.put<ApiResponse<unknown>>(categoriesEndpoints.updateMbp(record!.id), {
             id: record!.id,
             name: name.trim(),
           });
-          if (response.data.code !== 200) throw new Error(response.data.message);
         }
         if (isDestroyable !== mbpRecord?.is_destroyable) {
-          const response = await httpClient.put<ApiResponse<unknown>>(categoriesEndpoints.updateMbpStatus(record!.id), {
+          await httpClient.put<ApiResponse<unknown>>(categoriesEndpoints.updateMbpStatus(record!.id), {
             id: record!.id,
             is_destroyable: isDestroyable,
           });
-          if (response.data.code !== 200) throw new Error(response.data.message);
         }
       }
       snackbar.show({ title: isEdit ? 'Категория обновлена' : 'Категория добавлена', type: 'success' });

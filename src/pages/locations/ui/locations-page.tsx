@@ -59,11 +59,7 @@ export const LocationsPage = () => {
     method: 'delete',
     url: '',
     options: {
-      onSuccess: (response) => {
-        if (response.code !== 200) {
-          snackbar.show({ title: response.message || 'Не удалось удалить местоположение', type: 'error' });
-          return;
-        }
+      onSuccess: () => {
         setRemoving(null);
         snackbar.show({ title: 'Местоположение удалено', type: 'success' });
         void queryClient.invalidateQueries({ queryKey: ['locations-list', type] });

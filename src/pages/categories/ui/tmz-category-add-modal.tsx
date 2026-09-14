@@ -66,8 +66,7 @@ export const TmzCategoryAddModal = ({ isOpen, onClose, onSuccess }: Props) => {
           storage_id: Number(row.storageId),
         };
       });
-      const response = await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createTmz, body);
-      if (response.data.code !== 200) throw new Error(response.data.message);
+      await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createTmz, body);
       snackbar.show({ title: 'Типы расходов добавлены', type: 'success' });
       onSuccess();
       onClose();

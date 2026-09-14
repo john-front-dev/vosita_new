@@ -8,12 +8,7 @@ import type {
 
 const silentConfig = { headers: { 'x-skip-error-snackbar': 'true' } };
 
-const getPayload = <T>(response: ApiResponse<T>) => {
-  if (response.code !== 200) {
-    throw new Error(response.message ?? 'Не удалось выполнить запрос уведомлений');
-  }
-  return response.payload;
-};
+const getPayload = <T>(response: ApiResponse<T>) => response.payload;
 
 export const notificationEndpoints = {
   count: '/notifications/count',

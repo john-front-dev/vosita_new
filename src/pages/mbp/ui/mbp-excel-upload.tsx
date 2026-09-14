@@ -31,14 +31,6 @@ export const MbpExcelUpload = () => {
     },
     options: {
       onSuccess: async (response) => {
-        if (response.code !== 200) {
-          snackbar.show({
-            title: response.message || 'Не удалось загрузить файл',
-            type: 'error',
-          });
-          return;
-        }
-
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['mbp'] }),
           queryClient.invalidateQueries({ queryKey: ['mbp-filter-options'] }),
