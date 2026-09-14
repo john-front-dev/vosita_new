@@ -1,73 +1,191 @@
-# React + TypeScript + Vite
+# Vosita
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vosita — внутренняя система учёта имущества и материальных ценностей. Приложение охватывает заявки, основные средства, ТМЗ, МБП, ПАУ, сотрудников, склады, категории, капитализацию, амортизацию, историю операций и корзину удалённых записей.
 
-Currently, two official plugins are available:
+## Технологии
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19;
+- TypeScript 6;
+- Vite 8;
+- React Router 7;
+- TanStack Query 5;
+- Axios;
+- Alif UI;
+- Tailwind CSS 4;
+- React Hook Form + Zod;
+- ESLint с проверкой границ Feature-Sliced Design.
 
-## React Compiler
+Для установки зависимостей используется `npm` — файл `package-lock.json` должен оставаться актуальным.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Быстрый старт
 
-## Expanding the ESLint configuration
+1. Установить зависимости:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+   ```bash
+   npm install
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. Создать или обновить `.env`:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+   ```env
+   VITE_APP_API_BASE=http://backend-host:port
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. Запустить локальную разработку:
+
+   ```bash
+   npm run dev
+   ```
+
+Доступные команды:
+
+| Команда           | Назначение                              |
+| ----------------- | --------------------------------------- |
+| `npm run dev`     | Запуск Vite в режиме разработки         |
+| `npm run build`   | Проверка TypeScript и production-сборка |
+| `npm run lint`    | Проверка ESLint и архитектурных границ  |
+| `npm run preview` | Локальный просмотр production-сборки    |
+
+Перед передачей изменений минимум выполнить:
+
+```bash
+npx tsc -b --pretty false
+npm run lint
+git diff --check
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Архитектура: FSD Pages First
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Проект использует Feature-Sliced Design со слоями:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+├── app/       # запуск приложения, провайдеры, layout, router
+├── pages/     # страницы и основная реализация разделов
+├── widgets/   # крупные самостоятельные блоки интерфейса
+├── features/  # переиспользуемые пользовательские действия
+├── entities/  # переиспользуемые бизнес-сущности
+└── shared/    # инфраструктура и код без бизнес-контекста
 ```
+
+Главное правило проекта — **Pages First**. Новый раздел сначала полностью реализуется внутри `pages/<section>`. Код не нужно преждевременно выносить в `features` или `entities` только ради формального соответствия FSD.
+
+Выносить код ниже по слоям следует, когда он действительно переиспользуется:
+
+- самостоятельное пользовательское действие в разных местах → `features`;
+- бизнес-сущность, типы или запросы, используемые несколькими разделами → `entities`;
+- универсальная инфраструктура без знания предметной области → `shared`;
+- крупная композиция нескольких features/entities → `widgets`.
+
+Разрешённое направление зависимостей:
+
+```text
+app → pages → widgets → features → entities → shared
+```
+
+Слой может импортировать свой слой и слои правее. Обратные зависимости запрещены. Например, `entities` не импортирует `features` или `pages`, а `shared` не знает ни о каком бизнес-слое. Эти правила проверяются ESLint.
+
+## Структура раздела
+
+Типичная страница имеет следующую структуру:
+
+```text
+pages/categories/
+├── api/       # endpoint-ы и API-функции только этого раздела
+├── lib/       # чистые преобразования и вспомогательная логика
+├── model/     # типы, состояние, query/mutation hooks, константы
+├── ui/        # страница, таблицы, фильтры, модальные окна
+└── index.ts   # публичный API слайса
+```
+
+Не все папки обязательны. Создавайте только те сегменты, которые нужны разделу.
+
+Внешний код импортирует слайс только через его публичный API:
+
+```ts
+import { CategoriesPage } from '@pages/categories';
+import { useCategories } from '@entities/category';
+import { DataTable } from '@shared/ui';
+```
+
+Глубокие импорты вида `@pages/categories/ui/categories-page` за пределами слайса запрещены. Алиасы `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared` настроены одновременно в Vite и TypeScript.
+
+## Маршрутизация и права доступа
+
+Все URL объявляются в `src/shared/config/routes.ts`, маршруты собираются в `src/app/router/router.tsx`.
+
+Используются три guard-компонента:
+
+- `PrivateRoute` — требует access token;
+- `PublicOnlyRoute` — не пускает авторизованного пользователя на страницу входа;
+- `ProtectedRoute` — проверяет роль и тип доступного склада.
+
+Правила доступа находятся в `src/shared/config/access-rules.ts`. Основные роли:
+
+- `responsible` — ответственное лицо;
+- `warehouseManager` — заведующий складом;
+- `accountant` — бухгалтер.
+
+Права конкретных кнопок могут быть уже прав доступа к странице. Например, пользователь может видеть справочник, но редактирование разрешено только при `user.access === 'редактор'`.
+
+Пункт бокового меню и соответствующий маршрут должны использовать согласованные правила. Скрытие пункта меню само по себе не является защитой — доступ всегда ограничивается также в router.
+
+## Работа с API
+
+Общий Axios-клиент находится в `src/shared/api/http-client.ts` и:
+
+- использует `VITE_APP_API_BASE`;
+- добавляет Bearer token;
+- выполняет один общий refresh token запрос при `401`;
+- очищает истёкшую сессию;
+- показывает стандартные уведомления об ошибках;
+- сериализует query-параметры единообразно.
+
+Для чтения используются query hooks на основе TanStack Query, для изменений — `useMutationQuery` либо `httpClient`, если операция состоит из нескольких последовательных запросов.
+
+Backend часто возвращает HTTP-успех вместе с бизнес-кодом в теле:
+
+```ts
+type ApiResponse<T> = {
+  code: number;
+  message?: string;
+  payload: T;
+};
+```
+
+## UI и формы
+
+- В первую очередь используйте компоненты `alif-ui`.
+- Общие компоненты проекта находятся в `src/shared/ui`.
+- Стили пишутся utility-классами Tailwind; глобальные токены и редкие overrides находятся в `src/index.css`.
+- Для сложной валидации используйте React Hook Form и Zod.
+- Серверная загрузка и отправка должны иметь видимые состояния `isLoading`, `isFetching` и `isPending`.
+- Удаление и другие необратимые действия требуют подтверждения через `ConfirmModal`.
+- Тексты интерфейса и уведомлений сейчас ведутся на русском языке.
+
+## Важные соглашения
+
+- Типы лежат в `model/types.ts`, а не внутри больших UI-компонентов.
+- Endpoint-ы не пишутся строками в JSX — они собираются в `api/*-api.ts`.
+- Преобразование фильтров и payload отделяется от отображения, если логика не тривиальна.
+- Переиспользуемые экспорты проходят через `index.ts` слайса.
+- Имена файлов — `kebab-case`, компоненты — `PascalCase`, hooks — `useSomething`.
+- Не использовать `any`, `console.log` и `debugger`.
+- Не дублировать общий HTTP-клиент, обработку токенов, таблицы, пагинацию и уведомления.
+
+## Где искать основную инфраструктуру
+
+| Задача                      | Файл или каталог                    |
+| --------------------------- | ----------------------------------- |
+| Точка входа                 | `src/main.tsx`                      |
+| Глобальные провайдеры       | `src/app/providers`                 |
+| Router и guards             | `src/app/router`                    |
+| Все пути                    | `src/shared/config/routes.ts`       |
+| Правила доступа             | `src/shared/config/access-rules.ts` |
+| Боковое меню                | `src/widgets/sidebar`               |
+| HTTP-клиент                 | `src/shared/api/http-client.ts`     |
+| Query client и общие hooks  | `src/shared/api`                    |
+| Авторизация и local storage | `src/shared/lib/auth-storage.ts`    |
+| Глобальные API-типы         | `src/shared/types/global.d.ts`      |
+| Общие UI-компоненты         | `src/shared/ui`                     |
+| Глобальные стили            | `src/index.css`                     |
