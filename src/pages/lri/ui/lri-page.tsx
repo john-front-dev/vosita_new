@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react';
 import { Badge, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
-import type { StockRecord } from '@pages/stock/model/types';
-
 import { useBuildings, useCities } from '@entities/location';
-import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
+import {
+  getStockAssetStatusBadgeVariant,
+  getStockAssetStatusLabel,
+  type StockAssetListItem,
+} from '@entities/stock-asset';
 import { routes } from '@shared/config';
 import { formatDate, formatMoney, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
@@ -38,11 +40,7 @@ export const LriPage = () => {
     [filters],
   );
   const { cities } = useCities('', Boolean(lriFilters.CITY_ID[0]));
-  const { buildings } = useBuildings(
-    lriFilters.CITY_ID[0],
-    '',
-    Boolean(lriFilters.BUILDING_ID[0]),
-  );
+  const { buildings } = useBuildings(lriFilters.CITY_ID[0], '', Boolean(lriFilters.BUILDING_ID[0]));
   const appliedFilters = useMemo(
     () => getAppliedLriFilters(lriFilters, cities, buildings),
     [buildings, cities, lriFilters],
@@ -53,7 +51,7 @@ export const LriPage = () => {
     page: queryParams.page,
     searchText: queryParams.searchText,
   });
-  const columns = useMemo<DataTableProps<StockRecord>['columns']>(
+  const columns = useMemo<DataTableProps<StockAssetListItem>['columns']>(
     () => [
       { accessor: 'name', minWidth: '260px', title: 'Наименование объекта' },
       {

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
-import type { StockListResponse } from '@pages/stock/model/types';
-
+import type { StockAssetListResponse } from '@entities/stock-asset';
 import { useGetQuery } from '@shared/api';
 
 import { lriEndpoints } from '../api/lri-api';
@@ -20,7 +19,7 @@ export const useLriList = ({ filters, limit, page, searchText }: UseLriListParam
     () => buildLriListParams(filters, page, limit, searchText),
     [filters, limit, page, searchText],
   );
-  const query = useGetQuery<StockListResponse>({
+  const query = useGetQuery<StockAssetListResponse>({
     queryKey: ['lri'],
     url: lriEndpoints.list,
     params,

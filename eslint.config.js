@@ -124,5 +124,22 @@ export default defineConfig([
       'sort-imports': 'off',
     },
   },
+  {
+    files: ['src/pages/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@pages/*'],
+              message:
+                'Страница не должна импортировать другую страницу. Вынесите общий код в widgets, features или entities.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
 ]);

@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 
+import type { StockAssetListResponse } from '@entities/stock-asset';
 import { useGetQuery } from '@shared/api';
 
 import { getStockRequestConfig, stockListEndpoints } from '../api/stock-api';
 import { buildStockListParams } from '../lib/build-stock-list-params';
-import type { StockFilters, StockListResponse, StockListType } from './types';
+import type { StockFilters, StockListType } from './types';
 
 type UseStockListParams = {
   filters: StockFilters;
@@ -27,7 +28,7 @@ export const useStockList = ({ filters, limit, page, searchText, type }: UseStoc
     [filters, limit, page, searchText, type],
   );
 
-  const query = useGetQuery<StockListResponse>({
+  const query = useGetQuery<StockAssetListResponse>({
     queryKey: ['stock', type],
     url: stockListEndpoints[type],
     ...getStockRequestConfig(queryParams),

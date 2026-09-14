@@ -6,6 +6,34 @@ export type StockAssetCapitalization = {
   price?: number;
 };
 
+export type StockAssetListItem = {
+  application_id?: string;
+  building?: string;
+  building_id?: string;
+  cabinet?: string;
+  category_id?: number;
+  category_name?: string;
+  city?: string;
+  city_id?: string;
+  currency?: string;
+  date?: number | string;
+  exploiter?: string;
+  id: number | string;
+  inventory_number?: string;
+  is_inventoried?: boolean;
+  is_repair?: number;
+  name: string;
+  price?: number;
+  qr?: string;
+  receipt?: string;
+  responsible_person?: string;
+  responsible_person_id?: string;
+  serial_number?: string;
+  status_id?: number;
+};
+
+export type StockAssetListResponse = ApiResponse<PaginatedPayload<StockAssetListItem>>;
+
 export type StockAssetHistoryItem = {
   created_at?: number | string;
   history_id: number | string;

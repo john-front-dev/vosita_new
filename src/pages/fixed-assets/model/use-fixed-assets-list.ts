@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
-import type { StockListResponse } from '@pages/stock/model/types';
-
+import type { StockAssetListResponse } from '@entities/stock-asset';
 import { useGetQuery } from '@shared/api';
 
 import { fixedAssetsEndpoints } from '../api/fixed-assets-api';
@@ -25,7 +24,7 @@ export const useFixedAssetsList = ({
     () => buildFixedAssetsListParams(filters, page, limit, searchText),
     [filters, limit, page, searchText],
   );
-  const query = useGetQuery<StockListResponse>({
+  const query = useGetQuery<StockAssetListResponse>({
     queryKey: ['fixed-assets'],
     url: fixedAssetsEndpoints.list,
     params,

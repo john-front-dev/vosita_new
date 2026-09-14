@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react';
 import { Badge, Search, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
-import type { StockRecord } from '@pages/stock/model/types';
-
 import { useCategories } from '@entities/category';
 import { useBuildings, useCabinets, useCities } from '@entities/location';
-import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
+import {
+  getStockAssetStatusBadgeVariant,
+  getStockAssetStatusLabel,
+  type StockAssetListItem,
+} from '@entities/stock-asset';
 import { routes } from '@shared/config';
 import { formatDate, formatMoney, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
@@ -54,21 +56,8 @@ export const FixedAssetsPage = () => {
     Boolean(fixedAssetsFilters.CABINET_ID[0]),
   );
   const appliedFilters = useMemo(
-    () =>
-      getAppliedFixedAssetsFilters(
-        fixedAssetsFilters,
-        cities,
-        buildings,
-        cabinets,
-        categories,
-      ),
-    [
-      buildings,
-      cabinets,
-      categories,
-      cities,
-      fixedAssetsFilters,
-    ],
+    () => getAppliedFixedAssetsFilters(fixedAssetsFilters, cities, buildings, cabinets, categories),
+    [buildings, cabinets, categories, cities, fixedAssetsFilters],
   );
   const stockList = useFixedAssetsList({
     filters: fixedAssetsFilters,
@@ -77,7 +66,7 @@ export const FixedAssetsPage = () => {
     searchText: queryParams.searchText,
   });
 
-  const handleInventoryRowClick = (record: StockRecord) => {
+  const handleInventoryRowClick = (record: StockAssetListItem) => {
     setSelectedInventoryIds((currentIds) =>
       currentIds.includes(Number(record.id))
         ? currentIds.filter((selectedId) => selectedId !== Number(record.id))
@@ -85,7 +74,7 @@ export const FixedAssetsPage = () => {
     );
   };
 
-  const columns = useMemo<DataTableProps<StockRecord>['columns']>(
+  const columns = useMemo<DataTableProps<StockAssetListItem>['columns']>(
     () => [
       {
         accessor: 'inventory_number',

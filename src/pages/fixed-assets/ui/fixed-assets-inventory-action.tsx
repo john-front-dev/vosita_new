@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Button, OutlineSystemListView, snackbar, Typography } from 'alif-ui';
 
-import type { StockRecord } from '@pages/stock/model/types';
-
+import type { StockAssetListItem } from '@entities/stock-asset';
 import { httpClient, queryClient } from '@shared/api';
 
 type FixedAssetsInventoryButtonProps = {
@@ -11,7 +10,7 @@ type FixedAssetsInventoryButtonProps = {
 };
 
 type FixedAssetsInventoryActionsProps = {
-  records: StockRecord[];
+  records: StockAssetListItem[];
   selectedIds: number[];
   onCancel: () => void;
 };

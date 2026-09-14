@@ -15,7 +15,11 @@ import { useNavigate } from 'react-router-dom';
 import { useCategories } from '@entities/category';
 import { useWarehouseManagers } from '@entities/employee';
 import { useAccessibleWarehouses } from '@entities/location';
-import { getStockAssetStatusBadgeVariant, getStockAssetStatusLabel } from '@entities/stock-asset';
+import {
+  getStockAssetStatusBadgeVariant,
+  getStockAssetStatusLabel,
+  type StockAssetListItem,
+} from '@entities/stock-asset';
 import { httpClient } from '@shared/api';
 import { routes } from '@shared/config';
 import {
@@ -36,7 +40,7 @@ import {
   getDefaultStockListType,
   isStockListType,
 } from '../model/stock-tabs';
-import type { StockFilterKey, StockFilters, StockListType, StockRecord } from '../model/types';
+import type { StockFilterKey, StockFilters, StockListType } from '../model/types';
 import { useStockList } from '../model/use-stock-list';
 import { StockFiltersModal } from './stock-filters-modal';
 
@@ -99,12 +103,7 @@ export const StockPage = () => {
         categories,
         warehouseManagers,
       ),
-    [
-      accessibleWarehouses.warehouses,
-      categories,
-      stockFilters,
-      warehouseManagers,
-    ],
+    [accessibleWarehouses.warehouses, categories, stockFilters, warehouseManagers],
   );
 
   const stockList = useStockList({
@@ -142,8 +141,8 @@ export const StockPage = () => {
     }
   };
 
-  const columns = useMemo<DataTableProps<StockRecord>['columns']>(() => {
-    const sharedColumns: DataTableProps<StockRecord>['columns'] = [
+  const columns = useMemo<DataTableProps<StockAssetListItem>['columns']>(() => {
+    const sharedColumns: DataTableProps<StockAssetListItem>['columns'] = [
       {
         accessor: 'name',
         minWidth: '260px',
