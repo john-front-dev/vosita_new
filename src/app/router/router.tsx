@@ -19,7 +19,6 @@ import {
   EmployeesPage,
   FixedAssetsPage,
   HistoryPage,
-  HomePage,
   LocationsPage,
   LoginPage,
   LriPage,
@@ -27,7 +26,6 @@ import {
   MbpPage,
   MyFixedAssetsPage,
   OthersPage,
-  PlaceholderPage,
   ResetPasswordPage,
   StockAssetDetailsPage,
   StockPage,
@@ -38,10 +36,10 @@ import {
   TmzReportPage,
   TrashPage,
 } from './lazy-pages';
-import { PrivateRoute, ProtectedRoute, PublicOnlyRoute } from './route-guards';
+import { DefaultRoute, PrivateRoute, ProtectedRoute, PublicOnlyRoute } from './route-guards';
 
 const routeFallback = (
-  <div className="flex min-h-48 items-center justify-center">
+  <div className="flex h-screen items-center justify-center">
     <Loader />
   </div>
 );
@@ -55,27 +53,15 @@ const withAccess = (element: React.ReactNode, rule?: AccessRule) => (
 );
 
 const appRoutes = [
-  { path: routes.home, element: withSuspense(<HomePage />) },
+  { path: routes.home, element: <DefaultRoute /> },
   { path: routes.applications, element: withAccess(<ApplicationsPage />, accessRules.request) },
-  {
-    path: routes.applicationsFa,
-    element: withAccess(<PlaceholderPage title="Запросы ОС" />, accessRules.request),
-  },
   {
     path: routes.applicationsFaDetails,
     element: withAccess(<ApplicationDetailsPage type="fixed-assets" />, accessRules.request),
   },
   {
-    path: routes.applicationsLri,
-    element: withAccess(<PlaceholderPage title="Запросы ПАУ" />, accessRules.request),
-  },
-  {
     path: routes.applicationsLriDetails,
     element: withAccess(<ApplicationDetailsPage type="lri" />, accessRules.request),
-  },
-  {
-    path: routes.applicationsTmz,
-    element: withAccess(<PlaceholderPage title="Запросы ТМЗ" />, accessRules.request),
   },
   {
     path: routes.applicationsTmzDetails,
@@ -174,10 +160,6 @@ const appRoutes = [
     element: withAccess(<StockAssetDetailsPage type="lri" />, accessRules.lri),
   },
   {
-    path: routes.reports,
-    element: withAccess(<PlaceholderPage title="Отчёты" />, accessRules.reports),
-  },
-  {
     path: routes.taxGroups,
     element: withAccess(<TaxGroupsPage />, accessRules.responsibleOrAccountant),
   },
@@ -190,11 +172,7 @@ const appRoutes = [
 export const router = createBrowserRouter([
   {
     path: routes.login,
-    element: (
-      <PublicOnlyRoute>
-        {withSuspense(<LoginPage />)}
-      </PublicOnlyRoute>
-    ),
+    element: <PublicOnlyRoute>{withSuspense(<LoginPage />)}</PublicOnlyRoute>,
   },
   {
     path: routes.resetPassword,
@@ -202,11 +180,7 @@ export const router = createBrowserRouter([
   },
   {
     path: routes.changePassword,
-    element: (
-      <PrivateRoute>
-        {withSuspense(<ChangePasswordPage />)}
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute>{withSuspense(<ChangePasswordPage />)}</PrivateRoute>,
   },
   {
     element: (

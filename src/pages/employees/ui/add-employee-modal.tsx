@@ -1,9 +1,13 @@
-import { useState } from 'react';
-import { Button, Input, Modal, snackbar } from 'alif-ui';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Input, Modal } from 'alif-ui';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 
-import { useMutationQuery } from '@shared/api';
-
-import { employeesEndpoints } from '../api/employees-api';
+import {
+  addEmployeeDefaultValues,
+  type AddEmployeeFormValues,
+  addEmployeeSchema,
+} from '../model/add-employee-validation';
+import { useCreateEmployee } from '../model/use-employee-mutations';
 
 type AddEmployeeModalProps = {
   isOpen: boolean;
@@ -11,68 +15,75 @@ type AddEmployeeModalProps = {
   onSuccess: () => void;
 };
 
-type CreateEmployeeBody = { email: string; name: string; organization: 'ALIF' };
-
 export const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: AddEmployeeModalProps) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const normalizedName = name.trim();
-  const normalizedEmail = email.trim();
-  const isValid = normalizedName.length > 1 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
-  const createEmployee = useMutationQuery<ApiResponse<unknown>, { body: CreateEmployeeBody }>({
-    method: 'post',
-    url: employeesEndpoints.create,
-    options: {
-      onSuccess: () => {
-        snackbar.show({ title: 'Сотрудник добавлен', type: 'success' });
-        setName('');
-        setEmail('');
-        onSuccess();
-        onClose();
-      },
-      onError: () => snackbar.show({ title: 'Не удалось добавить сотрудника', type: 'error' }),
-    },
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+    reset,
+  } = useForm<AddEmployeeFormValues>({
+    defaultValues: addEmployeeDefaultValues,
+    mode: 'onChange',
+    resolver: zodResolver(addEmployeeSchema),
   });
+  const { create, isCreating } = useCreateEmployee(() => {
+    reset();
+    onSuccess();
+    onClose();
+  });
+  const close = () => {
+    reset();
+    onClose();
+  };
+  const submit: SubmitHandler<AddEmployeeFormValues> = ({ email, name }) =>
+    create(name, email);
 
   return (
-    <Modal className="w-125" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
+    <Modal className="w-125" isOpen={isOpen} onClose={close} isCentered withCloseButton>
       <Modal.Header title="Добавление сотрудника" />
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!isValid) return;
-          createEmployee.mutate({
-            body: { email: normalizedEmail, name: normalizedName, organization: 'ALIF' },
-          });
-        }}
-      >
+      <form onSubmit={handleSubmit(submit)}>
         <Modal.Content className="flex flex-col gap-4">
-          <Input
-            label="Ф.И.О."
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            fullWidth
-            bordered
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <Input
+                label="Ф.И.О."
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                hasError={Boolean(fieldState.error)}
+                hintText={fieldState.error?.message}
+                isHintAlwaysShown={Boolean(fieldState.error)}
+                fullWidth
+                bordered
+              />
+            )}
           />
-          <Input
-            label="Электронная почта"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            fullWidth
-            bordered
+          <Controller
+            control={control}
+            name="email"
+            render={({ field, fieldState }) => (
+              <Input
+                label="Электронная почта"
+                type="email"
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                hasError={Boolean(fieldState.error)}
+                hintText={fieldState.error?.message}
+                isHintAlwaysShown={Boolean(fieldState.error)}
+                fullWidth
+                bordered
+              />
+            )}
           />
         </Modal.Content>
         <Modal.Actions className="mt-4 flex justify-end gap-2">
-          <Button type="button" variant="outline-neutral" onClick={onClose}>
+          <Button type="button" variant="outline-neutral" onClick={close}>
             Отмена
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={!isValid}
-            isLoading={createEmployee.isPending}
-          >
+          <Button type="submit" variant="primary" disabled={!isValid} isLoading={isCreating}>
             Добавить
           </Button>
         </Modal.Actions>

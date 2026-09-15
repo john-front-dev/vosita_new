@@ -1,38 +1,25 @@
 import { useMemo, useState } from 'react';
-import { Button, OutlineSystemTrash, Search, snackbar, Surface, Typography } from 'alif-ui';
+import { Button, OutlineSystemTrash, Search, Surface, Typography } from 'alif-ui';
 
-import { queryClient, useMutationQuery } from '@shared/api';
 import { formatMoney, useUrlListState } from '@shared/lib';
 import { ConfirmModal, DataTable, type DataTableProps } from '@shared/ui';
 
-import { capitalizationEndpoints } from '../api/capitalization-api';
 import { formatCapitalizationDate } from '../model/capitalization-utils';
 import type { CapitalizationRecord } from '../model/types';
 import { useCapitalizationList } from '../model/use-capitalization-list';
+import { useRemoveCapitalization } from '../model/use-remove-capitalization';
 import { CapitalizationDetailsModal } from './capitalization-details-modal';
 
 export const CapitalizationPage = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
   const { pagination, queryParams, searchText, setSearchText } = useUrlListState();
-  const list = useCapitalizationList({
+  const { isFetching, isLoading, records, totalCount } = useCapitalizationList({
     LIMIT: queryParams.limit,
     NAME: queryParams.searchText,
     PAGE: queryParams.page,
   });
-  const removeMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
-    method: 'delete',
-    url: capitalizationEndpoints.list,
-    options: {
-      onSuccess: () => {
-        setRemovingId(null);
-        snackbar.show({ title: 'Запись капитализации удалена', type: 'success' });
-        void queryClient.invalidateQueries({ queryKey: ['capitalization-list'] });
-      },
-      onError: () =>
-        snackbar.show({ title: 'Не удалось удалить запись капитализации', type: 'error' }),
-    },
-  });
+  const { isRemoving, remove } = useRemoveCapitalization(() => setRemovingId(null));
   const columns = useMemo<DataTableProps<CapitalizationRecord>['columns']>(
     () => [
       {
@@ -105,16 +92,16 @@ export const CapitalizationPage = () => {
 
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => setSelectedId(record.id)}
           emptyPlaceholder={
             queryParams.searchText
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Список капитализаций пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
 
@@ -128,11 +115,11 @@ export const CapitalizationPage = () => {
         message="После удаления записи её нельзя будет восстановить."
         confirmText="Удалить"
         variant="risk"
-        isConfirmLoading={removeMutation.isPending}
+        isConfirmLoading={isRemoving}
         onClose={() => setRemovingId(null)}
         onConfirm={() => {
           if (removingId !== null) {
-            removeMutation.mutate({ url: capitalizationEndpoints.remove(removingId) });
+            remove(removingId);
           }
         }}
       />

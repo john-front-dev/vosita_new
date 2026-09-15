@@ -1,58 +1,28 @@
 import { useState } from 'react';
-import { Button, FileUploader, Modal, OutlineSystemFileAdd, snackbar } from 'alif-ui';
+import { Button, FileUploader, Modal, OutlineSystemFileAdd } from 'alif-ui';
 
-import { httpClient, queryClient } from '@shared/api';
-import { downloadBlob } from '@shared/lib';
-
-const fixedAssetsUploadEndpoint = '/upload_os';
-const fixedAssetsTemplateEndpoint = '/template_os';
+import { useFixedAssetsFileActions } from '../model/use-fixed-assets-file-actions';
 
 export const FixedAssetsUploadButton = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const { downloadTemplate, isDownloadingTemplate, isUploading, upload } =
+    useFixedAssetsFileActions(() => {
+      setFile(null);
+      setIsOpen(false);
+    });
 
   const handleClose = () => {
     setFile(null);
     setIsOpen(false);
   };
 
-  const handleTemplateDownload = async () => {
-    try {
-      setIsDownloadingTemplate(true);
-
-      const response = await httpClient.get<Blob>(fixedAssetsTemplateEndpoint, {
-        responseType: 'blob',
-      });
-      downloadBlob(response.data, 'template_os.xlsx');
-    } catch {
-      snackbar.show({ title: 'Не удалось скачать шаблон', type: 'error' });
-    } finally {
-      setIsDownloadingTemplate(false);
-    }
-  };
-
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (!file) {
       return;
     }
 
-    try {
-      setIsUploading(true);
-
-      const formData = new FormData();
-
-      formData.append('excelFile', file);
-      await httpClient.post(fixedAssetsUploadEndpoint, formData);
-      await queryClient.invalidateQueries({ queryKey: ['fixed-assets'] });
-      snackbar.show({ title: 'Файл успешно загружен', type: 'success' });
-      handleClose();
-    } catch {
-      snackbar.show({ title: 'Не удалось загрузить файл', type: 'error' });
-    } finally {
-      setIsUploading(false);
-    }
+    void upload(file);
   };
 
   return (
@@ -110,7 +80,7 @@ export const FixedAssetsUploadButton = () => {
               type="button"
               variant="primary"
               className="w-full"
-              onClick={handleTemplateDownload}
+              onClick={() => void downloadTemplate()}
               isLoading={isDownloadingTemplate}
             >
               Скачать шаблоны

@@ -11,4 +11,3 @@ export * from './notifications';
 export * from './serialize-query-params';
 export * from './use-debounced-value';
 export * from './use-url-list-state';
-export * from './use-url-pagination';

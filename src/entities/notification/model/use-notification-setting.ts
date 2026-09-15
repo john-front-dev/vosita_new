@@ -18,7 +18,7 @@ type UpdateNotificationSettingVariables = {
 };
 
 export const useNotificationSetting = (goodsId: number, storageId: number) => {
-  const query = useQuery({
+  const { data, ...query } = useQuery({
     queryKey: notificationSettingKey(goodsId, storageId),
     queryFn: () => notificationApi.getSetting(goodsId, storageId),
     retry: false,
@@ -26,7 +26,8 @@ export const useNotificationSetting = (goodsId: number, storageId: number) => {
 
   return {
     ...query,
-    setting: query.data ?? null,
+    data,
+    setting: data ?? null,
   };
 };
 

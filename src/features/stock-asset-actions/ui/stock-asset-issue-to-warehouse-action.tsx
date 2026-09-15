@@ -5,7 +5,6 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import { useEmployees } from '@entities/employee';
 import type { StockAsset, StockAssetType } from '@entities/stock-asset';
-import { normalizeSelectValue } from '@shared/lib';
 
 import { type IssueFormValues, issueSchema } from '../model/stock-asset-action-validation';
 import { useStockAssetIssue } from '../model/use-stock-asset-action-mutations';
@@ -14,16 +13,26 @@ type Props = { asset: StockAsset; type: StockAssetType };
 
 export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const form = useForm<IssueFormValues>({
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<IssueFormValues>({
     defaultValues: { userId: '' },
     mode: 'onChange',
     resolver: zodResolver(issueSchema),
   });
-  const values = useWatch({ control: form.control });
+  const { userId } = useWatch({ control });
   const { employees } = useEmployees('', isOpen);
-  const action = useStockAssetIssue({ assetId: asset.id, type, onSuccess: () => setIsOpen(false) });
+  const { isIssuing, issueToWarehouse } = useStockAssetIssue({
+    assetId: asset.id,
+    type,
+    onSuccess: () => setIsOpen(false),
+  });
   const open = () => {
-    form.reset();
+    reset();
     setIsOpen(true);
   };
 
@@ -51,13 +60,13 @@ export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
         <Modal.Content>
           <Select
             label="Заведующий складом"
-            value={values.userId || null}
+            value={userId || null}
             options={employees.map((item) => ({
               label: item.full_name,
               value: String(item.id),
             }))}
             onChange={(value) =>
-              form.setValue('userId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('userId', value ?? '', { shouldValidate: true })
             }
             fullWidth
           />
@@ -69,9 +78,11 @@ export const StockAssetIssueToWarehouseAction = ({ asset, type }: Props) => {
           <Button
             type="button"
             variant="primary"
-            isLoading={action.isIssuing}
-            disabled={!form.formState.isValid}
-            onClick={form.handleSubmit(({ userId }) => action.issueToWarehouse(userId))}
+            isLoading={isIssuing}
+            disabled={!isValid}
+            onClick={handleSubmit(({ userId: selectedUserId }) =>
+              issueToWarehouse(selectedUserId),
+            )}
           >
             Выдать
           </Button>

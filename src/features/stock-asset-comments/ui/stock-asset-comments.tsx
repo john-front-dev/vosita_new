@@ -3,9 +3,9 @@ import { Button, Loader, Surface, TextArea, Typography } from 'alif-ui';
 
 import type { AssetResource, StockAssetComment } from '@entities/stock-asset';
 import { useStockAssetComments } from '@entities/stock-asset';
-import { type MutationVariables, queryClient, useMutationQuery } from '@shared/api';
 import { ConfirmModal } from '@shared/ui';
 
+import { useStockAssetCommentMutations } from '../model/use-stock-asset-comment-mutations';
 import { StockAssetCommentItem } from './stock-asset-comment-item';
 
 type CommentTarget = {
@@ -30,51 +30,21 @@ export const StockAssetComments = ({
   const [removingComment, setRemovingComment] = useState<StockAssetComment | null>(null);
   const { comments, isLoading } = useStockAssetComments(assetId, true, resource);
   const isMbp = resource === 'mbp';
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['asset-comments', resource, assetId] });
-  const createComment = useMutationQuery<
-    ApiResponse<unknown>,
-    MutationVariables<Record<string, unknown>>
-  >({
-    method: 'post',
-    url: isMbp ? '/mbp/item/comment' : '/os/comment/',
-    options: {
-      onSuccess: () => {
+  const { createComment, deleteComment, isDeleting, isSubmitting, updateComment } =
+    useStockAssetCommentMutations({
+      assetId,
+      onCreated: () => {
         setCommentText('');
         setReplyTarget(null);
-        invalidate();
       },
-    },
-  });
-  const updateComment = useMutationQuery<
-    ApiResponse<unknown>,
-    MutationVariables<Record<string, unknown>>
-  >({
-    method: 'put',
-    url: '/os/comment/',
-    options: {
-      onSuccess: () => {
+      onDeleted: () => setRemovingComment(null),
+      onUpdated: () => {
         setCommentText('');
         setEditingTarget(null);
-        invalidate();
       },
-    },
-  });
-  const deleteComment = useMutationQuery<
-    ApiResponse<unknown>,
-    MutationVariables<Record<string, unknown>>
-  >({
-    method: 'delete',
-    url: '/os/comment/',
-    options: {
-      onSuccess: () => {
-        setRemovingComment(null);
-        invalidate();
-      },
-    },
-  });
+      resource,
+    });
   const composerTarget = editingTarget ?? replyTarget;
-  const isSubmitting = createComment.isPending || updateComment.isPending;
 
   const startReply = (comment: StockAssetComment, parentComment?: StockAssetComment) => {
     setEditingTarget(null);
@@ -98,24 +68,10 @@ export const StockAssetComments = ({
     const comment = commentText.trim();
     if (!comment) return;
     if (editingTarget) {
-      updateComment.mutate({
-        body: isMbp
-          ? { comment, id: editingTarget.id }
-          : { comment, id: editingTarget.id, warehouse_id: Number(assetId) },
-        url: isMbp ? `/mbp/comment/${editingTarget.id}` : undefined,
-      });
+      updateComment(editingTarget.id, comment);
       return;
     }
-    createComment.mutate({
-      body: isMbp
-        ? { comment, item_id: Number(assetId) }
-        : {
-            comment,
-            parent_id: replyTarget?.parentId ?? null,
-            sub_com_id: replyTarget?.subCommentId ?? null,
-            warehouse_id: Number(assetId),
-          },
-    });
+    createComment(comment, replyTarget);
   };
 
   const cancelComposerMode = () => {
@@ -204,14 +160,10 @@ export const StockAssetComments = ({
         message="Комментарий будет удалён без возможности восстановления."
         confirmText="Удалить"
         variant="risk"
-        isConfirmLoading={deleteComment.isPending}
+        isConfirmLoading={isDeleting}
         onClose={() => setRemovingComment(null)}
         onConfirm={() =>
-          removingComment &&
-          deleteComment.mutate({
-            body: isMbp ? undefined : { id: removingComment.id, warehouse_id: Number(assetId) },
-            url: isMbp ? `/mbp/comment/${removingComment.id}` : undefined,
-          })
+          removingComment && deleteComment(removingComment.id)
         }
       />
     </>

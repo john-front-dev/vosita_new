@@ -5,7 +5,6 @@ import { routes } from '@shared/config';
 import { formatDate, formatMoney } from '@shared/lib';
 import { DetailsGroup, DetailsRow } from '@shared/ui';
 
-
 export const MbpDetailsDescription = ({ mbp }: { mbp: MbpDetails }) => (
   <Surface className="flex flex-col gap-6" p="5" rounded="12">
     <DetailsGroup title="Сведения">

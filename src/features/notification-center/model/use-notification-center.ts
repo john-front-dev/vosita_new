@@ -14,9 +14,22 @@ export const useNotificationCenter = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const countQuery = useNotificationCount();
-  const notificationsQuery = useNotifications(unreadOnly, isOpen && countQuery.isAllowed);
-  const actions = useNotificationActions();
+  const { isAllowed, unreadCount: totalUnreadCount } = useNotificationCount();
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    items,
+    unreadCount,
+  } = useNotifications(unreadOnly, isOpen && isAllowed);
+  const {
+    clearRead: clearReadNotifications,
+    isClearingRead,
+    isMarkingAllRead,
+    markAllRead,
+    markRead,
+  } = useNotificationActions();
 
   const navigateToNotification = (item: NotificationItem) => {
     const goodsId = Number(item.payload?.goods_id ?? item.entity_id);
@@ -38,13 +51,13 @@ export const useNotificationCenter = () => {
       navigateToNotification(item);
       return;
     }
-    actions.markRead.mutate([item.id], {
+    markRead([item.id], {
       onSuccess: () => navigateToNotification(item),
     });
   };
 
   const clearRead = () => {
-    actions.clearRead.mutate(undefined, {
+    clearReadNotifications(undefined, {
       onSuccess: () => snackbar.show({ title: 'Прочитанные уведомления очищены', type: 'success' }),
     });
   };
@@ -52,20 +65,20 @@ export const useNotificationCenter = () => {
   return {
     clearRead,
     close: () => setIsOpen(false),
-    fetchNextPage: notificationsQuery.fetchNextPage,
-    hasNextPage: notificationsQuery.hasNextPage,
-    isAllowed: countQuery.isAllowed,
-    isClearingRead: actions.clearRead.isPending,
-    isFetchingNextPage: notificationsQuery.isFetchingNextPage,
-    isLoading: notificationsQuery.isLoading,
-    isMarkingAllRead: actions.markAllRead.isPending,
+    fetchNextPage,
+    hasNextPage,
+    isAllowed,
+    isClearingRead,
+    isFetchingNextPage,
+    isLoading,
+    isMarkingAllRead,
     isOpen,
-    items: notificationsQuery.items,
-    markAllRead: () => actions.markAllRead.mutate(),
+    items,
+    markAllRead: () => markAllRead(),
     open: () => setIsOpen(true),
     openNotification,
     setUnreadOnly,
-    unreadCount: notificationsQuery.unreadCount ?? countQuery.unreadCount,
+    unreadCount: unreadCount ?? totalUnreadCount,
     unreadOnly,
   };
 };

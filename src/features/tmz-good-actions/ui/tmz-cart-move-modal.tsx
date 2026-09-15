@@ -20,9 +20,9 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
   const { cities, isLoading: isCitiesLoading } = useCities('');
   const { buildings, isLoading: isBuildingsLoading } = useBuildings(cityId);
   const { warehouses, isLoading: isWarehousesLoading } = useAllWarehouses(Boolean(buildingId));
-  const operation = useTmzGoodOperation('cart', undefined, onSuccess);
+  const { isPending, mutate } = useTmzGoodOperation('cart', undefined, onSuccess);
   const targetWarehouses = warehouses.filter(
-    (warehouse) => Number(warehouse.subdivision_id ?? warehouse.sub_id) === Number(buildingId),
+    (warehouse) => warehouse.subdivision_id === Number(buildingId),
   );
   const isInvalid = !cityId || !buildingId || !warehouseId;
 
@@ -39,7 +39,7 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
       to_storage: Number(warehouseId),
       to_subdivision: Number(buildingId),
     }));
-    operation.mutate({ body });
+    mutate({ body });
   };
 
   return (
@@ -80,8 +80,8 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
           label="В склад"
           value={warehouseId || null}
           options={targetWarehouses.map((warehouse) => ({
-            label: warehouse.storage_name ?? warehouse.name ?? '',
-            value: String(warehouse.storage_id ?? warehouse.id),
+            label: warehouse.storage_name,
+            value: String(warehouse.storage_id),
           }))}
           onChange={(value) => setWarehouseId(normalizeSelectValue(value))}
           isLoading={isWarehousesLoading}
@@ -97,7 +97,7 @@ export const TmzCartMoveModal = ({ items, onClose, onSuccess }: Props) => {
           type="button"
           variant="primary"
           disabled={isInvalid}
-          isLoading={operation.isPending}
+          isLoading={isPending}
           onClick={submit}
         >
           Переместить

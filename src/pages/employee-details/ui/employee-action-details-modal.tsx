@@ -52,8 +52,8 @@ const getRows = (action: EmployeeActionDetails) =>
   ].filter((row) => hasValue(row.value));
 
 export const EmployeeActionDetailsModal = ({ actionId, onClose }: Props) => {
-  const details = useEmployeeActionDetails(actionId);
-  const rows = details.action ? getRows(details.action) : [];
+  const { action, isError, isLoading } = useEmployeeActionDetails(actionId);
+  const rows = action ? getRows(action) : [];
 
   return (
     <Modal
@@ -63,14 +63,14 @@ export const EmployeeActionDetailsModal = ({ actionId, onClose }: Props) => {
       isCentered
       withCloseButton
     >
-      <Modal.Header title={details.action?.operation_type || 'История события'} />
+      <Modal.Header title={action?.operation_type || 'История события'} />
       <Modal.Content className="max-h-[70vh] overflow-y-auto">
-        {details.isLoading && (
+        {isLoading && (
           <div className="flex justify-center py-6">
             <Loader />
           </div>
         )}
-        {details.isError && (
+        {isError && (
           <Typography category="body" proportions="s" className="text-(--color-danger)">
             Не удалось загрузить событие.
           </Typography>

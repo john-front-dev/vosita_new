@@ -36,13 +36,13 @@ export const MbpPage = () => {
     () => ({ ...mbpDefaultFilters, ...filters }),
     [filters],
   );
-  const { records, isFetching: isFiltersFetching, isLoading: isFiltersLoading } =
+  const { records: filterRecords, isFetching: isFiltersFetching, isLoading: isFiltersLoading } =
     useMbpFilterOptions();
   const appliedFilters = useMemo(
-    () => getAppliedMbpFilters(mbpFilters, records),
-    [mbpFilters, records],
+    () => getAppliedMbpFilters(mbpFilters, filterRecords),
+    [filterRecords, mbpFilters],
   );
-  const mbpList = useMbpList({
+  const { isFetching, isLoading, records: mbpRecords, totalCount } = useMbpList({
     filters: mbpFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -147,7 +147,7 @@ export const MbpPage = () => {
               setIsFiltersOpen(false);
             }}
             onClose={() => setIsFiltersOpen(false)}
-            records={records}
+            records={filterRecords}
           />
         </div>
 
@@ -160,16 +160,16 @@ export const MbpPage = () => {
 
         <DataTable
           columns={columns}
-          records={mbpList.records}
-          isFetching={mbpList.isFetching}
-          isLoading={mbpList.isLoading}
+          records={mbpRecords}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => navigate(routes.mbpDetails.replace(':id', String(record.id)))}
           emptyPlaceholder={
             queryParams.searchText
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Список МБП пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: mbpList.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>

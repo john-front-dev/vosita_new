@@ -1,8 +1,8 @@
 import {
-  type AccessibleWarehouse,
   buildDepartmentOptions,
   buildStorageOptions,
   buildSubdivisionOptions,
+  type WarehouseLocation,
 } from '@entities/location';
 
 import type { ApplicationFilterKey, ApplicationFilters } from '../model/types';
@@ -30,7 +30,7 @@ const buildAppliedFilters = (
 
 export const getAppliedApplicationFilters = (
   filters: ApplicationFilters,
-  warehouses: AccessibleWarehouse[],
+  warehouses: WarehouseLocation[],
 ): AppliedApplicationFilter[] => {
   const departmentLabels = getLabelsByValue(buildDepartmentOptions(warehouses));
   const subdivisionLabels = getLabelsByValue(

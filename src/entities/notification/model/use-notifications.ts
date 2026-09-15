@@ -11,7 +11,7 @@ const notificationKeys = {
 };
 
 export const useNotificationCount = () => {
-  const query = useQuery({
+  const { data, isSuccess, ...query } = useQuery({
     queryKey: notificationKeys.count,
     queryFn: notificationApi.getCount,
     refetchInterval: NOTIFICATION_POLL_INTERVAL,
@@ -20,13 +20,15 @@ export const useNotificationCount = () => {
 
   return {
     ...query,
-    isAllowed: query.isSuccess,
-    unreadCount: query.data?.unread_count ?? 0,
+    data,
+    isAllowed: isSuccess,
+    isSuccess,
+    unreadCount: data?.unread_count ?? 0,
   };
 };
 
 export const useNotifications = (onlyUnread: boolean, enabled: boolean) => {
-  const query = useInfiniteQuery({
+  const { data, ...query } = useInfiniteQuery({
     queryKey: [...notificationKeys.list, onlyUnread],
     queryFn: ({ pageParam }) =>
       notificationApi.getList({
@@ -42,11 +44,12 @@ export const useNotifications = (onlyUnread: boolean, enabled: boolean) => {
     initialPageParam: 1,
     retry: false,
   });
-  const pages = query.data?.pages ?? [];
+  const pages = data?.pages ?? [];
   const latestPayload = pages.at(-1);
 
   return {
     ...query,
+    data,
     items: pages.flatMap((page) => page.data),
     unreadCount: latestPayload?.unread_count,
   };
@@ -61,18 +64,24 @@ export const useNotificationActions = () => {
     ]);
   };
 
-  const markAllRead = useMutation({
+  const { isPending: isMarkingAllRead, mutate: markAllRead } = useMutation({
     mutationFn: notificationApi.markAllRead,
     onSuccess: refreshNotifications,
   });
-  const clearRead = useMutation({
+  const { isPending: isClearingRead, mutate: clearRead } = useMutation({
     mutationFn: notificationApi.hideRead,
     onSuccess: refreshNotifications,
   });
-  const markRead = useMutation({
+  const { mutate: markRead } = useMutation({
     mutationFn: notificationApi.markRead,
     onSuccess: refreshNotifications,
   });
 
-  return { clearRead, markAllRead, markRead };
+  return {
+    clearRead,
+    isClearingRead,
+    isMarkingAllRead,
+    markAllRead,
+    markRead,
+  };
 };

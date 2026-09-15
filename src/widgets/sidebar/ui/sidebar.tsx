@@ -76,12 +76,12 @@ const NavigableCollapse = ({ item, isChildActive, onNavigate }: NavigableCollaps
 };
 
 export const Sidebar = () => {
-  const location = useLocation();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const user = getStoredUser();
   const accesses = getStoredAccesses();
-  const allWarehouses = useAllWarehouses(Boolean(user?.is_responsible_person));
-  const tmzNavigationItems = getTmzNavigationItems(user, accesses, allWarehouses.warehouses);
+  const { warehouses } = useAllWarehouses(Boolean(user?.is_responsible_person));
+  const tmzNavigationItems = getTmzNavigationItems(user, accesses, warehouses);
   const userName = user?.full_name.trim().split(/\s+/).filter(Boolean) ?? [];
   const initials =
     userName.length > 1
@@ -89,7 +89,7 @@ export const Sidebar = () => {
       : userName[0]?.slice(0, 2) || '';
 
   const isActive = (item: Pick<SidebarNavItem, 'path'>) =>
-    location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+    pathname === item.path || pathname.startsWith(`${item.path}/`);
 
   const goToPath = (path: string) => {
     navigate(path);

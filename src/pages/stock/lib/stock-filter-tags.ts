@@ -1,6 +1,6 @@
 import type { Category } from '@entities/category';
 import type { WarehouseManager } from '@entities/employee';
-import type { AccessibleWarehouse } from '@entities/location';
+import type { WarehouseLocation } from '@entities/location';
 import { buildDepartmentOptions, buildSubdivisionOptions } from '@entities/location';
 import { stockAssetFilterStatusLabels } from '@entities/stock-asset';
 
@@ -30,7 +30,7 @@ const getLocationLabel = (
 
 export const getAppliedStockFilters = (
   filters: StockFilters,
-  warehouses: AccessibleWarehouse[],
+  warehouses: WarehouseLocation[],
   categories: Category[],
   warehouseManagers: WarehouseManager[],
 ): StockFilterTag[] => {

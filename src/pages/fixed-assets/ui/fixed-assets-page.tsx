@@ -59,7 +59,7 @@ export const FixedAssetsPage = () => {
     () => getAppliedFixedAssetsFilters(fixedAssetsFilters, cities, buildings, cabinets, categories),
     [buildings, cabinets, categories, cities, fixedAssetsFilters],
   );
-  const stockList = useFixedAssetsList({
+  const { isFetching, isLoading, records, totalCount } = useFixedAssetsList({
     filters: fixedAssetsFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -209,7 +209,7 @@ export const FixedAssetsPage = () => {
 
         {isInventoryMode && (
           <FixedAssetsInventoryActions
-            records={stockList.records}
+            records={records}
             selectedIds={selectedInventoryIds}
             onCancel={() => {
               setIsInventoryMode(false);
@@ -220,9 +220,9 @@ export const FixedAssetsPage = () => {
 
         <DataTable
           columns={columns}
-          records={stockList.records}
-          isFetching={stockList.isFetching}
-          isLoading={stockList.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           selectedRecords={isInventoryMode ? selectedInventoryIds : undefined}
           onSelectedRecordsChange={isInventoryMode ? setSelectedInventoryIds : undefined}
           onRowClick={
@@ -235,7 +235,7 @@ export const FixedAssetsPage = () => {
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Список ОС пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: stockList.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>

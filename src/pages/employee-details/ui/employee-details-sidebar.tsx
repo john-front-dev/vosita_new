@@ -1,109 +1,90 @@
 import { useMemo, useState } from 'react';
-import { Button, Checkbox, snackbar, Surface, Switch, Typography } from 'alif-ui';
+import { Button, Checkbox, Surface, Switch, Typography } from 'alif-ui';
 
 import {
   employeeAccessOptions,
   type EmployeeDetails,
   employeeEndpoints,
-  type EmployeeLocationAccess,
   employeeRoleOptions,
   type EmployeeWarehouseAccessResponse,
 } from '@entities/employee';
-import { queryClient, useGetQuery, useMutationQuery } from '@shared/api';
+import { useGetQuery } from '@shared/api';
 import { getStoredAccesses, getStoredUser, isAccountant } from '@shared/lib';
 import { DetailsGroup, DetailsRow } from '@shared/ui';
 
+import {
+  changeWarehouseAccessRole,
+  getInitialWarehouseAccesses,
+  isWarehouseAccessComplete,
+  supportsWarehouseAccess,
+} from '../model/employee-permission-utils';
+import { useEmployeeDetailsMutations } from '../model/use-employee-details-mutations';
 import { EmployeeWarehouseAccessSettings } from './employee-warehouse-access-settings';
 
 type EmployeeDetailsSidebarProps = { employee: EmployeeDetails };
 
 export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps) => {
+  const {
+    access,
+    active: initialActive,
+    consumables: initialConsumables = [],
+    email,
+    full_name: fullName,
+    id,
+    manual,
+    role_id: initialRoleId = 0,
+  } = employee;
   const canManage = getStoredUser()?.access === 'редактор';
   const isCurrentUserAccountant = isAccountant(getStoredAccesses());
   const canEditPermissions = canManage && !isCurrentUserAccountant;
-  const [roleId, setRoleId] = useState(String(employee.role_id ?? ''));
+  const [roleId, setRoleId] = useState(initialRoleId);
   const [accessId, setAccessId] = useState(
-    employeeAccessOptions.find((option) => option.label.toLowerCase() === employee.access)?.value ??
-      '',
+    employeeAccessOptions.find((option) => option.label.toLowerCase() === access)?.value ?? '',
   );
-  const [active, setActive] = useState(Boolean(employee.active));
-  const [consumables, setConsumables] = useState(employee.consumables ?? []);
+  const [active, setActive] = useState(Boolean(initialActive));
+  const [consumables, setConsumables] = useState(initialConsumables);
   const [changedConsumableIds, setChangedConsumableIds] = useState<number[]>([]);
-  const warehouseAccessQuery = useGetQuery<EmployeeWarehouseAccessResponse>({
-    queryKey: ['employee-warehouse-access', employee.id],
-    url: employeeEndpoints.warehouseAccessDetails(employee.id),
+  const {
+    data: warehouseAccessData,
+    dataUpdatedAt: warehouseAccessUpdatedAt,
+    isError: isWarehouseAccessError,
+    isFetching: isWarehouseAccessFetching,
+    isLoading: isWarehouseAccessLoading,
+  } = useGetQuery<EmployeeWarehouseAccessResponse>({
+    queryKey: ['employee-warehouse-access', id],
+    url: employeeEndpoints.warehouseAccessDetails(id),
     options: { enabled: canEditPermissions },
   });
-  const serverWarehouseAccesses = useMemo(() => {
-    const accesses = (warehouseAccessQuery.data?.payload.employee_permissions ?? []).map(
-      (permission) => ({
-        storage_type: permission.storage_type,
-        storages_ids: permission.storages.map((storage) => storage.id),
-      }),
-    );
+  const serverWarehouseAccesses = useMemo(
+    () =>
+      getInitialWarehouseAccesses(initialRoleId, warehouseAccessData?.payload.employee_permissions),
+    [initialRoleId, warehouseAccessData],
+  );
+  const [warehouseAccessDraft, setWarehouseAccessDraft] = useState({
+    accesses: serverWarehouseAccesses,
+    sourceUpdatedAt: warehouseAccessUpdatedAt,
+  });
+  const { accesses: warehouseAccesses, sourceUpdatedAt } = warehouseAccessDraft;
 
-    if (employee.role_id !== 7)
-      return accesses.filter((access) => access.storage_type !== 'Accountant');
-
-    const accountantAccess = accesses.find((access) => access.storage_type === 'Accountant');
-    return [{ storage_type: 'Accountant', storages_ids: accountantAccess?.storages_ids ?? [] }];
-  }, [employee.role_id, warehouseAccessQuery.data]);
-  const [warehouseAccessDraft, setWarehouseAccessDraft] = useState<{
-    accesses: EmployeeLocationAccess[];
-    sourceUpdatedAt: number;
-  }>({ accesses: [], sourceUpdatedAt: -1 });
-
-  if (warehouseAccessDraft.sourceUpdatedAt !== warehouseAccessQuery.dataUpdatedAt) {
+  if (sourceUpdatedAt !== warehouseAccessUpdatedAt) {
     setWarehouseAccessDraft({
       accesses: serverWarehouseAccesses,
-      sourceUpdatedAt: warehouseAccessQuery.dataUpdatedAt,
+      sourceUpdatedAt: warehouseAccessUpdatedAt,
     });
   }
 
-  const refreshEmployee = () =>
-    queryClient.invalidateQueries({ queryKey: ['employee-details', String(employee.id)] });
-
-  const editEmployee = useMutationQuery<
-    ApiResponse<unknown>,
-    { body: { access_id: number; role_id: number } }
-  >({
-    method: 'post',
-    url: employeeEndpoints.edit(employee.user_id ?? ''),
-  });
-  const saveWarehouseAccess = useMutationQuery<
-    ApiResponse<unknown>,
-    { body: { location_access: EmployeeLocationAccess[]; user_id: string } }
-  >({ method: 'post', url: employeeEndpoints.warehouseAccess });
-  const deactivateEmployee = useMutationQuery<ApiResponse<unknown>>({
-    method: 'delete',
-    url: employeeEndpoints.deactivate(employee.id),
-    options: { onSuccess: () => void refreshEmployee() },
-  });
-  const reactivateEmployee = useMutationQuery<ApiResponse<unknown>>({
-    method: 'post',
-    url: employeeEndpoints.reactivate(employee.id),
-    options: { onSuccess: () => void refreshEmployee() },
-  });
-  const saveConsumables = useMutationQuery<
-    ApiResponse<unknown>,
-    { body: Array<{ accept: boolean; id: number; title: string }> }
-  >({
-    method: 'post',
-    url: employeeEndpoints.consumables(employee.user_id ?? ''),
-    options: {
-      onSuccess: () => {
-        snackbar.show({ title: 'Настройки расходников сохранены', type: 'success' });
-        setChangedConsumableIds([]);
-        void refreshEmployee();
-      },
-      onError: () => snackbar.show({ title: 'Не удалось сохранить расходники', type: 'error' }),
-    },
-  });
+  const {
+    isSavingConsumables,
+    isSavingSettings,
+    isTogglingStatus,
+    saveConsumables,
+    saveSettings,
+    toggleStatus: updateStatus,
+  } = useEmployeeDetailsMutations(employee, () => setChangedConsumableIds([]));
 
   const toggleStatus = (nextActive: boolean) => {
     setActive(nextActive);
-    const mutation = nextActive ? reactivateEmployee : deactivateEmployee;
-    mutation.mutate({}, { onError: () => setActive(!nextActive) });
+    updateStatus(nextActive, () => setActive(!nextActive));
   };
   const toggleConsumable = (id: number) => {
     setConsumables((current) =>
@@ -114,61 +95,18 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
     );
   };
   const changeRole = (nextRoleId: string) => {
-    setRoleId(nextRoleId);
-    setWarehouseAccessDraft((current) => {
-      if (nextRoleId === '7') {
-        const accountantAccess = current.accesses.find(
-          (access) => access.storage_type === 'Accountant',
-        );
-        return {
-          ...current,
-          accesses: [
-            { storage_type: 'Accountant', storages_ids: accountantAccess?.storages_ids ?? [] },
-          ],
-        };
-      }
-
-      return {
-        ...current,
-        accesses: current.accesses.filter((access) => access.storage_type !== 'Accountant'),
-      };
-    });
+    const nextRole = Number(nextRoleId);
+    setRoleId(nextRole);
+    setWarehouseAccessDraft((current) => ({
+      ...current,
+      accesses: changeWarehouseAccessRole(nextRole, current.accesses),
+    }));
   };
-  const roleSupportsWarehouseAccess = ['1', '2', '3', '7'].includes(roleId);
+  const roleSupportsWarehouseAccess = supportsWarehouseAccess(roleId);
   const isWarehouseAccessUnavailable =
     roleSupportsWarehouseAccess &&
-    (warehouseAccessQuery.isLoading ||
-      warehouseAccessQuery.isFetching ||
-      warehouseAccessQuery.isError);
-  const hasIncompleteWarehouseAccess =
-    roleId === '7'
-      ? warehouseAccessDraft.accesses.length !== 1 ||
-        warehouseAccessDraft.accesses[0]?.storage_type !== 'Accountant' ||
-        !warehouseAccessDraft.accesses[0].storages_ids.length
-      : roleSupportsWarehouseAccess &&
-        warehouseAccessDraft.accesses.some((access) => !access.storages_ids.length);
-
-  const saveEmployeeSettings = async () => {
-    try {
-      await editEmployee.mutateAsync({
-        body: { role_id: Number(roleId), access_id: Number(accessId || 2) },
-      });
-
-      if (roleSupportsWarehouseAccess) {
-        await saveWarehouseAccess.mutateAsync({
-          body: {
-            user_id: String(employee.id),
-            location_access: warehouseAccessDraft.accesses,
-          },
-        });
-      }
-
-      snackbar.show({ title: 'Настройки сотрудника сохранены', type: 'success' });
-      void refreshEmployee();
-    } catch {
-      snackbar.show({ title: 'Не удалось сохранить настройки', type: 'error' });
-    }
-  };
+    (isWarehouseAccessLoading || isWarehouseAccessFetching || isWarehouseAccessError);
+  const hasIncompleteWarehouseAccess = !isWarehouseAccessComplete(roleId, warehouseAccesses);
 
   return (
     <div className="flex flex-col gap-4">
@@ -189,7 +127,7 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
               proportions="s"
               className="mt-1 wrap-anywhere text-(--color-text-primary)"
             >
-              {employee.full_name || '-'}
+              {fullName || '-'}
             </Typography>
           </div>
           <div>
@@ -207,12 +145,12 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
               proportions="s"
               className="mt-1 wrap-anywhere text-(--color-text-primary)"
             >
-              {employee.email || '-'}
+              {email || '-'}
             </Typography>
           </div>
         </div>
 
-        {employee.manual && canManage && (
+        {manual && canManage && (
           <div className="flex items-center justify-between gap-3">
             <Typography category="body" proportions="sStrong">
               Статус
@@ -220,7 +158,7 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
             <Switch
               label={active ? 'Активный' : 'Неактивный'}
               checked={active}
-              disabled={deactivateEmployee.isPending || reactivateEmployee.isPending}
+              disabled={isTogglingStatus}
               onChange={(event) => toggleStatus(event.target.checked)}
             />
           </div>
@@ -236,13 +174,13 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
                 <Checkbox
                   key={option.value}
                   label={option.label}
-                  checked={roleId === option.value}
+                  checked={roleId === Number(option.value)}
                   disabled={!active}
                   onChange={() => changeRole(option.value)}
                 />
               ))}
             </div>
-            {roleId === '3' && (
+            {roleId === 3 && (
               <div className="flex flex-col gap-3">
                 <Typography category="body" proportions="mStrong">
                   Доступ администратора
@@ -260,9 +198,9 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
             )}
             {roleSupportsWarehouseAccess && (
               <EmployeeWarehouseAccessSettings
-                accesses={warehouseAccessDraft.accesses}
-                disabled={!active || warehouseAccessQuery.isLoading}
-                isStorageTypeLocked={roleId === '7'}
+                accesses={warehouseAccesses}
+                disabled={!active || isWarehouseAccessLoading}
+                isStorageTypeLocked={roleId === 7}
                 onChange={(accesses) =>
                   setWarehouseAccessDraft((current) => ({ ...current, accesses }))
                 }
@@ -274,12 +212,18 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
               disabled={
                 !active ||
                 !roleId ||
-                (roleId === '3' && !accessId) ||
+                (roleId === 3 && !accessId) ||
                 isWarehouseAccessUnavailable ||
                 hasIncompleteWarehouseAccess
               }
-              isLoading={editEmployee.isPending || saveWarehouseAccess.isPending}
-              onClick={() => void saveEmployeeSettings()}
+              isLoading={isSavingSettings}
+              onClick={() =>
+                void saveSettings(
+                  roleId,
+                  Number(accessId || 2),
+                  roleSupportsWarehouseAccess ? warehouseAccesses : null,
+                )
+              }
             >
               Сохранить
             </Button>
@@ -289,13 +233,13 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
             <DetailsRow
               label="Роль"
               value={
-                employeeRoleOptions.find((option) => Number(option.value) === employee.role_id)
+                employeeRoleOptions.find((option) => Number(option.value) === initialRoleId)
                   ?.label
               }
             />
             <DetailsRow
               label="Доступ администратора"
-              value={employee.role_id === 4 ? 'Нет доступа' : employee.access}
+              value={initialRoleId === 4 ? 'Нет доступа' : access}
             />
           </DetailsGroup>
         )}
@@ -320,11 +264,11 @@ export const EmployeeDetailsSidebar = ({ employee }: EmployeeDetailsSidebarProps
               type="button"
               variant="primary"
               disabled={!active || !changedConsumableIds.length}
-              isLoading={saveConsumables.isPending}
+              isLoading={isSavingConsumables}
               onClick={() =>
-                saveConsumables.mutate({
-                  body: consumables.filter((item) => changedConsumableIds.includes(item.id)),
-                })
+                saveConsumables(
+                  consumables.filter((item) => changedConsumableIds.includes(item.id)),
+                )
               }
             >
               Сохранить

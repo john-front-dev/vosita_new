@@ -24,7 +24,7 @@ import { TmzGoodHistoryTable } from './tmz-good-history-table';
 export const TmzGoodDetailsPage = () => {
   const navigate = useNavigate();
   const { goodId, storageId } = useParams();
-  const query = useTmzGood(goodId, storageId);
+  const { isError, isFetching, isLoading, remains } = useTmzGood(goodId, storageId);
   const [cartRemain, setCartRemain] = useState<TmzGoodRemain | null>(null);
   const isWarehouseManager = Boolean(getStoredUser()?.is_warehouse_manager);
   const columns = useMemo<DataTableProps<TmzGoodRemain>['columns']>(
@@ -78,20 +78,17 @@ export const TmzGoodDetailsPage = () => {
     [isWarehouseManager],
   );
 
-  if (query.isLoading) {
+  if (isLoading) {
     return (
       <Surface className="flex justify-center" p="6" rounded="12">
         <Loader />
       </Surface>
     );
   }
-  if (query.isError || !goodId || !storageId) return <EmptyPage title="Товар не найден" />;
+  if (isError || !goodId || !storageId) return <EmptyPage title="Товар не найден" />;
 
-  const firstRemain = query.remains[0];
-  const totalQuantity = query.remains.reduce(
-    (total, remain) => total + Number(remain.total_qty || 0),
-    0,
-  );
+  const firstRemain = remains[0];
+  const totalQuantity = remains.reduce((total, remain) => total + Number(remain.total_qty || 0), 0);
   const hasLowStock = isLowStock(totalQuantity, firstRemain?.item_type_name);
 
   return (
@@ -137,9 +134,9 @@ export const TmzGoodDetailsPage = () => {
           <DataTable
             accessorId="id"
             columns={columns}
-            records={query.remains}
+            records={remains}
             emptyPlaceholder="Остатков товара нет"
-            isFetching={query.isFetching}
+            isFetching={isFetching}
             isMultiExpanded
             rowSpacing="m"
             rowExpansion={{
@@ -155,7 +152,7 @@ export const TmzGoodDetailsPage = () => {
           <Surface p="4" rounded="12">
             <TmzGoodActions
               goodsId={Number(goodId)}
-              remains={query.remains}
+              remains={remains}
               storageId={Number(storageId)}
             />
           </Surface>

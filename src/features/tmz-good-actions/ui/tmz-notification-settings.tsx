@@ -32,7 +32,7 @@ const TmzNotificationSettingsContent = ({
   const [isOpen, setIsOpen] = useState(false);
   const [enabled, setEnabled] = useState(setting.enabled);
   const [minQuantity, setMinQuantity] = useState(setting.enabled ? String(setting.min_qty) : '');
-  const updateSetting = useUpdateNotificationSetting();
+  const { isPending, mutate } = useUpdateNotificationSetting();
 
   const maximumThreshold = setting.current_qty - 1;
   const parsedThreshold = Number(minQuantity);
@@ -59,7 +59,7 @@ const TmzNotificationSettingsContent = ({
       return;
     }
 
-    updateSetting.mutate(
+    mutate(
       {
         enabled,
         goodsId,
@@ -151,8 +151,8 @@ const TmzNotificationSettingsContent = ({
           <Button
             type="button"
             variant="primary"
-            isLoading={updateSetting.isPending}
-            disabled={updateSetting.isPending}
+            isLoading={isPending}
+            disabled={isPending}
             onClick={() => handleSave()}
           >
             Сохранить

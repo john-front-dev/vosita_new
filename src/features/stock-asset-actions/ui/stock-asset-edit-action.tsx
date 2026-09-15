@@ -27,7 +27,12 @@ const toId = (value?: number | string) => String(value ?? '');
 
 export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const fixedAssetForm = useForm<FixedAssetEditFormValues>({
+  const {
+    control: fixedAssetControl,
+    formState: { isValid: isFixedAssetValid },
+    handleSubmit: handleFixedAssetSubmit,
+    setValue: setFixedAssetValue,
+  } = useForm<FixedAssetEditFormValues>({
     defaultValues: {
       buildingId: toId(asset.building_id),
       cabinetId: toId(asset.cabinet_id),
@@ -42,25 +47,42 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
     mode: 'onChange',
     resolver: zodResolver(fixedAssetEditSchema),
   });
-  const lriForm = useForm<LriEditFormValues>({
+  const {
+    control: lriControl,
+    formState: { isValid: isLriValid },
+    handleSubmit: handleLriSubmit,
+    setValue: setLriValue,
+  } = useForm<LriEditFormValues>({
     defaultValues: { name: asset.name, serialNumber: asset.serial_number ?? '' },
     mode: 'onChange',
     resolver: zodResolver(lriEditSchema),
   });
-  const cityId = useWatch({ control: fixedAssetForm.control, name: 'cityId' });
-  const buildingId = useWatch({ control: fixedAssetForm.control, name: 'buildingId' });
-  const fixedValues = useWatch({ control: fixedAssetForm.control });
-  const lriValues = useWatch({ control: lriForm.control });
+  const cityId = useWatch({ control: fixedAssetControl, name: 'cityId' });
+  const buildingId = useWatch({ control: fixedAssetControl, name: 'buildingId' });
+  const {
+    cabinetId,
+    categoryId,
+    exploiterId,
+    inventoryNumber,
+    name: fixedAssetName,
+    responsiblePersonId,
+    serialNumber: fixedAssetSerialNumber,
+  } = useWatch({ control: fixedAssetControl });
+  const { name: lriName, serialNumber: lriSerialNumber } = useWatch({ control: lriControl });
   const isFixedAsset = isOsLikeStockAssetType(type);
   const { categories } = useCategories('', isOpen && isFixedAsset);
   const { cities } = useCities('', isOpen && isFixedAsset);
   const { buildings } = useBuildings(cityId, '', isOpen && isFixedAsset);
   const { cabinets } = useCabinets(buildingId, '', isOpen && isFixedAsset);
   const { employees } = useEmployees('', isOpen && isFixedAsset);
-  const action = useStockAssetEdit({ assetId: asset.id, type, onSuccess: () => setIsOpen(false) });
+  const { editAsset, isEditing } = useStockAssetEdit({
+    assetId: asset.id,
+    type,
+    onSuccess: () => setIsOpen(false),
+  });
 
   const submitFixedAsset: SubmitHandler<FixedAssetEditFormValues> = (values) =>
-    action.editAsset({
+    editAsset({
       building_id: Number(values.buildingId),
       cabinet_id: Number(values.cabinetId),
       category_id: Number(values.categoryId),
@@ -74,12 +96,12 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
       serial_number: values.serialNumber,
     });
   const submitLri: SubmitHandler<LriEditFormValues> = (values) =>
-    action.editAsset({ name: values.name, serial_number: values.serialNumber });
+    editAsset({ name: values.name, serial_number: values.serialNumber });
   const submit = () =>
     isFixedAsset
-      ? fixedAssetForm.handleSubmit(submitFixedAsset)()
-      : lriForm.handleSubmit(submitLri)();
-  const isValid = isFixedAsset ? fixedAssetForm.formState.isValid : lriForm.formState.isValid;
+      ? handleFixedAssetSubmit(submitFixedAsset)()
+      : handleLriSubmit(submitLri)();
+  const isValid = isFixedAsset ? isFixedAssetValid : isLriValid;
 
   return (
     <>
@@ -107,17 +129,17 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
             <>
               <Input
                 label="Наименование"
-                value={fixedValues.name}
+                value={fixedAssetName}
                 onChange={(event) =>
-                  fixedAssetForm.setValue('name', event.target.value, { shouldValidate: true })
+                  setFixedAssetValue('name', event.target.value, { shouldValidate: true })
                 }
                 fullWidth
               />
               <Input
                 label="Серийный номер"
-                value={fixedValues.serialNumber}
+                value={fixedAssetSerialNumber}
                 onChange={(event) =>
-                  fixedAssetForm.setValue('serialNumber', event.target.value, {
+                  setFixedAssetValue('serialNumber', event.target.value, {
                     shouldValidate: true,
                   })
                 }
@@ -125,9 +147,9 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               />
               <Input
                 label="Инвентарный номер"
-                value={fixedValues.inventoryNumber}
+                value={inventoryNumber}
                 onChange={(event) =>
-                  fixedAssetForm.setValue('inventoryNumber', event.target.value, {
+                  setFixedAssetValue('inventoryNumber', event.target.value, {
                     shouldValidate: true,
                   })
                 }
@@ -136,13 +158,13 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               <Input label="Цена" value={String(asset.price ?? '')} disabled fullWidth />
               <Select
                 label="Категория"
-                value={fixedValues.categoryId || null}
+                value={categoryId || null}
                 options={categories.map((item) => ({
                   label: item.name,
                   value: String(item.id),
                 }))}
                 onChange={(value) =>
-                  fixedAssetForm.setValue('categoryId', normalizeSelectValue(value), {
+                  setFixedAssetValue('categoryId', normalizeSelectValue(value), {
                     shouldValidate: true,
                   })
                 }
@@ -151,13 +173,13 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
               {asset.status_id !== 3 ? (
                 <Select
                   label="Заведующий складом"
-                  value={fixedValues.responsiblePersonId || null}
+                  value={responsiblePersonId || null}
                   options={employees.map((item) => ({
                     label: item.full_name,
                     value: String(item.id),
                   }))}
                   onChange={(value) =>
-                    fixedAssetForm.setValue('responsiblePersonId', normalizeSelectValue(value))
+                    setFixedAssetValue('responsiblePersonId', normalizeSelectValue(value))
                   }
                   fullWidth
                 />
@@ -165,25 +187,25 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                 <>
                   <Select
                     label="Ответственное лицо"
-                    value={fixedValues.responsiblePersonId || null}
+                    value={responsiblePersonId || null}
                     options={employees.map((item) => ({
                       label: item.full_name,
                       value: String(item.id),
                     }))}
                     onChange={(value) =>
-                      fixedAssetForm.setValue('responsiblePersonId', normalizeSelectValue(value))
+                      setFixedAssetValue('responsiblePersonId', normalizeSelectValue(value))
                     }
                     fullWidth
                   />
                   <Select
                     label="Пользователь"
-                    value={fixedValues.exploiterId || null}
+                    value={exploiterId || null}
                     options={employees.map((item) => ({
                       label: item.full_name,
                       value: String(item.id),
                     }))}
                     onChange={(value) =>
-                      fixedAssetForm.setValue('exploiterId', normalizeSelectValue(value))
+                      setFixedAssetValue('exploiterId', normalizeSelectValue(value))
                     }
                     fullWidth
                   />
@@ -197,11 +219,11 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                   value: String(item.id),
                 }))}
                 onChange={(value) => {
-                  fixedAssetForm.setValue('cityId', normalizeSelectValue(value), {
+                  setFixedAssetValue('cityId', normalizeSelectValue(value), {
                     shouldValidate: true,
                   });
-                  fixedAssetForm.setValue('buildingId', '');
-                  fixedAssetForm.setValue('cabinetId', '');
+                  setFixedAssetValue('buildingId', '');
+                  setFixedAssetValue('cabinetId', '');
                 }}
                 fullWidth
               />
@@ -213,23 +235,23 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
                   value: String(item.id),
                 }))}
                 onChange={(value) => {
-                  fixedAssetForm.setValue('buildingId', normalizeSelectValue(value), {
+                  setFixedAssetValue('buildingId', normalizeSelectValue(value), {
                     shouldValidate: true,
                   });
-                  fixedAssetForm.setValue('cabinetId', '');
+                  setFixedAssetValue('cabinetId', '');
                 }}
                 fullWidth
                 disabled={!cityId}
               />
               <Select
                 label="Кабинет"
-                value={fixedValues.cabinetId || null}
+                value={cabinetId || null}
                 options={cabinets.map((item) => ({
                   label: item.room,
                   value: String(item.id),
                 }))}
                 onChange={(value) =>
-                  fixedAssetForm.setValue('cabinetId', normalizeSelectValue(value), {
+                  setFixedAssetValue('cabinetId', normalizeSelectValue(value), {
                     shouldValidate: true,
                   })
                 }
@@ -241,17 +263,17 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
             <>
               <Input
                 label="Наименование"
-                value={lriValues.name}
+                value={lriName}
                 onChange={(event) =>
-                  lriForm.setValue('name', event.target.value, { shouldValidate: true })
+                  setLriValue('name', event.target.value, { shouldValidate: true })
                 }
                 fullWidth
               />
               <Input
                 label="Серийный номер"
-                value={lriValues.serialNumber}
+                value={lriSerialNumber}
                 onChange={(event) =>
-                  lriForm.setValue('serialNumber', event.target.value, { shouldValidate: true })
+                  setLriValue('serialNumber', event.target.value, { shouldValidate: true })
                 }
                 fullWidth
               />
@@ -265,7 +287,7 @@ export const StockAssetEditAction = ({ asset, type }: StockAssetEditActionProps)
           <Button
             type="button"
             variant="primary"
-            isLoading={action.isEditing}
+            isLoading={isEditing}
             disabled={!isValid}
             onClick={submit}
           >

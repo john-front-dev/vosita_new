@@ -27,13 +27,11 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
   const { warehouses, isLoading: isWarehousesLoading } = useAllWarehouses(
     isOpen && Boolean(buildingId),
   );
-  const operation = useTmzGoodOperation('move', goodsId, onClose);
+  const { isPending, mutate } = useTmzGoodOperation('move', goodsId, onClose);
   const targetWarehouses = useMemo(
     () =>
-      warehouses.filter((warehouse) =>
-        buildingId
-          ? Number(warehouse.subdivision_id ?? warehouse.sub_id) === Number(buildingId)
-          : true,
+      warehouses.filter(
+        (warehouse) => !buildingId || warehouse.subdivision_id === Number(buildingId),
       ),
     [buildingId, warehouses],
   );
@@ -56,7 +54,7 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
       to_storage: Number(warehouseId),
       to_subdivision: Number(buildingId),
     };
-    operation.mutate({ body });
+    mutate({ body });
   };
 
   return (
@@ -124,8 +122,8 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
           label="В склад"
           value={warehouseId || null}
           options={targetWarehouses.map((warehouse) => ({
-            label: warehouse.storage_name ?? warehouse.name ?? '',
-            value: String(warehouse.storage_id ?? warehouse.id),
+            label: warehouse.storage_name,
+            value: String(warehouse.storage_id),
           }))}
           onChange={(value) => setWarehouseId(normalizeSelectValue(value))}
           isLoading={isWarehousesLoading}
@@ -150,8 +148,8 @@ export const TmzGoodMoveModal = ({ goodsId, isOpen, onClose, remains, storageId 
         <Button
           type="button"
           variant="primary"
-          disabled={isInvalid || operation.isPending}
-          isLoading={operation.isPending}
+          disabled={isInvalid || isPending}
+          isLoading={isPending}
           onClick={submit}
         >
           Переместить

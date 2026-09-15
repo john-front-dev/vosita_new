@@ -15,7 +15,7 @@ export const AddToCartModal = ({ isOpen, onClose, remain }: Props) => {
   const [quantity, setQuantity] = useState('1');
   const value = Number(quantity);
   const hasError = Boolean(remain && (!value || value < 0 || value > remain.total_qty));
-  const mutation = useAddTmzGoodToCart(remain?.goods_id ?? '', onClose);
+  const { isPending, mutate } = useAddTmzGoodToCart(remain?.goods_id ?? '', onClose);
 
   if (!remain) return null;
   return (
@@ -51,10 +51,10 @@ export const AddToCartModal = ({ isOpen, onClose, remain }: Props) => {
         <Button
           type="button"
           variant="primary"
-          disabled={hasError || mutation.isPending}
-          isLoading={mutation.isPending}
+          disabled={hasError || isPending}
+          isLoading={isPending}
           onClick={() =>
-            mutation.mutate({
+            mutate({
               body: {
                 good_id: remain.goods_id,
                 qty: value,

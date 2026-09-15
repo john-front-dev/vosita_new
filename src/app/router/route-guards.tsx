@@ -1,22 +1,42 @@
-import type { PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
+import { queryClient } from '@shared/api';
 import { routes } from '@shared/config';
 import {
   type AccessRule,
   canAccess,
+  clearAuthSession,
   getDefaultAuthorizedPath,
   getStoredAccesses,
   getStoredAccessToken,
   getStoredUser,
+  hasStoredAuthSessionData,
 } from '@shared/lib';
 import { AccessDeniedPage } from '@shared/ui';
 
+const useStoredSession = () => {
+  const token = getStoredAccessToken();
+  const user = getStoredUser();
+  const accesses = getStoredAccesses();
+  const isAuthenticated = Boolean(token && user);
+  const shouldClearSession = !isAuthenticated && hasStoredAuthSessionData();
+
+  useEffect(() => {
+    if (!shouldClearSession) return;
+
+    clearAuthSession();
+    queryClient.clear();
+  }, [shouldClearSession]);
+
+  return { accesses, isAuthenticated, user };
+};
+
 export const PrivateRoute = ({ children }: PropsWithChildren) => {
   const location = useLocation();
-  const token = getStoredAccessToken();
+  const { isAuthenticated } = useStoredSession();
 
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to={routes.login} replace state={{ from: location }} />;
   }
 
@@ -24,15 +44,23 @@ export const PrivateRoute = ({ children }: PropsWithChildren) => {
 };
 
 export const PublicOnlyRoute = ({ children }: PropsWithChildren) => {
-  const token = getStoredAccessToken();
-  const user = getStoredUser();
-  const accesses = getStoredAccesses();
+  const { accesses, isAuthenticated, user } = useStoredSession();
 
-  if (token) {
+  if (isAuthenticated) {
     return <Navigate to={getDefaultAuthorizedPath(user, accesses)} replace />;
   }
 
   return children;
+};
+
+export const DefaultRoute = () => {
+  const { accesses, isAuthenticated, user } = useStoredSession();
+
+  if (!isAuthenticated) {
+    return <Navigate to={routes.login} replace />;
+  }
+
+  return <Navigate to={getDefaultAuthorizedPath(user, accesses)} replace />;
 };
 
 type ProtectedRouteProps = PropsWithChildren<{

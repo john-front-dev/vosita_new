@@ -1,13 +1,9 @@
 import { snackbar } from 'alif-ui';
 
 import { applicationEndpoints } from '@entities/application';
-import { queryClient, useMutationQuery } from '@shared/api';
+import { useMutationQuery } from '@shared/api';
 
-const invalidateApplicationQueries = () => {
-  queryClient.invalidateQueries({ queryKey: ['application-details'] });
-  queryClient.invalidateQueries({ queryKey: ['application-invoices'] });
-  queryClient.invalidateQueries({ queryKey: ['applications'] });
-};
+import { invalidateApplicationDetailsQueries } from './application-details-cache';
 
 type UseApplicationDetailsActionsParams = {
   onDeleted: () => void;
@@ -18,19 +14,19 @@ export const useApplicationDetailsActions = ({
   onDeleted,
   onReceiptUploaded,
 }: UseApplicationDetailsActionsParams) => {
-  const deleteMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
+  const { isPending: isDeletingDirectly, mutate: deleteSubrequests } = useMutationQuery<ApiResponse<unknown>, { url: string }>({
     method: 'delete',
     url: '',
     options: {
       onSuccess: () => {
         snackbar.show({ title: 'Объекты удалены', type: 'success' });
         onDeleted();
-        invalidateApplicationQueries();
+        invalidateApplicationDetailsQueries();
       },
     },
   });
 
-  const removeMutation = useMutationQuery<
+  const { isPending: isRemoving, mutate: removeSubrequests } = useMutationQuery<
     ApiResponse<unknown>,
     { params: { action_type: string; object_id: string } }
   >({
@@ -40,12 +36,12 @@ export const useApplicationDetailsActions = ({
       onSuccess: () => {
         snackbar.show({ title: 'Объекты удалены', type: 'success' });
         onDeleted();
-        invalidateApplicationQueries();
+        invalidateApplicationDetailsQueries();
       },
     },
   });
 
-  const uploadReceiptMutation = useMutationQuery<
+  const { isPending: isUploadingReceipt, mutate: uploadReceipt } = useMutationQuery<
     ApiResponse<unknown>,
     { body: FormData; url: string }
   >({
@@ -56,24 +52,24 @@ export const useApplicationDetailsActions = ({
       onSuccess: () => {
         snackbar.show({ title: 'Чек добавлен', type: 'success' });
         onReceiptUploaded();
-        invalidateApplicationQueries();
+        invalidateApplicationDetailsQueries();
       },
     },
   });
 
   return {
     deleteSubrequests: (ids: string) =>
-      deleteMutation.mutate({ url: applicationEndpoints.deleteSubrequests(ids) }),
-    isDeleting: deleteMutation.isPending || removeMutation.isPending,
-    isUploadingReceipt: uploadReceiptMutation.isPending,
+      deleteSubrequests({ url: applicationEndpoints.deleteSubrequests(ids) }),
+    isDeleting: isDeletingDirectly || isRemoving,
+    isUploadingReceipt,
     removeSubrequests: (ids: string) =>
-      removeMutation.mutate({ params: { action_type: 'remove', object_id: ids } }),
-    refresh: invalidateApplicationQueries,
+      removeSubrequests({ params: { action_type: 'remove', object_id: ids } }),
+    refresh: invalidateApplicationDetailsQueries,
     uploadReceipt: (ids: string, file: File) => {
       const formData = new FormData();
 
       formData.append('file', file);
-      uploadReceiptMutation.mutate({
+      uploadReceipt({
         body: formData,
         url: applicationEndpoints.uploadReceipt(ids),
       });

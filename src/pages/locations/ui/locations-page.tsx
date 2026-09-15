@@ -6,16 +6,13 @@ import {
   OutlineSystemTrash,
   Search,
   SegmentedControl,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
 
-import { queryClient, useMutationQuery } from '@shared/api';
 import { getStoredUser, useUrlListState } from '@shared/lib';
 import { ConfirmModal, DataTable, type DataTableProps } from '@shared/ui';
 
-import { locationsEndpoints } from '../api/locations-api';
 import { locationTabs, locationTypeLabels } from '../model/location-tabs';
 import type {
   BuildingRecord,
@@ -25,6 +22,7 @@ import type {
   LocationType,
 } from '../model/types';
 import { isLocationType } from '../model/types';
+import { useRemoveLocation } from '../model/use-location-mutations';
 import { useLocationsList } from '../model/use-locations-list';
 import { LocationFormModal } from './location-form-modal';
 
@@ -49,25 +47,17 @@ export const LocationsPage = () => {
     defaultType: 'cities',
     isType: isLocationType,
   });
-  const list = useLocationsList({
+  const { isFetching, isLoading, records, totalCount } = useLocationsList({
     limit: queryParams.limit,
     page: queryParams.page,
     searchText: queryParams.searchText,
     type,
   });
-  const removeMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
-    method: 'delete',
-    url: '',
-    options: {
-      onSuccess: () => {
-        setRemoving(null);
-        snackbar.show({ title: 'Местоположение удалено', type: 'success' });
-        void queryClient.invalidateQueries({ queryKey: ['locations-list', type] });
-      },
-    },
-  });
+  const { isRemoving, remove } = useRemoveLocation(type, () => setRemoving(null));
   const columns = useMemo<DataTableProps<LocationRecord>['columns']>(() => {
-    const commonColumns: DataTableProps<LocationRecord>['columns'] = [{ accessor: 'id', minWidth: '100px', title: 'ID' }];
+    const commonColumns: DataTableProps<LocationRecord>['columns'] = [
+      { accessor: 'id', minWidth: '100px', title: 'ID' },
+    ];
     const typeColumns: DataTableProps<LocationRecord>['columns'] =
       type === 'cities'
         ? [{ accessor: 'name', minWidth: '300px', title: 'Город' }]
@@ -75,7 +65,12 @@ export const LocationsPage = () => {
           ? [
               { accessor: 'name', minWidth: '220px', title: 'Здание' },
               { accessor: 'city', minWidth: '220px', title: 'Город' },
-              { accessor: 'crm_id', minWidth: '150px', renderRowCell: (record) => (record as BuildingRecord).crm_id || '-', title: 'CRM ID' },
+              {
+                accessor: 'crm_id',
+                minWidth: '150px',
+                renderRowCell: (record) => (record as BuildingRecord).crm_id || '-',
+                title: 'CRM ID',
+              },
             ]
           : type === 'cabinets'
             ? [
@@ -98,11 +93,28 @@ export const LocationsPage = () => {
         minWidth: type === 'warehouses' ? '72px' : '112px',
         renderRowCell: (record) => (
           <div className="flex justify-end gap-1" onClick={(event) => event.stopPropagation()}>
-            <Button type="button" variant="tertiary" size="s" isIconBtn aria-label="Изменить" onClick={() => { setEditingRecord(record); setIsFormOpen(true); }}>
+            <Button
+              type="button"
+              variant="tertiary"
+              size="s"
+              isIconBtn
+              aria-label="Изменить"
+              onClick={() => {
+                setEditingRecord(record);
+                setIsFormOpen(true);
+              }}
+            >
               <OutlineSystemEdit />
             </Button>
             {type !== 'warehouses' && (
-              <Button type="button" variant="tertiary" size="s" isIconBtn aria-label="Удалить" onClick={() => setRemoving({ id: record.id, name: getRecordName(type, record) })}>
+              <Button
+                type="button"
+                variant="tertiary"
+                size="s"
+                isIconBtn
+                aria-label="Удалить"
+                onClick={() => setRemoving({ id: record.id, name: getRecordName(type, record) })}
+              >
                 <OutlineSystemTrash />
               </Button>
             )}
@@ -114,36 +126,57 @@ export const LocationsPage = () => {
     ];
   }, [canManage, type]);
 
-  const removeEndpoint = removing
-    ? type === 'cities'
-      ? locationsEndpoints.removeCity(removing.id)
-      : type === 'buildings'
-        ? locationsEndpoints.removeBuilding(removing.id)
-        : locationsEndpoints.removeCabinet(removing.id)
-    : '';
-
   return (
     <section className="flex min-h-[calc(100vh-48px)] flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Typography element="div" role="heading" aria-level={1} category="heading" proportions="h3">Местоположения</Typography>
+        <Typography element="div" role="heading" aria-level={1} category="heading" proportions="h3">
+          Местоположения
+        </Typography>
         <div className="flex flex-wrap items-center gap-3">
-          <SegmentedControl tabs={locationTabs} value={type} onChange={setType} rounded size="m" variant="accent" />
+          <SegmentedControl
+            tabs={locationTabs}
+            value={type}
+            onChange={setType}
+            rounded
+            size="m"
+            variant="accent"
+          />
           {canManage && (
-            <Button type="button" variant="primary" leftSection={<OutlineSystemAdd />} onClick={() => { setEditingRecord(null); setIsFormOpen(true); }}>
+            <Button
+              type="button"
+              variant="primary"
+              leftSection={<OutlineSystemAdd />}
+              onClick={() => {
+                setEditingRecord(null);
+                setIsFormOpen(true);
+              }}
+            >
               {locationTypeLabels[type].add}
             </Button>
           )}
         </div>
       </div>
       <Surface className="flex flex-1 flex-col gap-4" p="6" rounded="12">
-        <Search className="min-w-70" label="Поиск" value={searchText} onChange={(event) => setSearchText(event.target.value)} onClear={() => setSearchText('')} fullWidth proportions="l" />
+        <Search
+          className="min-w-70"
+          label="Поиск"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          onClear={() => setSearchText('')}
+          fullWidth
+          proportions="l"
+        />
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
-          emptyPlaceholder={queryParams.searchText ? `По поиску «${queryParams.searchText}» ничего не найдено.` : 'Список местоположений пока пуст.'}
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
+          emptyPlaceholder={
+            queryParams.searchText
+              ? `По поиску «${queryParams.searchText}» ничего не найдено.`
+              : 'Список местоположений пока пуст.'
+          }
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
       {isFormOpen && (
@@ -151,8 +184,10 @@ export const LocationsPage = () => {
           isOpen
           type={type}
           record={editingRecord}
-          onClose={() => { setIsFormOpen(false); setEditingRecord(null); }}
-          onSuccess={() => void queryClient.invalidateQueries({ queryKey: ['locations-list', type] })}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingRecord(null);
+          }}
         />
       )}
       <ConfirmModal
@@ -161,9 +196,9 @@ export const LocationsPage = () => {
         message={getRemoveMessage(type)}
         confirmText="Удалить"
         variant="risk"
-        isConfirmLoading={removeMutation.isPending}
+        isConfirmLoading={isRemoving}
         onClose={() => setRemoving(null)}
-        onConfirm={() => removeEndpoint && removeMutation.mutate({ url: removeEndpoint })}
+        onConfirm={() => removing && remove(removing.id)}
       />
     </section>
   );

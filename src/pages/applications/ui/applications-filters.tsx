@@ -1,22 +1,23 @@
 import { useMemo, useState } from 'react';
-import { Button, Modal, SelectMultiple } from 'alif-ui';
+import { Button, Modal, OutlineSystemFilterFromLessToMore, SelectMultiple } from 'alif-ui';
 
 import {
-  type AccessibleWarehouse,
   buildDepartmentOptions,
   buildStorageOptions,
   buildSubdivisionOptions,
+  type WarehouseLocation,
 } from '@entities/location';
 
 import type { ApplicationFilters } from '../model/types';
 
-type ApplicationsFiltersModalProps = {
+type ApplicationsFiltersProps = {
   filters: ApplicationFilters;
   isLoading: boolean;
   isOpen: boolean;
   onApply: (filters: ApplicationFilters) => void;
+  onClick: () => void;
   onClose: () => void;
-  warehouses: AccessibleWarehouse[];
+  warehouses: WarehouseLocation[];
 };
 
 type SelectValue = string | number | { value: string | number };
@@ -33,14 +34,15 @@ const keepAllowedValues = (values: string[], options: Array<{ value: string }>) 
   return values.filter((value) => allowedValues.has(value));
 };
 
-export const ApplicationsFiltersModal = ({
+export const ApplicationsFilters = ({
   filters,
   isLoading,
   isOpen,
   onApply,
+  onClick,
   onClose,
   warehouses,
-}: ApplicationsFiltersModalProps) => {
+}: ApplicationsFiltersProps) => {
   const [localFilters, setLocalFilters] = useState<ApplicationFilters>(filters);
 
   const departmentOptions = useMemo(() => buildDepartmentOptions(warehouses), [warehouses]);
@@ -94,54 +96,70 @@ export const ApplicationsFiltersModal = ({
   };
 
   return (
-    <Modal
-      className="w-125"
-      isOpen={isOpen}
-      onClose={onClose}
-      isCentered
-      withCloseButton
-      isCloseOutside={false}
-    >
-      <Modal.Header title="Фильтрация списка" />
-      <Modal.Content className="flex flex-col gap-4">
-        <SelectMultiple
-          label="Отдел"
-          values={localFilters.DEPARTMENT_ID}
-          options={departmentOptions}
-          onChange={(values) => handleDepartmentChange(values as SelectValue[])}
-          fullWidth
-          isLoading={isLoading}
-          proportions="m"
-        />
-        <SelectMultiple
-          label="Здание"
-          values={localFilters.SUBDIVISION_ID}
-          options={subdivisionOptions}
-          onChange={(values) => handleSubdivisionChange(values as SelectValue[])}
-          fullWidth
-          isLoading={isLoading}
-          proportions="m"
-        />
-        <SelectMultiple
-          label="Склад"
-          values={localFilters.STORAGE_ID}
-          options={storageOptions}
-          onChange={(values) => handleStorageChange(values as SelectValue[])}
-          fullWidth
-          isLoading={isLoading}
-          proportions="m"
-        />
-      </Modal.Content>
-      <Modal.Actions className="flex justify-end">
-        <div className="flex gap-2">
-          <Button type="button" variant="outline-neutral" onClick={onClose}>
-            Отмена
-          </Button>
-          <Button type="button" variant="primary" onClick={handleApply}>
-            Применить
-          </Button>
-        </div>
-      </Modal.Actions>
-    </Modal>
+    <>
+      <Button
+        type="button"
+        variant="outline-neutral"
+        size="l"
+        leftSection={<OutlineSystemFilterFromLessToMore />}
+        onClick={() => {
+          setLocalFilters(filters);
+          onClick();
+        }}
+      >
+        Фильтр
+      </Button>
+      {isOpen && (
+        <Modal
+          className="w-125"
+          isOpen
+          onClose={onClose}
+          isCentered
+          withCloseButton
+          isCloseOutside={false}
+        >
+          <Modal.Header title="Фильтрация списка" />
+          <Modal.Content className="flex flex-col gap-4">
+            <SelectMultiple
+              label="Отдел"
+              values={localFilters.DEPARTMENT_ID}
+              options={departmentOptions}
+              onChange={(values) => handleDepartmentChange(values as SelectValue[])}
+              fullWidth
+              isLoading={isLoading}
+              proportions="m"
+            />
+            <SelectMultiple
+              label="Здание"
+              values={localFilters.SUBDIVISION_ID}
+              options={subdivisionOptions}
+              onChange={(values) => handleSubdivisionChange(values as SelectValue[])}
+              fullWidth
+              isLoading={isLoading}
+              proportions="m"
+            />
+            <SelectMultiple
+              label="Склад"
+              values={localFilters.STORAGE_ID}
+              options={storageOptions}
+              onChange={(values) => handleStorageChange(values as SelectValue[])}
+              fullWidth
+              isLoading={isLoading}
+              proportions="m"
+            />
+          </Modal.Content>
+          <Modal.Actions className="flex justify-end">
+            <div className="flex gap-2">
+              <Button type="button" variant="outline-neutral" onClick={onClose}>
+                Отмена
+              </Button>
+              <Button type="button" variant="primary" onClick={handleApply}>
+                Применить
+              </Button>
+            </div>
+          </Modal.Actions>
+        </Modal>
+      )}
+    </>
   );
 };

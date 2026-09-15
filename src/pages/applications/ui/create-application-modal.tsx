@@ -1,16 +1,14 @@
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Modal, Select, snackbar, TextArea } from 'alif-ui';
+import { Button, Input, Modal, Select, TextArea } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
-import { applicationEndpoints } from '@entities/application';
 import {
-  type AccessibleWarehouse,
   buildDepartmentOptions,
   buildStorageOptions,
   buildSubdivisionOptions,
+  type WarehouseLocation,
 } from '@entities/location';
-import { useMutationQuery } from '@shared/api';
 import {
   getStoredAccesses,
   getStoredUser,
@@ -25,13 +23,12 @@ import {
   type CreateApplicationFormValues,
   createApplicationSchema,
 } from '../model/create-application-validation';
-import type { CreateApplicationRequest } from '../model/types';
+import { useCreateApplication } from '../model/use-create-application';
 
 type CreateApplicationModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  warehouses: AccessibleWarehouse[];
+  warehouses: WarehouseLocation[];
 };
 
 const isSelectObject = (value: unknown): value is { value: string | number } =>
@@ -48,7 +45,6 @@ const normalizeSelectValue = (value: unknown) => {
 export const CreateApplicationModal = ({
   isOpen,
   onClose,
-  onSuccess,
   warehouses,
 }: CreateApplicationModalProps) => {
   const user = getStoredUser();
@@ -67,8 +63,8 @@ export const CreateApplicationModal = ({
     control,
     handleSubmit,
     reset,
-    setValue,
-    formState: { errors, isValid },
+    resetField,
+    formState: { isValid },
   } = useForm<CreateApplicationFormValues>({
     defaultValues: createApplicationDefaultValues,
     mode: 'onChange',
@@ -93,23 +89,10 @@ export const CreateApplicationModal = ({
     [departmentId, subdivisionId, warehouses],
   );
 
-  const createMutation = useMutationQuery<ApiResponse<unknown>, { body: CreateApplicationRequest }>(
-    {
-      method: 'post',
-      url: applicationEndpoints.create,
-      options: {
-        onSuccess: () => {
-          snackbar.show({
-            title: 'Запрос создан',
-            type: 'success',
-          });
-          reset(createApplicationDefaultValues);
-          onSuccess();
-          onClose();
-        },
-      },
-    },
-  );
+  const { create, isCreating } = useCreateApplication(() => {
+    reset(createApplicationDefaultValues);
+    onClose();
+  });
 
   const handleClose = () => {
     reset(createApplicationDefaultValues);
@@ -117,13 +100,11 @@ export const CreateApplicationModal = ({
   };
 
   const onSubmit: SubmitHandler<CreateApplicationFormValues> = (values) => {
-    createMutation.mutate({
-      body: {
+    create({
         category: Number(values.category),
         description: values.description?.trim() || undefined,
         storage_id: Number(values.storageId),
         title: values.title.trim(),
-      },
     });
   };
 
@@ -135,15 +116,15 @@ export const CreateApplicationModal = ({
           <Controller
             control={control}
             name="title"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Input
                 label="Название"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                hasError={Boolean(errors.title)}
-                hintText={errors.title?.message}
-                isHintAlwaysShown={Boolean(errors.title)}
+                hasError={fieldState.isDirty && Boolean(fieldState.error)}
+                hintText={fieldState.isDirty ? fieldState.error?.message : undefined}
+                isHintAlwaysShown={fieldState.isDirty && Boolean(fieldState.error)}
                 fullWidth
                 bordered
               />
@@ -168,7 +149,7 @@ export const CreateApplicationModal = ({
           <Controller
             control={control}
             name="category"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Select
                 label="Тип товара"
                 value={field.value || null}
@@ -177,9 +158,10 @@ export const CreateApplicationModal = ({
                   value: String(option.category),
                 }))}
                 onChange={(value) => field.onChange(normalizeSelectValue(value))}
-                hasError={Boolean(errors.category)}
-                hintText={errors.category?.message}
-                isHintAlwaysShown={Boolean(errors.category)}
+                onBlur={field.onBlur}
+                hasError={fieldState.isDirty && Boolean(fieldState.error)}
+                hintText={fieldState.isDirty ? fieldState.error?.message : undefined}
+                isHintAlwaysShown={fieldState.isDirty && Boolean(fieldState.error)}
                 fullWidth
               />
             )}
@@ -195,8 +177,8 @@ export const CreateApplicationModal = ({
                 options={departmentOptions}
                 onChange={(value) => {
                   field.onChange(normalizeSelectValue(value));
-                  setValue('subdivisionId', '', { shouldValidate: true });
-                  setValue('storageId', '', { shouldValidate: true });
+                  resetField('subdivisionId');
+                  resetField('storageId');
                 }}
                 fullWidth
               />
@@ -213,7 +195,7 @@ export const CreateApplicationModal = ({
                 options={subdivisionOptions}
                 onChange={(value) => {
                   field.onChange(normalizeSelectValue(value));
-                  setValue('storageId', '', { shouldValidate: true });
+                  resetField('storageId');
                 }}
                 disabled={!departmentId}
                 fullWidth
@@ -224,15 +206,16 @@ export const CreateApplicationModal = ({
           <Controller
             control={control}
             name="storageId"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Select
                 label="Склад"
                 value={field.value || null}
                 options={storageOptions}
                 onChange={(value) => field.onChange(normalizeSelectValue(value))}
-                hasError={Boolean(errors.storageId)}
-                hintText={errors.storageId?.message}
-                isHintAlwaysShown={Boolean(errors.storageId)}
+                onBlur={field.onBlur}
+                hasError={fieldState.isDirty && Boolean(fieldState.error)}
+                hintText={fieldState.isDirty ? fieldState.error?.message : undefined}
+                isHintAlwaysShown={fieldState.isDirty && Boolean(fieldState.error)}
                 disabled={!subdivisionId}
                 fullWidth
               />
@@ -247,8 +230,8 @@ export const CreateApplicationModal = ({
           <Button
             type="submit"
             variant="primary"
-            disabled={!isValid || createMutation.isPending}
-            isLoading={createMutation.isPending}
+            disabled={!isValid || isCreating}
+            isLoading={isCreating}
           >
             Создать
           </Button>

@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, DatePicker, Input, Modal, Select, TextArea } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 
-import { queryClient, useMutationQuery } from '@shared/api';
 import { normalizeSelectValue } from '@shared/lib';
 
 import {
@@ -10,6 +9,7 @@ import {
   capitalizationSchema,
   getCapitalizationDefaultValues,
 } from '../model/capitalization-validation';
+import { useStockAssetCapitalizationMutations } from '../model/use-stock-asset-capitalization-mutations';
 
 type AddStockAssetCapitalizationModalProps = {
   assetId: number | string;
@@ -41,37 +41,17 @@ export const AddStockAssetCapitalizationModal = ({
     mode: 'onChange',
     resolver: zodResolver(capitalizationSchema),
   });
-  const addMutation = useMutationQuery<
-    ApiResponse<unknown>,
-    {
-      body: {
-        capitalization: number;
-        comment: string;
-        currency: string;
-        date: string;
-        object_id: number;
-      };
-    }
-  >({
-    method: 'post',
-    url: '/capitalization',
-    options: {
-      onSuccess: () => {
-        reset(getCapitalizationDefaultValues());
-        queryClient.invalidateQueries({ queryKey: ['stock-asset', String(assetId)] });
-        onClose();
-      },
-    },
+  const { addCapitalization, isAdding } = useStockAssetCapitalizationMutations(assetId, () => {
+    reset(getCapitalizationDefaultValues());
+    onClose();
   });
   const onSubmit: SubmitHandler<CapitalizationFormValues> = (values) =>
-    addMutation.mutate({
-      body: {
-        capitalization: Number(values.price),
-        comment: values.comment,
-        currency: values.currency,
-        date: formatCapitalizationDate(values.date),
-        object_id: Number(assetId),
-      },
+    addCapitalization({
+      capitalization: Number(values.price),
+      comment: values.comment,
+      currency: values.currency,
+      date: formatCapitalizationDate(values.date),
+      object_id: Number(assetId),
     });
   const handleClose = () => {
     reset(getCapitalizationDefaultValues());
@@ -144,8 +124,8 @@ export const AddStockAssetCapitalizationModal = ({
         <Button
           type="button"
           variant="primary"
-          disabled={!isValid || addMutation.isPending}
-          isLoading={addMutation.isPending}
+          disabled={!isValid || isAdding}
+          isLoading={isAdding}
           onClick={handleSubmit(onSubmit)}
         >
           Добавить

@@ -4,7 +4,7 @@ import { categoriesEndpoints } from '../api/categories-api';
 import type { ExpenseType, StorageOption, TmzCategory } from './types';
 
 export const useTmzCategoryOptions = (enabled: boolean) => {
-  const storagesQuery = useGetQuery<
+  const { data: storagesData, isLoading: isStoragesLoading } = useGetQuery<
     ApiResponse<{ items?: StorageOption[] }>
   >({
     queryKey: ['category-storages'],
@@ -12,12 +12,12 @@ export const useTmzCategoryOptions = (enabled: boolean) => {
     params: { limit: 100, page: 1 },
     options: { enabled },
   });
-  const expenseTypesQuery = useGetQuery<ApiResponse<ExpenseType[]>>({
+  const { data: expenseTypesData, isLoading: isExpenseTypesLoading } = useGetQuery<ApiResponse<ExpenseType[]>>({
     queryKey: ['category-expense-types'],
     url: categoriesEndpoints.expenseTypes,
     options: { enabled },
   });
-  const categoriesQuery = useGetQuery<ApiResponse<{ tmz?: TmzCategory[] }>>({
+  const { data: categoriesData, isLoading: isCategoriesLoading } = useGetQuery<ApiResponse<{ tmz?: TmzCategory[] }>>({
     queryKey: ['category-tmz-options'],
     url: categoriesEndpoints.tmzList,
     params: { LIMIT: 0, PAGE: 0, SEARCH_TEXT: '' },
@@ -25,10 +25,9 @@ export const useTmzCategoryOptions = (enabled: boolean) => {
   });
 
   return {
-    categories: categoriesQuery.data?.payload.tmz ?? [],
-    expenseTypes: expenseTypesQuery.data?.payload ?? [],
-    isLoading:
-      storagesQuery.isLoading || expenseTypesQuery.isLoading || categoriesQuery.isLoading,
-    storages: storagesQuery.data?.payload.items ?? [],
+    categories: categoriesData?.payload.tmz ?? [],
+    expenseTypes: expenseTypesData?.payload ?? [],
+    isLoading: isStoragesLoading || isExpenseTypesLoading || isCategoriesLoading,
+    storages: storagesData?.payload.items ?? [],
   };
 };

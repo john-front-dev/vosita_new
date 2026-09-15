@@ -15,8 +15,7 @@ export const CapitalizationDetailsModal = ({
   capitalizationId,
   onClose,
 }: CapitalizationDetailsModalProps) => {
-  const details = useCapitalizationDetails(capitalizationId);
-  const capitalization = details.capitalization;
+  const { capitalization, isError, isLoading } = useCapitalizationDetails(capitalizationId);
 
   return (
     <Modal
@@ -28,12 +27,12 @@ export const CapitalizationDetailsModal = ({
     >
       <Modal.Header title="Капитализация" />
       <Modal.Content>
-        {details.isLoading && (
+        {isLoading && (
           <div className="flex justify-center py-6">
             <Loader />
           </div>
         )}
-        {details.isError && (
+        {isError && (
           <Typography category="body" proportions="s" className="text-(--color-danger)">
             Не удалось загрузить запись капитализации.
           </Typography>

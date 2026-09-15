@@ -18,7 +18,7 @@ type Props = {
 };
 
 export const TmzGoodHistoryTable = ({ goodsId, storageId }: Props) => {
-  const query = useTmzGoodHistory(goodsId, storageId);
+  const { history, isError, isLoading } = useTmzGoodHistory(goodsId, storageId);
   const columns = useMemo<DataTableProps<TmzGoodHistory>['columns']>(
     () => [
       {
@@ -71,7 +71,7 @@ export const TmzGoodHistoryTable = ({ goodsId, storageId }: Props) => {
     [],
   );
 
-  if (query.isError) {
+  if (isError) {
     return (
       <Typography category="body" proportions="s" className="p-4 text-(--color-danger)">
         Не удалось загрузить историю партии.
@@ -83,8 +83,8 @@ export const TmzGoodHistoryTable = ({ goodsId, storageId }: Props) => {
     <DataTable
       accessorId="id"
       columns={columns}
-      records={query.history}
-      isLoading={query.isLoading}
+      records={history}
+      isLoading={isLoading}
       emptyPlaceholder="История партии пуста"
       rowSpacing="s"
     />

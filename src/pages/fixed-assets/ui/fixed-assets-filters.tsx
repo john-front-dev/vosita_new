@@ -20,25 +20,35 @@ const inventoryOptions = [
   { label: 'Не инвентаризирован', value: 'false' },
 ];
 
-type FixedAssetsFiltersModalProps = Pick<
-  FixedAssetsFiltersProps,
-  'filters' | 'onApply' | 'onClose'
->;
-
-const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFiltersModalProps) => {
+export const FixedAssetsFilters = ({
+  filters,
+  isOpen,
+  onApply,
+  onClick,
+  onClose,
+}: FixedAssetsFiltersProps) => {
   const [localFilters, setLocalFilters] = useState<FixedAssetsFiltersValues>(filters);
 
-  const { cities, isFetching: isCitiesFetching, isLoading: isCitiesLoading } = useCities();
+  const {
+    cities,
+    isFetching: isCitiesFetching,
+    isLoading: isCitiesLoading,
+  } = useCities('', isOpen);
   const {
     categories,
     isFetching: isCategoriesFetching,
     isLoading: isCategoriesLoading,
-  } = useCategories();
-  const { buildings, isFetching: isBuildingsFetching, isLoading: isBuildingsLoading } =
-    useBuildings(localFilters.CITY_ID[0]);
-  const { cabinets, isFetching: isCabinetsFetching, isLoading: isCabinetsLoading } = useCabinets(
-    localFilters.BUILDING_ID[0],
-  );
+  } = useCategories('', isOpen);
+  const {
+    buildings,
+    isFetching: isBuildingsFetching,
+    isLoading: isBuildingsLoading,
+  } = useBuildings(localFilters.CITY_ID[0], '', isOpen);
+  const {
+    cabinets,
+    isFetching: isCabinetsFetching,
+    isLoading: isCabinetsLoading,
+  } = useCabinets(localFilters.BUILDING_ID[0], '', isOpen);
 
   const cityOptions = useMemo(
     () => cities.map((city) => ({ label: city.name, value: String(city.id) })),
@@ -53,141 +63,135 @@ const FixedAssetsFiltersModal = ({ filters, onApply, onClose }: FixedAssetsFilte
     [buildings],
   );
   const cabinetOptions = useMemo(
-    () =>
-      cabinets.map((cabinet) => ({ label: cabinet.room, value: String(cabinet.id) })),
+    () => cabinets.map((cabinet) => ({ label: cabinet.room, value: String(cabinet.id) })),
     [cabinets],
   );
 
   return (
-    <Modal
-      className="w-150"
-      isOpen
-      onClose={onClose}
-      isCentered
-      withCloseButton
-      isCloseOutside={false}
-    >
-      <Modal.Header title="Фильтрация списка" />
-      <Modal.Content className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Select
-          label="Город"
-          value={localFilters.CITY_ID[0] || null}
-          options={cityOptions}
-          onChange={(value) => {
-            const cityId = normalizeSelectValue(value);
+    <>
+      <Button
+        type="button"
+        variant="outline-neutral"
+        size="l"
+        leftSection={<OutlineSystemFilterFromLessToMore />}
+        onClick={() => {
+          setLocalFilters(filters);
+          onClick();
+        }}
+      >
+        Фильтр
+      </Button>
+      {isOpen && (
+        <Modal
+          className="w-150"
+          isOpen
+          onClose={onClose}
+          isCentered
+          withCloseButton
+          isCloseOutside={false}
+        >
+          <Modal.Header title="Фильтрация списка" />
+          <Modal.Content className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Select
+              label="Город"
+              value={localFilters.CITY_ID[0] || null}
+              options={cityOptions}
+              onChange={(value) => {
+                const cityId = normalizeSelectValue(value);
 
-            setLocalFilters((previousFilters) => ({
-              ...previousFilters,
-              BUILDING_ID: [],
-              CABINET_ID: [],
-              CITY_ID: cityId ? [cityId] : [],
-            }));
-          }}
-          fullWidth
-          isLoading={isCitiesLoading || isCitiesFetching}
-            proportions="m"
-        />
-        <Select
-          label="Здание"
-          value={localFilters.BUILDING_ID[0] || null}
-          options={buildingOptions}
-          onChange={(value) => {
-            const buildingId = normalizeSelectValue(value);
+                setLocalFilters((previousFilters) => ({
+                  ...previousFilters,
+                  BUILDING_ID: [],
+                  CABINET_ID: [],
+                  CITY_ID: cityId ? [cityId] : [],
+                }));
+              }}
+              fullWidth
+              isLoading={isCitiesLoading || isCitiesFetching}
+              proportions="m"
+            />
+            <Select
+              label="Здание"
+              value={localFilters.BUILDING_ID[0] || null}
+              options={buildingOptions}
+              onChange={(value) => {
+                const buildingId = normalizeSelectValue(value);
 
-            setLocalFilters((previousFilters) => ({
-              ...previousFilters,
-              BUILDING_ID: buildingId ? [buildingId] : [],
-              CABINET_ID: [],
-            }));
-          }}
-          fullWidth
-          isLoading={isBuildingsLoading || isBuildingsFetching}
-          disabled={!localFilters.CITY_ID.length}
-            proportions="m"
-        />
-        <Select
-          label="Категория"
-          value={localFilters.CATEGORY_ID[0] || null}
-          options={categories.map((category) => ({
-            label: category.name,
-            value: String(category.id),
-          }))}
-          onChange={(value) => {
-            const categoryId = normalizeSelectValue(value);
+                setLocalFilters((previousFilters) => ({
+                  ...previousFilters,
+                  BUILDING_ID: buildingId ? [buildingId] : [],
+                  CABINET_ID: [],
+                }));
+              }}
+              fullWidth
+              isLoading={isBuildingsLoading || isBuildingsFetching}
+              disabled={!localFilters.CITY_ID.length}
+              proportions="m"
+            />
+            <Select
+              label="Категория"
+              value={localFilters.CATEGORY_ID[0] || null}
+              options={categories.map((category) => ({
+                label: category.name,
+                value: String(category.id),
+              }))}
+              onChange={(value) => {
+                const categoryId = normalizeSelectValue(value);
 
-            setLocalFilters((previousFilters) => ({
-              ...previousFilters,
-              CATEGORY_ID: categoryId ? [categoryId] : [],
-            }));
-          }}
-          fullWidth
-          isLoading={isCategoriesLoading || isCategoriesFetching}
-            proportions="m"
-        />
-        <Select
-          label="Кабинет"
-          value={localFilters.CABINET_ID[0] || null}
-          options={cabinetOptions}
-          onChange={(value) => {
-            const cabinetId = normalizeSelectValue(value);
+                setLocalFilters((previousFilters) => ({
+                  ...previousFilters,
+                  CATEGORY_ID: categoryId ? [categoryId] : [],
+                }));
+              }}
+              fullWidth
+              isLoading={isCategoriesLoading || isCategoriesFetching}
+              proportions="m"
+            />
+            <Select
+              label="Кабинет"
+              value={localFilters.CABINET_ID[0] || null}
+              options={cabinetOptions}
+              onChange={(value) => {
+                const cabinetId = normalizeSelectValue(value);
 
-            setLocalFilters((previousFilters) => ({
-              ...previousFilters,
-              CABINET_ID: cabinetId ? [cabinetId] : [],
-            }));
-          }}
-          fullWidth
-          isLoading={isCabinetsLoading || isCabinetsFetching}
-          disabled={!localFilters.BUILDING_ID.length}
-            proportions="m"
-        />
-        <Select
-          label="Инвентаризирован"
-          value={localFilters.IS_INVENTORIED[0] || null}
-          options={inventoryOptions}
-          onChange={(value) => {
-            const isInventoried = normalizeSelectValue(value);
+                setLocalFilters((previousFilters) => ({
+                  ...previousFilters,
+                  CABINET_ID: cabinetId ? [cabinetId] : [],
+                }));
+              }}
+              fullWidth
+              isLoading={isCabinetsLoading || isCabinetsFetching}
+              disabled={!localFilters.BUILDING_ID.length}
+              proportions="m"
+            />
+            <Select
+              label="Инвентаризирован"
+              value={localFilters.IS_INVENTORIED[0] || null}
+              options={inventoryOptions}
+              onChange={(value) => {
+                const isInventoried = normalizeSelectValue(value);
 
-            setLocalFilters((previousFilters) => ({
-              ...previousFilters,
-              IS_INVENTORIED: isInventoried ? [isInventoried] : [],
-            }));
-          }}
-          fullWidth
-            proportions="m"
-        />
-      </Modal.Content>
-      <Modal.Actions className="flex justify-end">
-        <div className="flex gap-2">
-          <Button type="button" variant="outline-neutral" onClick={onClose}>
-            Отмена
-          </Button>
-          <Button type="button" variant="primary" onClick={() => onApply(localFilters)}>
-            Применить
-          </Button>
-        </div>
-      </Modal.Actions>
-    </Modal>
+                setLocalFilters((previousFilters) => ({
+                  ...previousFilters,
+                  IS_INVENTORIED: isInventoried ? [isInventoried] : [],
+                }));
+              }}
+              fullWidth
+              proportions="m"
+            />
+          </Modal.Content>
+          <Modal.Actions className="flex justify-end">
+            <div className="flex gap-2">
+              <Button type="button" variant="outline-neutral" onClick={onClose}>
+                Отмена
+              </Button>
+              <Button type="button" variant="primary" onClick={() => onApply(localFilters)}>
+                Применить
+              </Button>
+            </div>
+          </Modal.Actions>
+        </Modal>
+      )}
+    </>
   );
 };
-
-export const FixedAssetsFilters = ({
-  filters,
-  isOpen,
-  onApply,
-  onClick,
-  onClose,
-}: FixedAssetsFiltersProps) => (
-  <>
-    <Button
-      type="button"
-      variant="outline-neutral"
-      size="l"
-      leftSection={<OutlineSystemFilterFromLessToMore />}
-      onClick={onClick}
-    >
-      Фильтр
-    </Button>
-    {isOpen && <FixedAssetsFiltersModal filters={filters} onApply={onApply} onClose={onClose} />}
-  </>
-);

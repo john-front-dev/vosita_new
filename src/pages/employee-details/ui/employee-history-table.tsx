@@ -18,14 +18,29 @@ import { EmployeeActionDetailsModal } from './employee-action-details-modal';
 
 export type EmployeeHistoryTab = 'actions' | 'fixed-asset-history' | 'mbp-history';
 
-type EmployeeHistoryTableProps = { employeeId: string; tab: EmployeeHistoryTab };
+type EmployeeHistoryTableProps = {
+  employeeId: string;
+  tab: EmployeeHistoryTab;
+};
 
 export const EmployeeHistoryTable = ({ employeeId, tab }: EmployeeHistoryTableProps) => {
   const navigate = useNavigate();
   const [selectedActionId, setSelectedActionId] = useState<number | null>(null);
-  const fixedAssets = useEmployeeFixedAssetHistory(employeeId, tab === 'fixed-asset-history');
-  const mbp = useEmployeeMbpHistory(employeeId, tab === 'mbp-history');
-  const actions = useEmployeeUserActions(employeeId, tab === 'actions');
+  const {
+    isFetching: isFixedAssetsFetching,
+    isLoading: isFixedAssetsLoading,
+    records: fixedAssetRecords,
+  } = useEmployeeFixedAssetHistory(employeeId, tab === 'fixed-asset-history');
+  const {
+    isFetching: isMbpFetching,
+    isLoading: isMbpLoading,
+    records: mbpRecords,
+  } = useEmployeeMbpHistory(employeeId, tab === 'mbp-history');
+  const {
+    isFetching: isActionsFetching,
+    isLoading: isActionsLoading,
+    records: actionRecords,
+  } = useEmployeeUserActions(employeeId, tab === 'actions');
 
   const fixedAssetColumns = useMemo<DataTableProps<EmployeeFixedAssetHistory>['columns']>(
     () => [
@@ -90,8 +105,8 @@ export const EmployeeHistoryTable = ({ employeeId, tab }: EmployeeHistoryTablePr
     return (
       <DataTable
         columns={fixedAssetColumns}
-        records={fixedAssets.records}
-        isLoading={fixedAssets.isLoading || fixedAssets.isFetching}
+        records={fixedAssetRecords}
+        isLoading={isFixedAssetsLoading || isFixedAssetsFetching}
         emptyPlaceholder="История операций ОС отсутствует."
         onRowClick={(record) =>
           navigate(routes.fixedAssetsDetails.replace(':id', String(record.warehouse_id)))
@@ -104,8 +119,8 @@ export const EmployeeHistoryTable = ({ employeeId, tab }: EmployeeHistoryTablePr
     return (
       <DataTable
         columns={mbpColumns}
-        records={mbp.records}
-        isLoading={mbp.isLoading || mbp.isFetching}
+        records={mbpRecords}
+        isLoading={isMbpLoading || isMbpFetching}
         emptyPlaceholder="История операций МБП отсутствует."
       />
     );
@@ -115,8 +130,8 @@ export const EmployeeHistoryTable = ({ employeeId, tab }: EmployeeHistoryTablePr
     <>
       <DataTable
         columns={actionColumns}
-        records={actions.records}
-        isLoading={actions.isLoading || actions.isFetching}
+        records={actionRecords}
+        isLoading={isActionsLoading || isActionsFetching}
         emptyPlaceholder="Нет данных об операциях пользователя."
         onRowClick={(record) => setSelectedActionId(record.id)}
       />

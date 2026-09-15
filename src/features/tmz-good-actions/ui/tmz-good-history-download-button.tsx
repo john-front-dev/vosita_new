@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const TmzGoodHistoryDownloadButton = ({ goodsId, iconOnly = true, storageId }: Props) => {
-  const report = useFileDownload({
+  const { download, isDownloading } = useFileDownload({
     filename: `history_${goodsId}.xlsx`,
     url: tmzGoodEndpoints.historyReport(goodsId, storageId ?? ''),
   });
@@ -23,8 +23,8 @@ export const TmzGoodHistoryDownloadButton = ({ goodsId, iconOnly = true, storage
       isIconBtn={iconOnly}
       leftSection={iconOnly ? undefined : <OutlineSystemDownload />}
       title="Скачать историю"
-      isLoading={report.isDownloading}
-      onClick={() => void report.download()}
+      isLoading={isDownloading}
+      onClick={() => void download()}
     >
       {iconOnly ? <OutlineSystemDownload /> : 'Скачать историю'}
     </Button>

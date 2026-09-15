@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Button, OutlineSystemDownload, snackbar, Surface, Typography } from 'alif-ui';
+import { useMemo } from 'react';
+import { Button, OutlineSystemDownload, Surface, Typography } from 'alif-ui';
 
 import { applicationEndpoints } from '@entities/application';
-import { httpClient, useGetQuery } from '@shared/api';
-import { downloadBlob, formatDate, formatMoney } from '@shared/lib';
+import { useGetQuery } from '@shared/api';
+import { formatDate, formatMoney } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
 import type {
@@ -11,6 +11,7 @@ import type {
   ApplicationInvoiceItem,
   ApplicationInvoicesResponse,
 } from '../model/types';
+import { useDownloadApplicationInvoice } from '../model/use-download-application-invoice';
 
 type ApplicationInvoicesTableProps = {
   requestId?: number | string;
@@ -39,7 +40,7 @@ const getInvoiceItems = (invoice: ApplicationInvoice): InvoiceItemRecord[] =>
   }));
 
 export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTableProps) => {
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const { download, downloadingId } = useDownloadApplicationInvoice();
 
   const { data, isFetching, isLoading } = useGetQuery<ApplicationInvoicesResponse>({
     queryKey: ['application-invoices', requestId],
@@ -96,7 +97,7 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
             isLoading={downloadingId === invoice.id}
             onClick={(event) => {
               event.stopPropagation();
-              downloadInvoice(invoice);
+              void download(invoice.id, invoice.invoice_number);
             }}
           >
             <OutlineSystemDownload />
@@ -106,29 +107,8 @@ export const ApplicationInvoicesTable = ({ requestId }: ApplicationInvoicesTable
         title: '',
       },
     ],
-    [downloadingId],
+    [download, downloadingId],
   );
-
-  const downloadInvoice = async (invoice: ApplicationInvoice) => {
-    try {
-      setDownloadingId(invoice.id);
-
-      const response = await httpClient.get<Blob>(
-        applicationEndpoints.downloadInvoice(invoice.id),
-        {
-          responseType: 'blob',
-        },
-      );
-      downloadBlob(response.data, `invoice-${invoice.invoice_number}.pdf`);
-    } catch {
-      snackbar.show({
-        title: 'Не удалось скачать накладную',
-        type: 'error',
-      });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
 
   return (
     <DataTable

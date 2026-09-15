@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Button, FileUploader, Modal, OutlineSystemDownload, snackbar, Tooltip } from 'alif-ui';
+import { Button, FileUploader, Modal, OutlineSystemDownload, Tooltip } from 'alif-ui';
 
-import { applicationEndpoints } from '@entities/application';
-import { useMutationQuery } from '@shared/api';
+import { useUploadSubrequests } from '../model/use-application-stock-actions';
 
 const subrequestTemplate = {
   fileName: 'subrequest_upload_template.xlsx',
@@ -22,25 +21,10 @@ export const UploadSubrequestsModal = ({
 }: UploadSubrequestsModalProps) => {
   const [file, setFile] = useState<File | null>(null);
 
-  const uploadMutation = useMutationQuery<ApiResponse<unknown>, { body: FormData }>({
-    method: 'post',
-    url: applicationEndpoints.uploadSubrequests,
-    config: {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    },
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Успешно',
-          type: 'success',
-        });
-        setFile(null);
-        onSuccess();
-        onClose();
-      },
-    },
+  const { isUploading, upload } = useUploadSubrequests(() => {
+    setFile(null);
+    onSuccess();
+    onClose();
   });
 
   const handleUpload = () => {
@@ -48,9 +32,7 @@ export const UploadSubrequestsModal = ({
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    uploadMutation.mutate({ body: formData });
+    upload(file);
   };
 
   const handleClose = () => {
@@ -97,8 +79,8 @@ export const UploadSubrequestsModal = ({
         <Button
           type="button"
           variant="primary"
-          disabled={!file || uploadMutation.isPending}
-          isLoading={uploadMutation.isPending}
+          disabled={!file || isUploading}
+          isLoading={isUploading}
           onClick={handleUpload}
         >
           Загрузить

@@ -44,7 +44,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
   const { employees } = useEmployees('', !isTmz);
   const { categories: fixedAssetCategories } = useCategories('', !isTmz && !isMbp);
   const { categories: mbpCategories } = useMbpCategories('', !isTmz && isMbp);
-  const operation = useTmzGoodOperation('cart', undefined, onSuccess);
+  const { isPending, mutate } = useTmzGoodOperation('cart', undefined, onSuccess);
   const sourceSubdivisions = useMemo(
     () =>
       items.filter(
@@ -95,7 +95,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
         })),
       }),
     }));
-    operation.mutate({ body });
+    mutate({ body });
   };
 
   return (
@@ -205,7 +205,7 @@ export const TmzCartDistributeModal = ({ items, onClose, onSuccess }: Props) => 
           type="button"
           variant="primary"
           disabled={hasInvalidCabinets || hasInvalidPartyFields}
-          isLoading={operation.isPending}
+          isLoading={isPending}
           onClick={submit}
         >
           Распределить

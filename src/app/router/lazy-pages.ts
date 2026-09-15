@@ -35,9 +35,6 @@ export const FixedAssetsPage = lazy(() =>
 export const HistoryPage = lazy(() =>
   import('@pages/history').then((module) => ({ default: module.HistoryPage })),
 );
-export const HomePage = lazy(() =>
-  import('@pages/home').then((module) => ({ default: module.HomePage })),
-);
 export const LocationsPage = lazy(() =>
   import('@pages/locations').then((module) => ({ default: module.LocationsPage })),
 );
@@ -58,9 +55,6 @@ export const MyFixedAssetsPage = lazy(() =>
 );
 export const OthersPage = lazy(() =>
   import('@pages/others').then((module) => ({ default: module.OthersPage })),
-);
-export const PlaceholderPage = lazy(() =>
-  import('@pages/placeholder').then((module) => ({ default: module.PlaceholderPage })),
 );
 export const ResetPasswordPage = lazy(() =>
   import('@pages/reset-password').then((module) => ({ default: module.ResetPasswordPage })),

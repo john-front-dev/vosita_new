@@ -1,10 +1,4 @@
-import type { AccessibleWarehouse } from '@entities/location';
-import {
-  getDepartmentName,
-  getStorageId,
-  getStorageName,
-  getSubdivisionName,
-} from '@entities/location';
+import type { WarehouseLocation } from '@entities/location';
 import { buildAppliedFilterTags } from '@shared/lib';
 
 import {
@@ -33,19 +27,19 @@ export const getApprovalStatusVariant = (statusId: number) => {
   return 'neutral' as const;
 };
 
-const getWarehouseOptions = (warehouses: AccessibleWarehouse[]) =>
+const getWarehouseOptions = (warehouses: WarehouseLocation[]) =>
   warehouses.map((warehouse) => ({
     label: formatApprovalLocation(
-      getDepartmentName(warehouse),
-      getSubdivisionName(warehouse),
-      getStorageName(warehouse),
+      warehouse.department_name,
+      warehouse.subdivision_name,
+      warehouse.storage_name,
     ),
-    value: String(getStorageId(warehouse) ?? ''),
+    value: String(warehouse.storage_id),
   }));
 
 export const getAppliedApprovalFilters = (
   filters: ApprovalFilters,
-  warehouses: AccessibleWarehouse[],
+  warehouses: WarehouseLocation[],
 ) => {
   const warehouseOptions = getWarehouseOptions(warehouses);
 

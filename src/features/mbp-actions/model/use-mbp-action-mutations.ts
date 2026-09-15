@@ -38,7 +38,7 @@ const useMbpMutation = ({
   });
 
 export const useMbpEdit = ({ id, onSuccess }: ActionParams) => {
-  const mutation = useMbpMutation({
+  const { isPending, mutate } = useMbpMutation({
     id,
     method: 'patch',
     onSuccess,
@@ -47,13 +47,13 @@ export const useMbpEdit = ({ id, onSuccess }: ActionParams) => {
   });
 
   return {
-    edit: (body: Record<string, unknown>) => mutation.mutate({ body }),
-    isEditing: mutation.isPending,
+    edit: (body: Record<string, unknown>) => mutate({ body }),
+    isEditing: isPending,
   };
 };
 
 export const useMbpIssueToEmployee = ({ id, onSuccess }: ActionParams) => {
-  const mutation = useMbpMutation({
+  const { isPending, mutate } = useMbpMutation({
     id,
     method: 'post',
     onSuccess,
@@ -62,13 +62,13 @@ export const useMbpIssueToEmployee = ({ id, onSuccess }: ActionParams) => {
   });
 
   return {
-    isIssuing: mutation.isPending,
-    issue: (body: Record<string, unknown>) => mutation.mutate({ body }),
+    isIssuing: isPending,
+    issue: (body: Record<string, unknown>) => mutate({ body }),
   };
 };
 
 export const useMbpIssueToWarehouse = ({ id, onSuccess }: ActionParams) => {
-  const mutation = useMbpMutation({
+  const { isPending, mutate } = useMbpMutation({
     id,
     method: 'post',
     onSuccess,
@@ -77,14 +77,13 @@ export const useMbpIssueToWarehouse = ({ id, onSuccess }: ActionParams) => {
   });
 
   return {
-    isPending: mutation.isPending,
-    run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
+    isPending,
+    run: (afterSuccess?: () => void) => mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };
 
 export const useMbpWriteOff = ({ id, onSuccess }: ActionParams) => {
-  const mutation = useMbpMutation({
+  const { isPending, mutate } = useMbpMutation({
     id,
     method: 'put',
     onSuccess,
@@ -93,14 +92,13 @@ export const useMbpWriteOff = ({ id, onSuccess }: ActionParams) => {
   });
 
   return {
-    isPending: mutation.isPending,
-    run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
+    isPending,
+    run: (afterSuccess?: () => void) => mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };
 
 export const useMbpDestroy = ({ id, onSuccess }: ActionParams) => {
-  const mutation = useMbpMutation({
+  const { isPending, mutate } = useMbpMutation({
     id,
     method: 'put',
     onSuccess,
@@ -109,8 +107,7 @@ export const useMbpDestroy = ({ id, onSuccess }: ActionParams) => {
   });
 
   return {
-    isPending: mutation.isPending,
-    run: (afterSuccess?: () => void) =>
-      mutation.mutate({}, { onSuccess: () => afterSuccess?.() }),
+    isPending,
+    run: (afterSuccess?: () => void) => mutate({}, { onSuccess: () => afterSuccess?.() }),
   };
 };

@@ -14,9 +14,9 @@ import { MbpIssueAction } from './mbp-issue-action';
 
 export const MbpActions = ({ mbp }: { mbp: MbpDetails }) => {
   const user = getStoredUser();
-  const issueToWarehouse = useMbpIssueToWarehouse({ id: mbp.id });
-  const writeOff = useMbpWriteOff({ id: mbp.id });
-  const destroy = useMbpDestroy({ id: mbp.id });
+  const { isPending: isIssuing, run: issueToWarehouse } = useMbpIssueToWarehouse({ id: mbp.id });
+  const { isPending: isWritingOff, run: writeOff } = useMbpWriteOff({ id: mbp.id });
+  const { isPending: isDestroying, run: destroy } = useMbpDestroy({ id: mbp.id });
 
   if (user?.access !== 'редактор' || mbp.status === 21 || mbp.status === 22) return null;
 
@@ -30,8 +30,8 @@ export const MbpActions = ({ mbp }: { mbp: MbpDetails }) => {
           message="Вы уверены, что хотите отправить этот МБП на склад?"
           confirmText="Отправить"
           icon={<OutlineSystemShoppingBasket />}
-          isPending={issueToWarehouse.isPending}
-          onConfirm={issueToWarehouse.run}
+          isPending={isIssuing}
+          onConfirm={issueToWarehouse}
         />
       )}
       {mbp.status === 10 && (
@@ -43,8 +43,8 @@ export const MbpActions = ({ mbp }: { mbp: MbpDetails }) => {
             message="Вы уверены, что хотите отметить этот МБП как списанный?"
             confirmText="Списать"
             icon={<OutlineSystemTrash />}
-            isPending={writeOff.isPending}
-            onConfirm={writeOff.run}
+            isPending={isWritingOff}
+            onConfirm={writeOff}
           />
           <MbpConfirmAction
             label="Уничтожить"
@@ -52,8 +52,8 @@ export const MbpActions = ({ mbp }: { mbp: MbpDetails }) => {
             message="Вы уверены, что хотите отметить этот МБП как уничтоженный?"
             confirmText="Уничтожить"
             icon={<OutlineSystemTrash />}
-            isPending={destroy.isPending}
-            onConfirm={destroy.run}
+            isPending={isDestroying}
+            onConfirm={destroy}
             variant="risk"
           />
         </>

@@ -17,6 +17,13 @@ export type AmortizationFilters = {
   STATUS_ID: string;
 };
 
+export type AmortizationFormValues = {
+  filters: AmortizationFilters;
+  from: Date;
+  searchText: string;
+  to: Date;
+};
+
 export type UseAmortizationListParams = {
   filters: AmortizationFilters;
   from: string;

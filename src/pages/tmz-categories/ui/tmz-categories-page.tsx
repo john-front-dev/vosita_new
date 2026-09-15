@@ -40,7 +40,7 @@ export const TmzCategoriesPage = () => {
   const { cities } = useCities('', Boolean(filters.CITY_ID[0]));
   const { buildings } = useBuildings(filters.CITY_ID[0], '', Boolean(filters.BUILDING_ID[0]));
   const { categories: filterCategories } = useTmzCategoryOptions(Boolean(filters.CATEGORY_ID[0]));
-  const categories = useTmzCategories({
+  const { isFetching, isLoading, isSearching, rows, totalCount, totalSum } = useTmzCategories({
     filters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -170,8 +170,8 @@ export const TmzCategoriesPage = () => {
             proportions="s"
             className="mt-1 text-(--color-text-secondary)"
           >
-            Общая сумма остатков:{' '}
-            {categories.totalSum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} сомони
+            Общая сумма остатков: {totalSum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}{' '}
+            сомони
           </Typography>
         </div>
         {isWarehouseManager && <TmzCartDrawer />}
@@ -216,22 +216,18 @@ export const TmzCategoriesPage = () => {
 
         <DataTable
           columns={columns}
-          records={categories.rows}
-          isFetching={categories.isFetching}
-          isLoading={categories.isLoading}
+          records={rows}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={handleRowClick}
           emptyPlaceholder={
-            categories.isSearching
+            isSearching
               ? `По поиску «${queryParams.searchText}» ничего не найдено.`
               : storageId
                 ? 'Список категорий ТМЗ пока пуст.'
                 : 'Выберите склад ТМЗ в боковом меню.'
           }
-          pagination={
-            categories.isSearching
-              ? undefined
-              : { ...pagination, totalCount: categories.totalCount }
-          }
+          pagination={isSearching ? undefined : { ...pagination, totalCount }}
           tableClassNames={{
             row: (record) =>
               record.kind === 'good' && isLowStock(record.totalQty) ? 'bg-red-50/70' : '',

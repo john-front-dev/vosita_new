@@ -1,28 +1,36 @@
 import { useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { useFileDownload } from '@shared/api';
-import { useDebouncedValue } from '@shared/lib';
+import { formatDateOnly, useDebouncedValue } from '@shared/lib';
 
 import { amortizationEndpoints } from '../api/amortization-api';
 import { getAmortizationColumns } from './amortization-columns';
 import {
   defaultAmortizationFilters,
   getDefaultAmortizationDate,
-  toAmortizationQueryDate,
 } from './amortization-utils';
-import type { AmortizationFilters, AmortizationType } from './types';
+import type { AmortizationFormValues, AmortizationType } from './types';
 import { useAmortizationList } from './use-amortization-list';
 
 export const useAmortizationPage = (type: AmortizationType) => {
-  const [from, setFrom] = useState(getDefaultAmortizationDate);
-  const [to, setTo] = useState(getDefaultAmortizationDate);
-  const [searchText, setSearchText] = useState('');
-  const [filters, setFilters] = useState<AmortizationFilters>(defaultAmortizationFilters);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const { control, setValue } = useForm<AmortizationFormValues>({
+    defaultValues: {
+      filters: defaultAmortizationFilters,
+      from: getDefaultAmortizationDate(),
+      searchText: '',
+      to: getDefaultAmortizationDate(),
+    },
+  });
+  const [filters, from, searchText, to] = useWatch({
+    control,
+    name: ['filters', 'from', 'searchText', 'to'],
+  });
   const debouncedSearchText = useDebouncedValue(searchText);
-  const fromDate = toAmortizationQueryDate(from);
-  const toDate = toAmortizationQueryDate(to);
-  const list = useAmortizationList({
+  const fromDate = formatDateOnly(from);
+  const toDate = formatDateOnly(to);
+  const { isFetching, isLoading, records } = useAmortizationList({
     filters,
     from: fromDate,
     searchText: debouncedSearchText,
@@ -38,7 +46,7 @@ export const useAmortizationPage = (type: AmortizationType) => {
     }),
     [debouncedSearchText, filters, fromDate, toDate],
   );
-  const fileDownload = useFileDownload({
+  const { download, isDownloading } = useFileDownload({
     filename: 'amortization-report.xlsx',
     params: downloadParams,
     url: amortizationEndpoints.download,
@@ -46,19 +54,16 @@ export const useAmortizationPage = (type: AmortizationType) => {
 
   return {
     columns: getAmortizationColumns(type),
-    fileDownload,
+    control,
+    download,
     filters,
-    from,
     isFiltersOpen,
-    isListLoading: list.isLoading || list.isFetching,
-    records: list.records,
+    isDownloading,
+    isListLoading: isLoading || isFetching,
+    records,
     searchText,
-    setFilters,
-    setFrom,
     setIsFiltersOpen,
-    setSearchText,
-    setTo,
+    setValue,
     title: type === 'fixed-assets' ? 'Амортизация ОС' : 'Амортизация ПАУ',
-    to,
   };
 };

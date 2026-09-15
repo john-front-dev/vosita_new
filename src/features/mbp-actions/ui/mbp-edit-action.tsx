@@ -5,14 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import { useMbpCategories } from '@entities/category';
 import { useEmployees } from '@entities/employee';
-import {
-  getStorageId,
-  getStorageName,
-  useAllWarehouses,
-  useBuildings,
-  useCabinets,
-  useCities,
-} from '@entities/location';
+import { useAllWarehouses, useBuildings, useCabinets, useCities } from '@entities/location';
 import type { MbpDetails } from '@entities/mbp';
 import { normalizeSelectValue, notifyError } from '@shared/lib';
 
@@ -54,61 +47,79 @@ const getInitialValues = (mbp: MbpDetails): MbpEditFormValues => ({
 
 export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const form = useForm<MbpEditFormValues>({
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<MbpEditFormValues>({
     defaultValues: getInitialValues(mbp),
     mode: 'onChange',
     resolver: zodResolver(mbpEditSchema),
   });
-  const values = useWatch({ control: form.control });
+  const {
+    buildingId,
+    categoryId,
+    cityId,
+    comment,
+    currency,
+    price,
+    responsibleId,
+    roomId,
+    serialNumber,
+    storageId,
+    unit,
+  } = useWatch({ control });
   const { categories } = useMbpCategories('', isOpen);
   const { employees } = useEmployees('', isOpen);
   const { cities } = useCities('', isOpen);
-  const { buildings } = useBuildings(values.cityId, '', isOpen);
-  const { cabinets } = useCabinets(values.buildingId, '', isOpen);
+  const { buildings } = useBuildings(cityId, '', isOpen);
+  const { cabinets } = useCabinets(buildingId, '', isOpen);
   const { warehouses, isLoading: isWarehousesLoading, isFetching: isWarehousesFetching } =
-    useAllWarehouses(isOpen && Boolean(values.buildingId), values.buildingId);
-  const action = useMbpEdit({ id: mbp.id, onSuccess: () => setIsOpen(false) });
+    useAllWarehouses(isOpen && Boolean(buildingId), buildingId);
+  const { edit, isEditing } = useMbpEdit({ id: mbp.id, onSuccess: () => setIsOpen(false) });
   const responsibleOptions = includeCurrentOption(
     employees.map((employee) => ({
       label: employee.full_name,
       value: String(employee.id),
     })),
-    getCurrentOption(values.responsibleId, mbp.responsible_id, mbp.responsible_name),
+    getCurrentOption(responsibleId, mbp.responsible_id, mbp.responsible_name),
   );
   const categoryOptions = includeCurrentOption(
     categories.map((category) => ({
       label: category.name,
       value: String(category.id),
     })),
-    getCurrentOption(values.categoryId, mbp.category_id, mbp.category_name),
+    getCurrentOption(categoryId, mbp.category_id, mbp.category_name),
   );
   const cityOptions = includeCurrentOption(
     cities.map((city) => ({ label: city.name, value: String(city.id) })),
-    getCurrentOption(values.cityId, mbp.department_id, mbp.department_name),
+    getCurrentOption(cityId, mbp.department_id, mbp.department_name),
   );
   const buildingOptions = includeCurrentOption(
     buildings.map((building) => ({
       label: building.name ?? building.build ?? '',
       value: String(building.id),
     })),
-    getCurrentOption(values.buildingId, mbp.subdivision_id, mbp.subdivision_name),
+    getCurrentOption(buildingId, mbp.subdivision_id, mbp.subdivision_name),
   );
   const warehouseOptions = includeCurrentOption(
     warehouses
       .map((warehouse) => ({
-        label: getStorageName(warehouse) ?? '',
-        value: String(getStorageId(warehouse) ?? ''),
+        label: warehouse.storage_name,
+        value: String(warehouse.storage_id),
       }))
       .filter((option) => option.label && option.value),
-    getCurrentOption(values.storageId, mbp.storage_id, mbp.storage_name),
+    getCurrentOption(storageId, mbp.storage_id, mbp.storage_name),
   );
   const roomOptions = includeCurrentOption(
     cabinets.map((room) => ({ label: room.room, value: String(room.id) })),
-    getCurrentOption(values.roomId, mbp.rooms_id, mbp.rooms_name),
+    getCurrentOption(roomId, mbp.rooms_id, mbp.rooms_name),
   );
 
   const open = () => {
-    form.reset(getInitialValues(mbp));
+    reset(getInitialValues(mbp));
     setIsOpen(true);
   };
 
@@ -140,7 +151,7 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
       return;
     }
 
-    action.edit(payload);
+    edit(payload);
   };
 
   return (
@@ -165,15 +176,15 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
         <Modal.Content className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
           <Input
             label="Единица измерения"
-            value={values.unit}
-            onChange={(event) => form.setValue('unit', event.target.value)}
+            value={unit}
+            onChange={(event) => setValue('unit', event.target.value)}
             fullWidth
           />
           <Input
             label="Цена"
-            value={values.price}
+            value={price}
             onChange={(event) =>
-              form.setValue(
+              setValue(
                 'price',
                 event.target.value
                   .replace(/,/g, '.')
@@ -186,83 +197,83 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
           />
           <Input
             label="Валюта"
-            value={values.currency}
-            onChange={(event) => form.setValue('currency', event.target.value)}
+            value={currency}
+            onChange={(event) => setValue('currency', event.target.value)}
             fullWidth
           />
           <Input
             label="Серийный номер"
-            value={values.serialNumber}
-            onChange={(event) => form.setValue('serialNumber', event.target.value)}
+            value={serialNumber}
+            onChange={(event) => setValue('serialNumber', event.target.value)}
             fullWidth
           />
           <Select
             label="Ответственное лицо"
-            value={values.responsibleId || null}
+            value={responsibleId || null}
             options={responsibleOptions}
             onChange={(value) =>
-              form.setValue('responsibleId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('responsibleId', normalizeSelectValue(value), { shouldValidate: true })
             }
             fullWidth
           />
           <Select
             label="Категория"
-            value={values.categoryId || null}
+            value={categoryId || null}
             options={categoryOptions}
             onChange={(value) =>
-              form.setValue('categoryId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('categoryId', normalizeSelectValue(value), { shouldValidate: true })
             }
             fullWidth
           />
           <Select
             label="Город"
-            value={values.cityId || null}
+            value={cityId || null}
             options={cityOptions}
             onChange={(value) => {
-              form.setValue('cityId', normalizeSelectValue(value), { shouldValidate: true });
-              form.setValue('buildingId', '');
-              form.setValue('storageId', '');
-              form.setValue('roomId', '');
+              setValue('cityId', normalizeSelectValue(value), { shouldValidate: true });
+              setValue('buildingId', '');
+              setValue('storageId', '');
+              setValue('roomId', '');
             }}
             fullWidth
           />
           <Select
             label="Здание"
-            value={values.buildingId || null}
+            value={buildingId || null}
             options={buildingOptions}
             onChange={(value) => {
-              form.setValue('buildingId', normalizeSelectValue(value), { shouldValidate: true });
-              form.setValue('storageId', '');
-              form.setValue('roomId', '');
+              setValue('buildingId', normalizeSelectValue(value), { shouldValidate: true });
+              setValue('storageId', '');
+              setValue('roomId', '');
             }}
-            disabled={!values.cityId}
+            disabled={!cityId}
             fullWidth
           />
           <Select
             label="Склад"
-            value={values.storageId || null}
+            value={storageId || null}
             options={warehouseOptions}
             onChange={(value) =>
-              form.setValue('storageId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('storageId', normalizeSelectValue(value), { shouldValidate: true })
             }
             isLoading={isWarehousesLoading || isWarehousesFetching}
-            disabled={!values.buildingId}
+            disabled={!buildingId}
             fullWidth
           />
           <Select
             label="Кабинет"
-            value={values.roomId || null}
+            value={roomId || null}
             options={roomOptions}
             onChange={(value) =>
-              form.setValue('roomId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('roomId', normalizeSelectValue(value), { shouldValidate: true })
             }
-            disabled={!values.buildingId}
+            disabled={!buildingId}
             fullWidth
           />
           <TextArea
             label="Комментарий"
-            value={values.comment}
-            onChange={(event) => form.setValue('comment', event.target.value)}
+            value={comment}
+            onChange={(event) => setValue('comment', event.target.value)}
             fullWidth
           />
         </Modal.Content>
@@ -273,9 +284,9 @@ export const MbpEditAction = ({ mbp }: { mbp: MbpDetails }) => {
           <Button
             type="button"
             variant="primary"
-            isLoading={action.isEditing}
-            disabled={!form.formState.isValid}
-            onClick={form.handleSubmit(submit)}
+            isLoading={isEditing}
+            disabled={!isValid}
+            onClick={handleSubmit(submit)}
           >
             Изменить
           </Button>

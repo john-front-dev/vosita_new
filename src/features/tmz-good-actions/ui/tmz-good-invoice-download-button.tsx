@@ -6,7 +6,7 @@ type Props = {
 };
 
 export const TmzGoodInvoiceDownloadButton = ({ history }: Props) => {
-  const invoice = useFileDownload({
+  const { download, isDownloading } = useFileDownload({
     filename: `invoice_${history.id}.pdf`,
     url: tmzGoodEndpoints.invoice(history.id),
   });
@@ -17,8 +17,8 @@ export const TmzGoodInvoiceDownloadButton = ({ history }: Props) => {
     <button
       type="button"
       className="cursor-pointer border-0 bg-transparent text-sm text-(--color-primary) hover:underline disabled:cursor-wait"
-      disabled={invoice.isDownloading}
-      onClick={() => void invoice.download()}
+      disabled={isDownloading}
+      onClick={() => void download()}
     >
       № {history.invoice_number}
     </button>

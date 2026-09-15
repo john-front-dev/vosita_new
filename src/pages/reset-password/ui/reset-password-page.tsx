@@ -6,19 +6,17 @@ import {
   Input,
   OutlineSystemEyeOff,
   OutlineSystemEyeOn,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { type MutationVariables, useMutationQuery } from '@shared/api';
 import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
 
-import { resetPasswordApi } from '../api/reset-password-api';
-import type { ResetPasswordFormValues, ResetPasswordRequest } from '../model/types';
+import type { ResetPasswordFormValues } from '../model/types';
+import { useResetPassword } from '../model/use-reset-password';
 import { resetPasswordSchema } from '../model/validation';
 
 const defaultValues: ResetPasswordFormValues = {
@@ -42,36 +40,18 @@ export const ResetPasswordPage = () => {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  const resetPasswordMutation = useMutationQuery<
-    ApiResponse<unknown>,
-    MutationVariables<ResetPasswordRequest>
-  >({
-    method: 'post',
-    url: '',
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Пароль успешно изменён',
-          subtitle: 'Теперь вы можете войти с новым паролем',
-          type: 'success',
-          withCloseButton: true,
-        });
-        navigate(routes.login, { replace: true });
-      },
-    },
-  });
+  const { isResetting, resetPassword } = useResetPassword(id ?? '', () =>
+    navigate(routes.login, { replace: true }),
+  );
 
   if (!id) {
     return <Navigate to={routes.login} replace />;
   }
 
   const onSubmit: SubmitHandler<ResetPasswordFormValues> = (values) => {
-    resetPasswordMutation.mutate({
-      body: {
+    resetPassword({
         password: values.new_password,
         passwordConfirm: values.confirm_new_password,
-      },
-      url: resetPasswordApi.changePassword(id),
     });
   };
 
@@ -105,7 +85,7 @@ export const ResetPasswordPage = () => {
                   hasError={Boolean(errors.new_password)}
                   hintText={errors.new_password?.message}
                   isHintAlwaysShown={Boolean(errors.new_password)}
-                  disabled={resetPasswordMutation.isPending}
+                  disabled={isResetting}
                   fullWidth
                   proportions="l"
                   bordered
@@ -136,7 +116,7 @@ export const ResetPasswordPage = () => {
                   hasError={Boolean(errors.confirm_new_password)}
                   hintText={errors.confirm_new_password?.message}
                   isHintAlwaysShown={Boolean(errors.confirm_new_password)}
-                  disabled={resetPasswordMutation.isPending}
+                  disabled={isResetting}
                   fullWidth
                   proportions="l"
                   bordered
@@ -159,8 +139,8 @@ export const ResetPasswordPage = () => {
               type="submit"
               variant="primary"
               size="l"
-              disabled={!isValid || resetPasswordMutation.isPending}
-              isLoading={resetPasswordMutation.isPending}
+              disabled={!isValid || isResetting}
+              isLoading={isResetting}
             >
               Изменить пароль
             </Button>

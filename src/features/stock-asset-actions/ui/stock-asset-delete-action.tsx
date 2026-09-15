@@ -23,7 +23,7 @@ export const StockAssetDeleteAction = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const action = useStockAssetDelete({
+  const { deleteAsset, isDeleting } = useStockAssetDelete({
     assetId: asset.id,
     type,
     onSuccess: () => navigate(returnRoute[type]),
@@ -47,9 +47,9 @@ export const StockAssetDeleteAction = ({
         confirmText="Удалить"
         width="large"
         variant="risk"
-        isConfirmLoading={action.isDeleting}
+        isConfirmLoading={isDeleting}
         onClose={() => setIsOpen(false)}
-        onConfirm={action.deleteAsset}
+        onConfirm={deleteAsset}
       />
     </>
   );

@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 
-import type { Employee, EmployeesResponse } from '@entities/employee';
+import { type Employee, employeeEndpoints, type EmployeesResponse } from '@entities/employee';
 import { useGetQuery } from '@shared/api';
 
-import { employeesEndpoints } from '../api/employees-api';
 import type { EmployeesFilters } from './employees-filters';
 
 type UseEmployeesListParams = {
@@ -27,7 +26,7 @@ export const useEmployeesList = ({ filters, limit, page, searchText }: UseEmploy
   );
   const query = useGetQuery<EmployeesResponse>({
     queryKey: ['employees-list'],
-    url: employeesEndpoints.list,
+    url: employeeEndpoints.list,
     params,
   });
   const payload = query.data?.payload;

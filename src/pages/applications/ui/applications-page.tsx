@@ -1,17 +1,8 @@
 import { useMemo, useState } from 'react';
-import {
-  Button,
-  OutlineSystemAdd,
-  OutlineSystemFilterFromLessToMore,
-  Search,
-  SegmentedControl,
-  Surface,
-  Typography,
-} from 'alif-ui';
+import { Button, OutlineSystemAdd, Search, SegmentedControl, Surface, Typography } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
 import { useAccessibleWarehouses } from '@entities/location';
-import { queryClient } from '@shared/api';
 import { routes } from '@shared/config';
 import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
@@ -30,7 +21,7 @@ import type {
   ApplicationRecord,
 } from '../model/types';
 import { useApplicationsList } from '../model/use-applications-list';
-import { ApplicationsFiltersModal } from './applications-filters-modal';
+import { ApplicationsFilters } from './applications-filters';
 import { CreateApplicationModal } from './create-application-modal';
 
 const getDetailsPath = (type: ApplicationListType, id: number) => {
@@ -51,7 +42,7 @@ export const ApplicationsPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const user = getStoredUser();
   const accesses = getStoredAccesses();
-  const accessibleWarehouses = useAccessibleWarehouses();
+  const { isLoading: isWarehousesLoading, warehouses } = useAccessibleWarehouses();
   const availableTabs = getAvailableApplicationTabs(user, accesses);
   const defaultType = getDefaultApplicationListType(user, accesses);
   const {
@@ -73,11 +64,11 @@ export const ApplicationsPage = () => {
   });
   const applicationFilters = filters as ApplicationFilters;
   const appliedFilters = useMemo(
-    () => getAppliedApplicationFilters(applicationFilters, accessibleWarehouses.warehouses),
-    [applicationFilters, accessibleWarehouses.warehouses],
+    () => getAppliedApplicationFilters(applicationFilters, warehouses),
+    [applicationFilters, warehouses],
   );
 
-  const applicationsList = useApplicationsList({
+  const { isFetching, isLoading, records, totalCount } = useApplicationsList({
     filters: applicationFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -188,15 +179,15 @@ export const ApplicationsPage = () => {
               fullWidth
               proportions="l"
             />
-            <Button
-              type="button"
-              variant="outline-neutral"
-              size="l"
-              leftSection={<OutlineSystemFilterFromLessToMore />}
+            <ApplicationsFilters
+              filters={applicationFilters}
+              isLoading={isWarehousesLoading}
+              isOpen={isFiltersOpen}
+              warehouses={warehouses}
+              onApply={setFilters}
               onClick={() => setIsFiltersOpen(true)}
-            >
-              Фильтр
-            </Button>
+              onClose={() => setIsFiltersOpen(false)}
+            />
           </div>
         </div>
 
@@ -214,9 +205,9 @@ export const ApplicationsPage = () => {
 
         <DataTable
           columns={columns}
-          records={applicationsList.records}
-          isFetching={applicationsList.isFetching}
-          isLoading={applicationsList.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => navigate(getDetailsPath(listType, record.id))}
           emptyPlaceholder={
             queryParams.searchText
@@ -225,30 +216,16 @@ export const ApplicationsPage = () => {
           }
           pagination={{
             ...pagination,
-            totalCount: applicationsList.totalCount,
+            totalCount,
           }}
         />
       </Surface>
 
-      {isFiltersOpen && (
-        <ApplicationsFiltersModal
-          filters={applicationFilters}
-          isLoading={accessibleWarehouses.isLoading}
-          isOpen={isFiltersOpen}
-          warehouses={accessibleWarehouses.warehouses}
-          onApply={setFilters}
-          onClose={() => setIsFiltersOpen(false)}
-        />
-      )}
-
       {isCreateOpen && (
         <CreateApplicationModal
           isOpen={isCreateOpen}
-          warehouses={accessibleWarehouses.warehouses}
+          warehouses={warehouses}
           onClose={() => setIsCreateOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['applications'] });
-          }}
         />
       )}
     </section>

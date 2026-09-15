@@ -6,22 +6,30 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useEmployees } from '@entities/employee';
 import { useCabinets } from '@entities/location';
 import type { MbpDetails } from '@entities/mbp';
-import { normalizeSelectValue } from '@shared/lib';
 
 import { type MbpIssueFormValues, mbpIssueSchema } from '../model/mbp-action-validation';
 import { useMbpIssueToEmployee } from '../model/use-mbp-action-mutations';
 
 export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const form = useForm<MbpIssueFormValues>({
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<MbpIssueFormValues>({
     defaultValues: { employeeId: '', responsibleId: '', roomId: '' },
     mode: 'onChange',
     resolver: zodResolver(mbpIssueSchema),
   });
-  const values = useWatch({ control: form.control });
+  const { employeeId, responsibleId, roomId } = useWatch({ control });
   const { employees } = useEmployees('', isOpen);
   const { cabinets } = useCabinets(String(mbp.subdivision_id ?? ''), '', isOpen);
-  const action = useMbpIssueToEmployee({ id: mbp.id, onSuccess: () => setIsOpen(false) });
+  const { isIssuing, issue } = useMbpIssueToEmployee({
+    id: mbp.id,
+    onSuccess: () => setIsOpen(false),
+  });
 
   return (
     <>
@@ -31,7 +39,7 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
         size="m"
         leftSection={<OutlineSystemUser />}
         onClick={() => {
-          form.reset();
+          reset();
           setIsOpen(true);
         }}
       >
@@ -48,37 +56,37 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
         <Modal.Content className="flex flex-col gap-4">
           <Select
             label="Ответственное лицо"
-            value={values.responsibleId || null}
+            value={responsibleId || null}
             options={employees.map((employee) => ({
               label: employee.full_name,
               value: String(employee.id),
             }))}
             onChange={(value) =>
-              form.setValue('responsibleId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('responsibleId', value ?? '', { shouldValidate: true })
             }
             fullWidth
           />
           <Select
             label="Сотрудник"
-            value={values.employeeId || null}
+            value={employeeId || null}
             options={employees.map((employee) => ({
               label: employee.full_name,
               value: String(employee.id),
             }))}
             onChange={(value) =>
-              form.setValue('employeeId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('employeeId', value ?? '', { shouldValidate: true })
             }
             fullWidth
           />
           <Select
             label="Кабинет"
-            value={values.roomId || null}
+            value={roomId || null}
             options={cabinets.map((room) => ({
               label: room.room,
               value: String(room.id),
             }))}
             onChange={(value) =>
-              form.setValue('roomId', normalizeSelectValue(value), { shouldValidate: true })
+              setValue('roomId', value ?? '', { shouldValidate: true })
             }
             fullWidth
           />
@@ -90,10 +98,10 @@ export const MbpIssueAction = ({ mbp }: { mbp: MbpDetails }) => {
           <Button
             type="button"
             variant="primary"
-            isLoading={action.isIssuing}
-            disabled={!form.formState.isValid}
-            onClick={form.handleSubmit((formValues) =>
-              action.issue({
+            isLoading={isIssuing}
+            disabled={!isValid}
+            onClick={handleSubmit((formValues) =>
+              issue({
                 employee_uuid: formValues.employeeId,
                 id: Number(mbp.id),
                 responsible_id: formValues.responsibleId,

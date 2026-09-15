@@ -70,7 +70,12 @@ export const EmployeeDetailsPage = () => {
     ...record,
     selectionId: index,
   }));
-  const responsibleMbp = useResponsibleMbp(id, page, tab === 'responsibility');
+  const {
+    isFetching: isResponsibleMbpFetching,
+    isLoading: isResponsibleMbpLoading,
+    records: responsibleMbpRecords,
+    totalCount: responsibleMbpTotalCount,
+  } = useResponsibleMbp(id, page, tab === 'responsibility');
   const canTransferAssets = getStoredUser()?.access === 'редактор';
   const selectedInventoryNumbers = records
     .filter((_, index) => selectedAssetRows.includes(index))
@@ -157,7 +162,7 @@ export const EmployeeDetailsPage = () => {
         size="s"
         isIconBtn
         aria-label="Вернуться к списку сотрудников"
-        onClick={() => navigate(routes.employees)}
+        onClick={() => navigate(-1)}
       >
         <OutlineNavigationLeftArrow />
       </Button>
@@ -268,21 +273,21 @@ export const EmployeeDetailsPage = () => {
                     pageSize: 10,
                     totalCount: Math.max(
                       itemList?.total_count ?? (itemList?.total_pages ?? 0) * 10,
-                      tab === 'responsibility' ? responsibleMbp.totalCount : 0,
+                      tab === 'responsibility' ? responsibleMbpTotalCount : 0,
                     ),
                   }}
                 >
                   {tab === 'responsibility' &&
-                    (responsibleMbp.isLoading || responsibleMbp.records.length > 0) && (
+                    (isResponsibleMbpLoading || responsibleMbpRecords.length > 0) && (
                       <div className={`${records.length > 0 ? 'mt-6' : ''}flex flex-col gap-3`}>
                         <Typography category="body" proportions="mStrong">
                           МБП под ответственностью
                         </Typography>
                         <DataTable
                           columns={mbpColumns}
-                          records={responsibleMbp.records}
-                          isFetching={responsibleMbp.isFetching}
-                          isLoading={responsibleMbp.isLoading}
+                          records={responsibleMbpRecords}
+                          isFetching={isResponsibleMbpFetching}
+                          isLoading={isResponsibleMbpLoading}
                           onRowClick={(record) =>
                             navigate(routes.mbpDetails.replace(':id', String(record.id)))
                           }

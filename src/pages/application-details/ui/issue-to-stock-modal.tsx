@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { Button, DatePicker, Input, Modal, snackbar, Switch, Typography } from 'alif-ui';
 
-import { applicationEndpoints } from '@entities/application';
-import { useMutationQuery } from '@shared/api';
-import { downloadBlob, formatDateOnly, parseDateOnly } from '@shared/lib';
+import { formatDateOnly, parseDateOnly } from '@shared/lib';
 
 import type {
   ApplicationListType,
   ApplicationObjectRecord,
-  IssueApplicationObjectsRequest,
 } from '../model/types';
+import { useIssueApplicationObjects } from '../model/use-application-stock-actions';
 
 type IssueToStockModalProps = {
   categoryId?: number;
@@ -39,24 +37,9 @@ export const IssueToStockModal = ({
     ? Math.min(...records.map((record) => Number(record.quantity) || 0)) - 1
     : 0;
   const canEnableNotification = maximumThreshold >= 0.001;
-  const issueMutation = useMutationQuery<Blob, { body: IssueApplicationObjectsRequest }>({
-    method: 'post',
-    url: applicationEndpoints.issue[type],
-    config: {
-      responseType: 'blob',
-    },
-    options: {
-      onSuccess: (response) => {
-        downloadBlob(response, 'issue-to-stock.pdf');
-
-        snackbar.show({
-          title: 'Объекты отправлены на склад',
-          type: 'success',
-        });
-        onSuccess();
-        onClose();
-      },
-    },
+  const { isIssuing, issue } = useIssueApplicationObjects(type, () => {
+    onSuccess();
+    onClose();
   });
 
   const handleIssue = () => {
@@ -84,8 +67,7 @@ export const IssueToStockModal = ({
       return;
     }
 
-    issueMutation.mutate({
-      body: {
+    issue({
         objects: records.map((record) => ({
           id: record.id,
           ...(isTmz ? { category_id: record.tmz_cat_id ?? categoryId } : {}),
@@ -93,7 +75,6 @@ export const IssueToStockModal = ({
         })),
         registration_date: registrationDate,
         ...(isTmz ? { storage_id: storageId ?? records[0]?.storage_id } : {}),
-      },
     });
   };
 
@@ -163,8 +144,8 @@ export const IssueToStockModal = ({
         <Button
           type="button"
           variant="primary"
-          disabled={!registrationDate || issueMutation.isPending}
-          isLoading={issueMutation.isPending}
+          disabled={!registrationDate || isIssuing}
+          isLoading={isIssuing}
           onClick={handleIssue}
         >
           Выдать

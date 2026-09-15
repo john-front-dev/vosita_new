@@ -9,8 +9,6 @@ export const getDefaultAmortizationDate = () => {
   return date;
 };
 
-export const toAmortizationQueryDate = (date: Date) => date.toISOString().slice(0, 10);
-
 export const defaultAmortizationFilters: AmortizationFilters = {
   BUILDING_ID: '',
   CATEGORY_ID: '',

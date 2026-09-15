@@ -3,10 +3,8 @@ import {
   Badge,
   Button,
   OutlineSystemDownload,
-  OutlineSystemFilterFromLessToMore,
   Search,
   SegmentedControl,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
@@ -20,19 +18,10 @@ import {
   getStockAssetStatusLabel,
   type StockAssetListItem,
 } from '@entities/stock-asset';
-import { httpClient } from '@shared/api';
 import { routes } from '@shared/config';
-import {
-  downloadBlob,
-  formatDate,
-  getStoredAccesses,
-  getStoredUser,
-  useUrlListState,
-} from '@shared/lib';
+import { formatDate, getStoredAccesses, getStoredUser, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
-import { getStockRequestConfig, stockDownloadEndpoint } from '../api/stock-api';
-import { buildStockListParams } from '../lib/build-stock-list-params';
 import { getAppliedStockFilters } from '../lib/stock-filter-tags';
 import { stockDefaultFilters, stockFilterKeys } from '../model/stock-filters';
 import {
@@ -40,9 +29,14 @@ import {
   getDefaultStockListType,
   isStockListType,
 } from '../model/stock-tabs';
-import type { StockFilterKey, StockFilters, StockListType } from '../model/types';
+import type {
+  StockFilterKey,
+  StockFilters as StockFiltersValues,
+  StockListType,
+} from '../model/types';
+import { useDownloadStock } from '../model/use-download-stock';
 import { useStockList } from '../model/use-stock-list';
-import { StockFiltersModal } from './stock-filters-modal';
+import { StockFilters } from './stock-filters';
 
 const getStockDetailsPath = (type: StockListType, id: number | string) => {
   const detailsPathMap: Record<StockListType, string> = {
@@ -56,10 +50,10 @@ const getStockDetailsPath = (type: StockListType, id: number | string) => {
 export const StockPage = () => {
   const navigate = useNavigate();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const { download, isDownloading } = useDownloadStock();
   const user = getStoredUser();
   const accesses = getStoredAccesses();
-  const accessibleWarehouses = useAccessibleWarehouses();
+  const { isLoading: isWarehousesLoading, warehouses } = useAccessibleWarehouses();
   const availableTabs = getAvailableStockTabs(user, accesses);
   const defaultType = getDefaultStockListType(user, accesses);
   const {
@@ -82,7 +76,7 @@ export const StockPage = () => {
 
   const stockFilters = useMemo(
     () =>
-      (Object.keys(stockDefaultFilters) as StockFilterKey[]).reduce<StockFilters>(
+      (Object.keys(stockDefaultFilters) as StockFilterKey[]).reduce<StockFiltersValues>(
         (accumulator, key) => {
           accumulator[key] = filters[key] ?? [];
 
@@ -96,17 +90,11 @@ export const StockPage = () => {
   const { warehouseManagers } = useWarehouseManagers(stockFilters.BUILDING_ID[0]);
 
   const appliedFilters = useMemo(
-    () =>
-      getAppliedStockFilters(
-        stockFilters,
-        accessibleWarehouses.warehouses,
-        categories,
-        warehouseManagers,
-      ),
-    [accessibleWarehouses.warehouses, categories, stockFilters, warehouseManagers],
+    () => getAppliedStockFilters(stockFilters, warehouses, categories, warehouseManagers),
+    [categories, stockFilters, warehouseManagers, warehouses],
   );
 
-  const stockList = useStockList({
+  const { isFetching, isLoading, records, totalCount } = useStockList({
     filters: stockFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -114,31 +102,14 @@ export const StockPage = () => {
     type,
   });
 
-  const handleDownload = async () => {
-    const params = buildStockListParams({
+  const handleDownload = () => {
+    void download({
       filters: stockFilters,
       limit: queryParams.limit,
       page: queryParams.page,
       searchText: queryParams.searchText,
       type,
     });
-
-    try {
-      setIsDownloading(true);
-
-      const response = await httpClient.get<Blob>(stockDownloadEndpoint, {
-        ...getStockRequestConfig(params),
-        responseType: 'blob',
-      });
-      downloadBlob(response.data, `stock-${type}.xlsx`);
-    } catch {
-      snackbar.show({
-        title: 'Не удалось скачать файл',
-        type: 'error',
-      });
-    } finally {
-      setIsDownloading(false);
-    }
   };
 
   const columns = useMemo<DataTableProps<StockAssetListItem>['columns']>(() => {
@@ -257,15 +228,15 @@ export const StockPage = () => {
               fullWidth
               proportions="l"
             />
-            <Button
-              type="button"
-              variant="outline-neutral"
-              size="l"
-              leftSection={<OutlineSystemFilterFromLessToMore />}
+            <StockFilters
+              filters={stockFilters}
+              isLoading={isWarehousesLoading}
+              isOpen={isFiltersOpen}
+              warehouses={warehouses}
+              onApply={setFilters}
               onClick={() => setIsFiltersOpen(true)}
-            >
-              Фильтр
-            </Button>
+              onClose={() => setIsFiltersOpen(false)}
+            />
           </div>
         </div>
 
@@ -278,9 +249,9 @@ export const StockPage = () => {
 
         <DataTable
           columns={columns}
-          records={stockList.records}
-          isFetching={stockList.isFetching}
-          isLoading={stockList.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => navigate(getStockDetailsPath(type, record.id))}
           emptyPlaceholder={
             queryParams.searchText
@@ -289,21 +260,10 @@ export const StockPage = () => {
           }
           pagination={{
             ...pagination,
-            totalCount: stockList.totalCount,
+            totalCount,
           }}
         />
       </Surface>
-
-      {isFiltersOpen && (
-        <StockFiltersModal
-          filters={stockFilters}
-          isLoading={accessibleWarehouses.isLoading}
-          isOpen={isFiltersOpen}
-          warehouses={accessibleWarehouses.warehouses}
-          onApply={setFilters}
-          onClose={() => setIsFiltersOpen(false)}
-        />
-      )}
     </section>
   );
 };

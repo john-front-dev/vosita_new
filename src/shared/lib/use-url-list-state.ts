@@ -3,22 +3,28 @@ import { useSearchParams } from 'react-router-dom';
 
 import { paginationConfig } from '@shared/config';
 
+import {
+  applyUrlFilterValues,
+  getUrlFilterValues,
+  normalizePositiveInt,
+  parsePositiveInt,
+} from './url-list-state-utils';
 import { useDebouncedValue } from './use-debounced-value';
 
 type UseUrlListStateParams<TType extends string, TFilterKey extends string> = {
-  debounceDelay?: number;
   defaultType?: TType;
   clearOnTypeChange?: boolean;
   filterKeys?: readonly TFilterKey[];
   isType?: (value: string | null) => value is TType;
-  searchParamKey?: string;
   typeParamKey?: string;
 };
 
+const searchParamKey = 'search_text';
+
 type UrlListState<TType extends string, TFilterKey extends string> = {
-  debouncedSearchText: string;
-  limit: number;
-  page: number;
+  clearFilters: () => void;
+  filters: Record<TFilterKey, string[]>;
+  hasFilters: boolean;
   pagination: {
     currentPage: number;
     onPageChange: (nextPage: number) => void;
@@ -26,60 +32,16 @@ type UrlListState<TType extends string, TFilterKey extends string> = {
     pageSize: number;
   };
   queryParams: {
-    filters: Record<TFilterKey, string[]>;
     limit: number;
     page: number;
     searchText: string;
   };
-  clearFilters: () => void;
-  filters: Record<TFilterKey, string[]>;
-  searchParams: URLSearchParams;
   searchText: string;
   setFilter: (key: TFilterKey, values: string[]) => void;
   setFilters: (filters: Record<TFilterKey, string[]>) => void;
-  setLimit: (nextLimit: number) => void;
-  setPage: (nextPage: number) => void;
   setSearchText: (value: string) => void;
   setType: (value: string) => void;
   type: TType | undefined;
-};
-
-const parsePositiveInt = (value: string | null, fallback: number) => {
-  const parsedValue = Number.parseInt(value ?? '', 10);
-
-  return Number.isNaN(parsedValue) || parsedValue < 1 ? fallback : parsedValue;
-};
-
-const normalizePositiveInt = (value: number, fallback: number) =>
-  Number.isNaN(value) || value < 1 ? fallback : value;
-
-const parseArrayParam = (searchParams: URLSearchParams, key: string) =>
-  searchParams
-    .getAll(key)
-    .flatMap((value) => value.split(','))
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-const getFilterValues = (searchParams: URLSearchParams, filterKeys: readonly string[]) =>
-  filterKeys.reduce<Record<string, string[]>>((accumulator, key) => {
-    accumulator[key] = parseArrayParam(searchParams, key);
-
-    return accumulator;
-  }, {});
-
-const applyFilterValues = (searchParams: URLSearchParams, filters: Record<string, string[]>) => {
-  Object.entries(filters).forEach(([key, values]) => {
-    const normalizedValues = values
-      .map(String)
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    if (normalizedValues.length) {
-      searchParams.set(key, normalizedValues.join(','));
-    } else {
-      searchParams.delete(key);
-    }
-  });
 };
 
 export function useUrlListState<TType extends string, TFilterKey extends string = string>(
@@ -94,11 +56,9 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
 ): UrlListState<TType, TFilterKey>;
 
 export function useUrlListState<TType extends string = string, TFilterKey extends string = string>({
-  debounceDelay,
   defaultType,
   filterKeys = [],
   isType,
-  searchParamKey = 'search_text',
   typeParamKey = 'type',
   clearOnTypeChange = false,
 }: UseUrlListStateParams<TType, TFilterKey> = {}): UrlListState<TType, TFilterKey> {
@@ -106,10 +66,11 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
   const typeFromQuery = searchParams.get(typeParamKey);
   const type = isType?.(typeFromQuery) ? typeFromQuery : defaultType;
   const searchText = searchParams.get(searchParamKey) ?? '';
-  const debouncedSearchText = useDebouncedValue(searchText, debounceDelay);
+  const debouncedSearchText = useDebouncedValue(searchText);
   const page = parsePositiveInt(searchParams.get('page'), paginationConfig.defaultPage);
   const limit = parsePositiveInt(searchParams.get('limit'), paginationConfig.defaultLimit);
-  const filters = getFilterValues(searchParams, filterKeys) as Record<TFilterKey, string[]>;
+  const filters = getUrlFilterValues(searchParams, filterKeys) as Record<TFilterKey, string[]>;
+  const hasFilters = filterKeys.some((key) => searchParams.has(key));
 
   useEffect(() => {
     const nextParams = new URLSearchParams(searchParams);
@@ -164,7 +125,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
         { replace: true },
       );
     },
-    [limit, page, searchParamKey, setSearchParams, type, typeParamKey],
+    [limit, page, setSearchParams, type, typeParamKey],
   );
 
   const setType = useCallback(
@@ -201,7 +162,6 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
       filterKeys,
       isType,
       limit,
-      searchParamKey,
       setSearchParams,
       typeParamKey,
       updateSearchParams,
@@ -240,7 +200,7 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
 
           nextParams.set('page', String(paginationConfig.defaultPage));
           nextParams.set('limit', String(limit));
-          applyFilterValues(nextParams, nextFilters);
+          applyUrlFilterValues(nextParams, nextFilters);
 
           return nextParams;
         },
@@ -268,10 +228,8 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
 
   return {
     clearFilters,
-    debouncedSearchText,
     filters,
-    limit,
-    page,
+    hasFilters,
     pagination: {
       currentPage: page,
       onPageChange: setPage,
@@ -279,17 +237,13 @@ export function useUrlListState<TType extends string = string, TFilterKey extend
       pageSize: limit,
     },
     queryParams: {
-      filters,
       limit,
       page,
       searchText: debouncedSearchText,
     },
-    searchParams,
     searchText,
     setFilter,
     setFilters,
-    setLimit,
-    setPage,
     setSearchText,
     setType,
     type,

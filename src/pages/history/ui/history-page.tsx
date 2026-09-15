@@ -3,7 +3,7 @@ import { Surface, Typography } from 'alif-ui';
 
 import { StockAssetHistoryDetailsModal } from '@features/stock-asset-history';
 import { useEmployees } from '@entities/employee';
-import { getStorageId, getStorageName, useAllWarehouses } from '@entities/location';
+import { useAllWarehouses } from '@entities/location';
 import { formatDate, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
@@ -31,29 +31,27 @@ export const HistoryPage = () => {
     HistoryFilterKey
   >({ filterKeys: historyFilterKeys });
   const historyFilters = filters as HistoryFilterValues;
-  const list = useHistoryList({
+  const { isFetching, isLoading, records, totalCount } = useHistoryList({
     filters: historyFilters,
     limit: queryParams.limit,
     page: queryParams.page,
     searchText: queryParams.searchText,
   });
-  const warehousesQuery = useAllWarehouses(true);
-  const employeesQuery = useEmployees();
+  const { warehouses } = useAllWarehouses(true);
+  const { employees } = useEmployees();
 
   const appliedFilters = useMemo(() => {
     const warehouseId = historyFilters.warehouse_id[0];
     const operationId = historyFilters.operation_type[0];
     const initiatorId = historyFilters.initiator[0];
-    const warehouse = warehousesQuery.warehouses.find(
-      (item) => String(getStorageId(item)) === warehouseId,
-    );
+    const warehouse = warehouses.find((item) => String(item.storage_id) === warehouseId);
     const operation = historyOperationOptions.find((item) => item.value === operationId);
-    const initiator = employeesQuery.employees.find((item) => String(item.id) === initiatorId);
+    const initiator = employees.find((item) => String(item.id) === initiatorId);
 
     return [
       warehouseId && {
         key: 'warehouse_id' as const,
-        label: `Склад: ${warehouse ? getStorageName(warehouse) : warehouseId}`,
+        label: `Склад: ${warehouse ? warehouse.storage_name : warehouseId}`,
       },
       operationId && {
         key: 'operation_type' as const,
@@ -72,7 +70,7 @@ export const HistoryPage = () => {
         label: `До: ${historyFilters.end_date[0]}`,
       },
     ].filter(Boolean) as Array<{ key: HistoryFilterKey; label: string }>;
-  }, [employeesQuery.employees, historyFilters, warehousesQuery.warehouses]);
+  }, [employees, historyFilters, warehouses]);
 
   const columns = useMemo<DataTableProps<HistoryRecord>['columns']>(
     () => [
@@ -126,12 +124,12 @@ export const HistoryPage = () => {
         />
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => setSelectedHistory({ id: record.id, type: record.type })}
           emptyPlaceholder="История событий пока пуста."
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
       {selectedHistory && isFixedAssetOperation(selectedHistory.type) ? (

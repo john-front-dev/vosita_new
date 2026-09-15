@@ -5,25 +5,23 @@ import {
   OutlineSystemRefresh,
   OutlineSystemUserAdd,
   Search,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
 import { useNavigate } from 'react-router-dom';
 
 import type { Employee } from '@entities/employee';
-import { useMutationQuery } from '@shared/api';
 import { routes } from '@shared/config';
 import { getStoredUser, useUrlListState } from '@shared/lib';
 import { DataTable, type DataTableProps } from '@shared/ui';
 
-import { employeesEndpoints } from '../api/employees-api';
 import {
   employeesDefaultFilters,
   type EmployeesFilterKey,
   employeesFilterKeys,
   type EmployeesFilters as EmployeesFilterValues,
 } from '../model/employees-filters';
+import { useRefreshEmployees } from '../model/use-employee-mutations';
 import { useEmployeesList } from '../model/use-employees-list';
 import { AddEmployeeModal } from './add-employee-modal';
 import { EmployeesFilters } from './employees-filters';
@@ -39,29 +37,16 @@ export const EmployeesPage = () => {
   const canManage = getStoredUser()?.access === 'редактор';
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const { filters, pagination, queryParams, searchParams, searchText, setFilters, setSearchText } =
+  const { filters, hasFilters, pagination, queryParams, searchText, setFilters, setSearchText } =
     useUrlListState<string, EmployeesFilterKey>({ filterKeys: employeesFilterKeys });
-  const hasStoredFilters = employeesFilterKeys.some((key) => searchParams.has(key));
-  const employeeFilters = (
-    hasStoredFilters ? filters : employeesDefaultFilters
-  ) as EmployeesFilterValues;
-  const list = useEmployeesList({
+  const employeeFilters = (hasFilters ? filters : employeesDefaultFilters) as EmployeesFilterValues;
+  const { isFetching, isLoading, records, refetch, totalCount } = useEmployeesList({
     filters: employeeFilters,
     limit: queryParams.limit,
     page: queryParams.page,
     searchText: queryParams.searchText,
   });
-  const refreshEmployees = useMutationQuery<ApiResponse<unknown>>({
-    method: 'post',
-    url: employeesEndpoints.refresh,
-    options: {
-      onSuccess: () => {
-        snackbar.show({ title: 'Список сотрудников обновлён', type: 'success' });
-        void list.refetch();
-      },
-      onError: () => snackbar.show({ title: 'Не удалось обновить список', type: 'error' }),
-    },
-  });
+  const { isRefreshing, refresh } = useRefreshEmployees(() => void refetch());
   const columns = useMemo<DataTableProps<Employee>['columns']>(
     () => [
       { accessor: 'user_id', minWidth: '130px', title: 'HR ID' },
@@ -111,8 +96,8 @@ export const EmployeesPage = () => {
             variant="outline-neutral"
             isIconBtn
             aria-label="Обновить сотрудников"
-            isLoading={refreshEmployees.isPending}
-            onClick={() => refreshEmployees.mutate({})}
+            isLoading={isRefreshing}
+            onClick={refresh}
           >
             <OutlineSystemRefresh />
           </Button>
@@ -153,9 +138,9 @@ export const EmployeesPage = () => {
         </div>
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) =>
             navigate(routes.employeeDetails.replace(':id', String(record.id)))
           }
@@ -164,14 +149,14 @@ export const EmployeesPage = () => {
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Список сотрудников пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
       {isAddOpen && (
         <AddEmployeeModal
           isOpen
           onClose={() => setIsAddOpen(false)}
-          onSuccess={() => void list.refetch()}
+          onSuccess={() => void refetch()}
         />
       )}
     </section>

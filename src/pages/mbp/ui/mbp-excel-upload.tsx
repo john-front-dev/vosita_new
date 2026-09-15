@@ -5,13 +5,10 @@ import {
   Modal,
   OutlineSystemDownload,
   OutlineSystemFileAdd,
-  snackbar,
   Tooltip,
 } from 'alif-ui';
 
-import { queryClient, useMutationQuery } from '@shared/api';
-
-import { mbpEndpoints } from '../api/mbp-api';
+import { useUploadMbp } from '../model/use-upload-mbp';
 
 const mbpTemplate = {
   fileName: 'mbp_upload_template.xlsx',
@@ -21,31 +18,13 @@ const mbpTemplate = {
 export const MbpExcelUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const uploadMutation = useMutationQuery<ApiResponse<unknown>, { body: FormData }>({
-    method: 'post',
-    url: mbpEndpoints.upload,
-    config: {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    },
-    options: {
-      onSuccess: async (response) => {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['mbp'] }),
-          queryClient.invalidateQueries({ queryKey: ['mbp-filter-options'] }),
-        ]);
-        snackbar.show({
-          title: response.message || 'Данные успешно загружены',
-          type: 'success',
-        });
-        handleClose();
-      },
-    },
+  const { isUploading, upload } = useUploadMbp(() => {
+    setFile(null);
+    setIsOpen(false);
   });
 
   const handleClose = () => {
-    if (uploadMutation.isPending) {
+    if (isUploading) {
       return;
     }
 
@@ -54,13 +33,11 @@ export const MbpExcelUpload = () => {
   };
 
   const handleUpload = () => {
-    if (!file || uploadMutation.isPending) {
+    if (!file || isUploading) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('excelFile', file);
-    uploadMutation.mutate({ body: formData });
+    upload(file);
   };
 
   return (
@@ -117,15 +94,15 @@ export const MbpExcelUpload = () => {
               type="button"
               variant="outline-neutral"
               onClick={handleClose}
-              disabled={uploadMutation.isPending}
+              disabled={isUploading}
             >
               Отмена
             </Button>
             <Button
               type="button"
               variant="primary"
-              disabled={!file || uploadMutation.isPending}
-              isLoading={uploadMutation.isPending}
+              disabled={!file || isUploading}
+              isLoading={isUploading}
               onClick={handleUpload}
             >
               Загрузить

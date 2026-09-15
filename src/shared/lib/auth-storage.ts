@@ -20,6 +20,7 @@ export type AuthAccess = {
 
 type AuthSession = {
   accessToken: string;
+  remember: boolean;
   refreshToken?: string;
   user: AuthUser;
   accesses?: AuthAccess[];
@@ -29,16 +30,54 @@ const tokenKey = 'token';
 const refreshTokenKey = 'refresh_token';
 const userKey = 'user';
 const accessesKey = 'accesses';
+const authStorageKeys = [tokenKey, refreshTokenKey, userKey, accessesKey] as const;
 
-export const setAuthSession = ({ accessToken, refreshToken, user, accesses = [] }: AuthSession) => {
-  localStorage.setItem(tokenKey, accessToken);
-  localStorage.setItem(userKey, JSON.stringify(user));
-  localStorage.setItem(accessesKey, JSON.stringify(accesses));
+const getAuthStorage = () => {
+  if (sessionStorage.getItem(tokenKey)) return sessionStorage;
+  if (localStorage.getItem(tokenKey)) return localStorage;
+
+  return null;
+};
+
+const clearStorage = (storage: Storage) => {
+  authStorageKeys.forEach((key) => storage.removeItem(key));
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isAuthUser = (value: unknown): value is AuthUser =>
+  isRecord(value) &&
+  typeof value.id === 'string' &&
+  typeof value.full_name === 'string' &&
+  typeof value.email === 'string';
+
+const isAuthAccess = (value: unknown): value is AuthAccess =>
+  isRecord(value) &&
+  typeof value.storage_type === 'string' &&
+  typeof value.user_id === 'string' &&
+  Array.isArray(value.storages) &&
+  value.storages.every(
+    (storage) =>
+      isRecord(storage) && typeof storage.id === 'number' && typeof storage.name === 'string',
+  );
+
+export const setAuthSession = ({
+  accessToken,
+  remember,
+  refreshToken,
+  user,
+  accesses = [],
+}: AuthSession) => {
+  clearAuthSession();
+
+  const storage = remember ? localStorage : sessionStorage;
+  storage.setItem(tokenKey, accessToken);
+  storage.setItem(userKey, JSON.stringify(user));
+  storage.setItem(accessesKey, JSON.stringify(accesses));
 
   if (refreshToken) {
-    localStorage.setItem(refreshTokenKey, refreshToken);
-  } else {
-    localStorage.removeItem(refreshTokenKey);
+    storage.setItem(refreshTokenKey, refreshToken);
   }
 };
 
@@ -46,54 +85,65 @@ export const updateStoredAuthTokens = ({
   accessToken,
   refreshToken,
 }: Pick<AuthSession, 'accessToken' | 'refreshToken'>) => {
-  localStorage.setItem(tokenKey, accessToken);
+  const storage = getAuthStorage();
+
+  if (!storage) return;
+
+  storage.setItem(tokenKey, accessToken);
 
   if (refreshToken) {
-    localStorage.setItem(refreshTokenKey, refreshToken);
+    storage.setItem(refreshTokenKey, refreshToken);
+  } else {
+    storage.removeItem(refreshTokenKey);
   }
 };
 
 export const clearAuthSession = () => {
-  localStorage.removeItem(tokenKey);
-  localStorage.removeItem(refreshTokenKey);
-  localStorage.removeItem(userKey);
-  localStorage.removeItem(accessesKey);
+  clearStorage(localStorage);
+  clearStorage(sessionStorage);
 };
 
 export const getStoredUser = (): AuthUser | null => {
-  const rawUser = localStorage.getItem(userKey);
+  const rawUser = getAuthStorage()?.getItem(userKey);
 
   if (!rawUser) {
     return null;
   }
 
   try {
-    return JSON.parse(rawUser) as AuthUser;
+    const user: unknown = JSON.parse(rawUser);
+
+    return isAuthUser(user) ? user : null;
   } catch {
-    localStorage.removeItem(userKey);
     return null;
   }
 };
 
 export const getStoredAccessToken = () => {
-  return localStorage.getItem(tokenKey);
+  return getAuthStorage()?.getItem(tokenKey) ?? null;
 };
 
+export const hasStoredAuthSessionData = () =>
+  [localStorage, sessionStorage].some((storage) =>
+    authStorageKeys.some((key) => storage.getItem(key)),
+  );
+
 export const getStoredRefreshToken = () => {
-  return localStorage.getItem(refreshTokenKey);
+  return getAuthStorage()?.getItem(refreshTokenKey) ?? null;
 };
 
 export const getStoredAccesses = (): AuthAccess[] => {
-  const rawAccesses = localStorage.getItem(accessesKey);
+  const rawAccesses = getAuthStorage()?.getItem(accessesKey);
 
   if (!rawAccesses) {
     return [];
   }
 
   try {
-    return JSON.parse(rawAccesses) as AuthAccess[];
+    const accesses: unknown = JSON.parse(rawAccesses);
+
+    return Array.isArray(accesses) && accesses.every(isAuthAccess) ? accesses : [];
   } catch {
-    localStorage.removeItem(accessesKey);
     return [];
   }
 };

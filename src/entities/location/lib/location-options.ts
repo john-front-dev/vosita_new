@@ -1,79 +1,58 @@
-import type { AccessibleWarehouse, LocationOption } from '../model/types';
+import type { LocationOption, WarehouseLocation } from '../model/types';
 
 const getUniqueOptions = (options: LocationOption[]) =>
   options.filter(
     (option, index, array) => array.findIndex((entry) => entry.value === option.value) === index,
   );
 
-const hasValue = (value: number | string | undefined): value is number | string =>
-  value !== undefined && value !== '';
-
-export const getDepartmentId = (warehouse: AccessibleWarehouse) =>
-  warehouse.dep_id ?? warehouse.department_id;
-
-export const getDepartmentName = (warehouse: AccessibleWarehouse) =>
-  warehouse.dep_name ?? warehouse.department_name;
-
-export const getSubdivisionId = (warehouse: AccessibleWarehouse) =>
-  warehouse.sub_id ?? warehouse.subdivision_id;
-
-export const getSubdivisionName = (warehouse: AccessibleWarehouse) =>
-  warehouse.sub_name ?? warehouse.subdivision_name;
-
-export const getStorageId = (warehouse: AccessibleWarehouse) =>
-  warehouse.storage_id ?? warehouse.id;
-
-export const getStorageName = (warehouse: AccessibleWarehouse) =>
-  warehouse.storage_name ?? warehouse.name;
-
-export const buildDepartmentOptions = (warehouses: AccessibleWarehouse[]) =>
+export const buildDepartmentOptions = (warehouses: WarehouseLocation[]) =>
   getUniqueOptions(
     warehouses
       .map((warehouse) => ({
-        label: getDepartmentName(warehouse) ?? '',
-        value: String(getDepartmentId(warehouse) ?? ''),
+        label: warehouse.department_name,
+        value: String(warehouse.department_id),
       }))
-      .filter((option) => hasValue(option.value) && option.label),
+      .filter((option) => option.label),
   );
 
 export const buildSubdivisionOptions = (
-  warehouses: AccessibleWarehouse[],
+  warehouses: WarehouseLocation[],
   departmentIds: string[],
 ) =>
   getUniqueOptions(
     warehouses
       .filter((warehouse) => {
-        const departmentId = getDepartmentId(warehouse);
-
-        return departmentIds.length === 0 || departmentIds.includes(String(departmentId));
+        return (
+          departmentIds.length === 0 || departmentIds.includes(String(warehouse.department_id))
+        );
       })
       .map((warehouse) => ({
-        label: getSubdivisionName(warehouse) ?? '',
-        value: String(getSubdivisionId(warehouse) ?? ''),
+        label: warehouse.subdivision_name,
+        value: String(warehouse.subdivision_id),
       }))
-      .filter((option) => hasValue(option.value) && option.label),
+      .filter((option) => option.label),
   );
 
 export const buildStorageOptions = (
-  warehouses: AccessibleWarehouse[],
+  warehouses: WarehouseLocation[],
   departmentIds: string[],
   subdivisionIds: string[],
 ) =>
   getUniqueOptions(
     warehouses
       .filter((warehouse) => {
-        const departmentId = getDepartmentId(warehouse);
-        const subdivisionId = getSubdivisionId(warehouse);
         const isDepartmentAllowed =
-          departmentIds.length === 0 || departmentIds.includes(String(departmentId));
+          departmentIds.length === 0 ||
+          departmentIds.includes(String(warehouse.department_id));
         const isSubdivisionAllowed =
-          subdivisionIds.length === 0 || subdivisionIds.includes(String(subdivisionId));
+          subdivisionIds.length === 0 ||
+          subdivisionIds.includes(String(warehouse.subdivision_id));
 
         return isDepartmentAllowed && isSubdivisionAllowed;
       })
       .map((warehouse) => ({
-        label: getStorageName(warehouse) ?? '',
-        value: String(getStorageId(warehouse) ?? ''),
+        label: warehouse.storage_name,
+        value: String(warehouse.storage_id),
       }))
-      .filter((option) => hasValue(option.value) && option.label),
+      .filter((option) => option.label),
   );

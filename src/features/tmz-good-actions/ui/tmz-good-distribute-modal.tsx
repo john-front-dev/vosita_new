@@ -62,7 +62,7 @@ export const TmzGoodDistributeModal = ({
     isOpen && needsPartyItems && isMbp,
   );
   const { employees } = useEmployees('', isOpen && needsPartyItems);
-  const operation = useTmzGoodOperation('distribute', goodsId, onClose);
+  const { isPending, mutate } = useTmzGoodOperation('distribute', goodsId, onClose);
   const categories = isMbp ? mbpCategories : fixedAssetCategories;
 
   const changeQuantity = (rawValue: string) => {
@@ -113,7 +113,7 @@ export const TmzGoodDistributeModal = ({
         })),
       }),
     };
-    operation.mutate({ body });
+    mutate({ body });
   };
 
   return (
@@ -230,8 +230,8 @@ export const TmzGoodDistributeModal = ({
         <Button
           type="button"
           variant="primary"
-          disabled={isInvalid || operation.isPending}
-          isLoading={operation.isPending}
+          disabled={isInvalid || isPending}
+          isLoading={isPending}
           onClick={submit}
         >
           Распределить

@@ -24,7 +24,7 @@ const defaultValues: LoginFormValues = {
 
 export const LoginPage = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const loginMutation = useLogin();
+  const { isPending, login } = useLogin();
 
   const {
     control,
@@ -37,7 +37,7 @@ export const LoginPage = () => {
   });
 
   const onSubmit: SubmitHandler<LoginFormValues> = (values) => {
-    loginMutation.login({
+    login({
       email: values.email.trim(),
       password: values.password,
       is_remember_me: values.remember,
@@ -51,7 +51,7 @@ export const LoginPage = () => {
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="mb-6 flex items-center justify-center gap-3 text-(--brand-value-default)">
-          <AlifIcon className="h-[42px] w-[42px]" />
+          <AlifIcon className="h-10.5 w-10.5" />
           <Typography
             element="span"
             category="display"
@@ -75,7 +75,7 @@ export const LoginPage = () => {
                 hasError={Boolean(errors.email)}
                 hintText={errors.email?.message}
                 isHintAlwaysShown={Boolean(errors.email)}
-                disabled={loginMutation.isPending}
+                disabled={isPending}
                 fullWidth
                 proportions="l"
                 bordered
@@ -96,7 +96,7 @@ export const LoginPage = () => {
                 hasError={Boolean(errors.password)}
                 hintText={errors.password?.message}
                 isHintAlwaysShown={Boolean(errors.password)}
-                disabled={loginMutation.isPending}
+                disabled={isPending}
                 fullWidth
                 proportions="l"
                 bordered
@@ -121,7 +121,7 @@ export const LoginPage = () => {
               <Checkbox
                 label="Запомнить меня в системе"
                 checked={field.value}
-                disabled={loginMutation.isPending}
+                disabled={isPending}
                 onChange={(event) => field.onChange(event.target.checked)}
               />
             )}
@@ -132,15 +132,15 @@ export const LoginPage = () => {
             type="submit"
             variant="primary"
             size="l"
-            disabled={!isValid || loginMutation.isPending}
-            isLoading={loginMutation.isPending}
+            disabled={!isValid || isPending}
+            isLoading={isPending}
           >
             Войти
           </Button>
 
           <button
             type="button"
-            className="mx-auto text-base font-medium text-(--color-text-muted) transition-colors hover:text-(--brand-value-default)"
+            className="cursor-pointer text-(--color-text-muted) transition-colors hover:text-(--brand-value-default)"
           >
             Забыли пароль?
           </button>

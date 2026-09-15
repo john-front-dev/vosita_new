@@ -22,9 +22,6 @@ export const accessRules = {
   request: {
     roles: ['responsible', 'warehouseManager', 'accountant'],
   },
-  reports: {
-    disabled: true,
-  },
   responsibleOrAccountant: {
     roles: ['responsible', 'accountant'],
   },

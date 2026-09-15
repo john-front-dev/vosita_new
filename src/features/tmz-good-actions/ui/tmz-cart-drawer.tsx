@@ -22,12 +22,12 @@ export const TmzCartDrawer = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [operation, setOperation] = useState<'distribute' | 'move' | null>(null);
-  const cart = useTmzCart();
-  const updateItem = useUpdateTmzCartItem();
-  const removeItems = useRemoveTmzCartItems();
-  const selectedItems = cart.items.filter((item) => selectedIds.includes(item.id));
+  const { isLoading, items } = useTmzCart();
+  const { isPending: isUpdating, mutate: updateItem } = useUpdateTmzCartItem();
+  const { isPending: isRemoving, mutate: removeItems } = useRemoveTmzCartItems();
+  const selectedItems = items.filter((item) => selectedIds.includes(item.id));
   const groups = Object.entries(
-    cart.items.reduce<Record<string, typeof cart.items>>((result, item) => {
+    items.reduce<Record<string, typeof items>>((result, item) => {
       (result[item.item_type_name] ??= []).push(item);
       return result;
     }, {}),
@@ -37,20 +37,20 @@ export const TmzCartDrawer = () => {
     setSelectedIds((ids) =>
       ids.includes(id) ? ids.filter((itemId) => itemId !== id) : [...ids, id],
     );
-  const remove = (items: typeof cart.items) =>
-    removeItems.mutate({
-      body: items.map((item) => ({ good_id: item.good_id, warehouse_id: item.warehouse_id })),
+  const remove = (itemsToRemove: typeof items) =>
+    removeItems({
+      body: itemsToRemove.map((item) => ({ good_id: item.good_id, warehouse_id: item.warehouse_id })),
     });
-  const getQuantity = (item: (typeof cart.items)[number]) => quantities[item.id] ?? item.qty;
-  const setQuantity = (item: (typeof cart.items)[number], qty: number) =>
+  const getQuantity = (item: (typeof items)[number]) => quantities[item.id] ?? item.qty;
+  const setQuantity = (item: (typeof items)[number], qty: number) =>
     setQuantities((values) => ({
       ...values,
       [item.id]: Math.min(Math.max(1, qty), item.qty),
     }));
-  const saveQuantity = (item: (typeof cart.items)[number]) => {
+  const saveQuantity = (item: (typeof items)[number]) => {
     const qty = getQuantity(item);
     if (qty === item.qty) return;
-    updateItem.mutate(
+    updateItem(
       { body: { good_id: item.good_id, qty, warehouse_id: item.warehouse_id } },
       {
         onSuccess: () =>
@@ -62,7 +62,7 @@ export const TmzCartDrawer = () => {
       },
     );
   };
-  const hasQuantityChanges = cart.items.some((item) => getQuantity(item) !== item.qty);
+  const hasQuantityChanges = items.some((item) => getQuantity(item) !== item.qty);
   const mixedTypes = selectedItems.some((item) => item.item_type !== selectedItems[0]?.item_type);
   const totalQuantity = selectedItems.reduce((total, item) => total + item.qty, 0);
   const totalPrice = selectedItems.reduce((total, item) => total + item.qty * item.price, 0);
@@ -83,9 +83,9 @@ export const TmzCartDrawer = () => {
       >
         <span className="relative inline-flex">
           <OutlineSystemShoppingBasket />
-          {cart.items.length > 0 && (
+          {items.length > 0 && (
             <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] leading-none text-white">
-              {cart.items.length > 99 ? '99+' : cart.items.length}
+              {items.length > 99 ? '99+' : items.length}
             </span>
           )}
         </span>
@@ -98,11 +98,11 @@ export const TmzCartDrawer = () => {
         width="min(720px, 100vw)"
       >
         <div className="flex h-full flex-col gap-4">
-          {cart.isLoading ? (
+          {isLoading ? (
             <div className="flex flex-1 items-center justify-center">
               <Loader />
             </div>
-          ) : !cart.items.length ? (
+          ) : !items.length ? (
             <div className="flex flex-1 items-center justify-center text-(--color-text-secondary)">
               Ваша корзина пуста
             </div>
@@ -110,13 +110,13 @@ export const TmzCartDrawer = () => {
             <>
               <div className="flex items-center justify-between">
                 <Checkbox
-                  label={selectedIds.length === cart.items.length ? 'Отменить все' : 'Выбрать все'}
-                  checked={selectedIds.length === cart.items.length}
+                  label={selectedIds.length === items.length ? 'Отменить все' : 'Выбрать все'}
+                  checked={selectedIds.length === items.length}
                   onChange={() =>
                     setSelectedIds(
-                      selectedIds.length === cart.items.length
+                      selectedIds.length === items.length
                         ? []
-                        : cart.items.map((item) => item.id),
+                        : items.map((item) => item.id),
                     )
                   }
                 />
@@ -125,8 +125,8 @@ export const TmzCartDrawer = () => {
                   size="s"
                   variant="risk"
                   leftSection={<OutlineSystemDelete />}
-                  isLoading={removeItems.isPending}
-                  onClick={() => remove(cart.items)}
+                  isLoading={isRemoving}
+                  onClick={() => remove(items)}
                 >
                   Очистить корзину
                 </Button>
@@ -180,7 +180,7 @@ export const TmzCartDrawer = () => {
                             variant="outline-neutral"
                             isIconBtn
                             title="Уменьшить количество"
-                            disabled={getQuantity(item) <= 1 || updateItem.isPending}
+                            disabled={getQuantity(item) <= 1 || isUpdating}
                             onClick={() => setQuantity(item, getQuantity(item) - 1)}
                           >
                             −
@@ -192,7 +192,7 @@ export const TmzCartDrawer = () => {
                             variant="outline-neutral"
                             isIconBtn
                             title="Увеличить количество"
-                            disabled={getQuantity(item) >= item.qty || updateItem.isPending}
+                            disabled={getQuantity(item) >= item.qty || isUpdating}
                             onClick={() => setQuantity(item, getQuantity(item) + 1)}
                           >
                             +
@@ -209,7 +209,7 @@ export const TmzCartDrawer = () => {
                               variant="primary"
                               isIconBtn
                               title="Подтвердить количество"
-                              isLoading={updateItem.isPending}
+                              isLoading={isUpdating}
                               onClick={() => saveQuantity(item)}
                             >
                               <OutlineSystemCheck />

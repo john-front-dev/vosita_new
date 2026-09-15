@@ -14,18 +14,18 @@ export const TmzCartCabinetSelect = ({
   subdivisionId,
   onChange,
 }: TmzCartCabinetSelectProps) => {
-  const query = useCabinets(String(subdivisionId));
+  const { cabinets, isLoading } = useCabinets(String(subdivisionId));
 
   return (
     <Select
       label="В кабинет"
       value={cabinetId || null}
-      options={query.cabinets.map((cabinet) => ({
+      options={cabinets.map((cabinet) => ({
         label: cabinet.room,
         value: String(cabinet.id),
       }))}
       onChange={(value) => onChange(normalizeSelectValue(value))}
-      isLoading={query.isLoading}
+      isLoading={isLoading}
       fullWidth
     />
   );

@@ -5,20 +5,18 @@ import {
   Input,
   OutlineSystemEyeOff,
   OutlineSystemEyeOn,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useMutationQuery } from '@shared/api';
 import { routes } from '@shared/config';
 import { AlifIcon } from '@shared/icons';
 import { clearAuthSession } from '@shared/lib';
 
-import { changePasswordApi } from '../api/change-password-api';
-import type { ChangePasswordFormValues, ChangePasswordRequest } from '../model/types';
+import type { ChangePasswordFormValues } from '../model/types';
+import { useChangePassword } from '../model/use-change-password';
 import { changePasswordSchema } from '../model/validation';
 
 const defaultValues: ChangePasswordFormValues = {
@@ -45,33 +43,15 @@ export const ChangePasswordPage = () => {
     resolver: zodResolver(changePasswordSchema),
   });
 
-  const changePasswordMutation = useMutationQuery<
-    ApiResponse<unknown>,
-    { body: ChangePasswordRequest }
-  >({
-    method: 'post',
-    url: changePasswordApi.changeCurrentPassword,
-    options: {
-      onSuccess: () => {
-        clearAuthSession();
-        snackbar.show({
-          title: 'Пароль успешно изменён',
-          subtitle: 'Авторизуйтесь повторно с новым паролем',
-          type: 'success',
-          withCloseButton: true,
-        });
-        navigate(routes.login, { replace: true });
-      },
-    },
-  });
+  const { changePassword, isChanging } = useChangePassword(() =>
+    navigate(routes.login, { replace: true }),
+  );
 
   const onSubmit: SubmitHandler<ChangePasswordFormValues> = (values) => {
-    changePasswordMutation.mutate({
-      body: {
-        old_password: values.old_password,
-        new_password: values.new_password,
-        confirm_new_password: values.confirm_new_password,
-      },
+    changePassword({
+      old_password: values.old_password,
+      new_password: values.new_password,
+      confirm_new_password: values.confirm_new_password,
     });
   };
 
@@ -94,7 +74,7 @@ export const ChangePasswordPage = () => {
       >
         <form className="flex flex-col items-center" onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-6 flex items-center justify-center gap-3 text-(--brand-value-default)">
-            <AlifIcon className="h-[42px] w-[42px]" />
+            <AlifIcon className="h-10.5 w-10.5" />
             <Typography
               element="span"
               category="display"
@@ -141,7 +121,7 @@ export const ChangePasswordPage = () => {
                   hasError={Boolean(errors.old_password)}
                   hintText={errors.old_password?.message}
                   isHintAlwaysShown={Boolean(errors.old_password)}
-                  disabled={changePasswordMutation.isPending}
+                  disabled={isChanging}
                   fullWidth
                   proportions="l"
                   bordered
@@ -172,7 +152,7 @@ export const ChangePasswordPage = () => {
                   hasError={Boolean(errors.new_password)}
                   hintText={errors.new_password?.message}
                   isHintAlwaysShown={Boolean(errors.new_password)}
-                  disabled={changePasswordMutation.isPending}
+                  disabled={isChanging}
                   fullWidth
                   proportions="l"
                   bordered
@@ -203,7 +183,7 @@ export const ChangePasswordPage = () => {
                   hasError={Boolean(errors.confirm_new_password)}
                   hintText={errors.confirm_new_password?.message}
                   isHintAlwaysShown={Boolean(errors.confirm_new_password)}
-                  disabled={changePasswordMutation.isPending}
+                  disabled={isChanging}
                   fullWidth
                   proportions="l"
                   bordered
@@ -226,8 +206,8 @@ export const ChangePasswordPage = () => {
               type="submit"
               variant="primary"
               size="l"
-              disabled={!isValid || changePasswordMutation.isPending}
-              isLoading={changePasswordMutation.isPending}
+              disabled={!isValid || isChanging}
+              isLoading={isChanging}
             >
               Изменить пароль
             </Button>

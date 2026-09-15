@@ -1,10 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Modal, Select, snackbar } from 'alif-ui';
+import { Button, Input, Modal, Select } from 'alif-ui';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
-
-import { applicationEndpoints } from '@entities/application';
-import { useMutationQuery } from '@shared/api';
 
 import { applicationUnits } from '../model/application-units';
 import {
@@ -12,17 +9,13 @@ import {
   type SubrequestFormValues,
   subrequestSchema,
 } from '../model/subrequest-validation';
-import type {
-  ApplicationObjectRecord,
-  CreateSubrequestRequest,
-  UpdateSubrequestRequest,
-} from '../model/types';
+import type { ApplicationObjectRecord } from '../model/types';
+import { useSubrequestMutations } from '../model/use-subrequest-mutations';
 import { useTmzCategories } from '../model/use-tmz-categories';
 
 type SubrequestModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
   requestId?: number;
   subrequest?: ApplicationObjectRecord;
 };
@@ -44,7 +37,6 @@ const normalizeDecimalInput = (value: string) =>
 export const SubrequestModal = ({
   isOpen,
   onClose,
-  onSuccess,
   requestId,
   subrequest,
 }: SubrequestModalProps) => {
@@ -78,35 +70,10 @@ export const SubrequestModal = ({
     resolver: zodResolver(subrequestSchema),
   });
 
-  const createMutation = useMutationQuery<ApiResponse<unknown>, { body: CreateSubrequestRequest }>({
-    method: 'post',
-    url: applicationEndpoints.createSubrequest,
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Объект добавлен',
-          type: 'success',
-        });
-        reset(subrequestDefaultValues);
-        onSuccess();
-        onClose();
-      },
-    },
-  });
-
-  const editMutation = useMutationQuery<ApiResponse<unknown>, { body: UpdateSubrequestRequest }>({
-    method: 'post',
-    url: subrequest ? applicationEndpoints.editSubrequest(subrequest.id) : '',
-    options: {
-      onSuccess: () => {
-        snackbar.show({
-          title: 'Успешно',
-          type: 'success',
-        });
-        reset(subrequestDefaultValues);
-        onSuccess();
-        onClose();
-      },
+  const { createSubrequest, editSubrequest, isSubmitting } = useSubrequestMutations({
+    onSuccess: () => {
+      reset(subrequestDefaultValues);
+      onClose();
     },
   });
 
@@ -120,12 +87,10 @@ export const SubrequestModal = ({
   };
 
   const onSubmit: SubmitHandler<SubrequestFormValues> = (values) => {
-    if (isEditMode) {
-      editMutation.mutate({
-        body: {
-          name: values.name.trim(),
-          price: Number(values.price),
-        },
+    if (subrequest) {
+      editSubrequest(subrequest.id, {
+        name: values.name.trim(),
+        price: Number(values.price),
       });
       return;
     }
@@ -134,19 +99,15 @@ export const SubrequestModal = ({
       return;
     }
 
-    createMutation.mutate({
-      body: {
-        name: values.name.trim(),
-        price: Number(values.price),
-        quantity: Number(values.quantity),
-        request_id: requestId,
-        tmz_cat_id: Number(values.categoryId),
-        unit: values.unit,
-      },
+    createSubrequest({
+      name: values.name.trim(),
+      price: Number(values.price),
+      quantity: Number(values.quantity),
+      request_id: requestId,
+      tmz_cat_id: Number(values.categoryId),
+      unit: values.unit,
     });
   };
-
-  const isSubmitting = createMutation.isPending || editMutation.isPending;
 
   return (
     <Modal className="w-125" isOpen={isOpen} onClose={handleClose} isCentered withCloseButton>

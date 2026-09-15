@@ -5,33 +5,51 @@ import { formatDate } from '@shared/lib';
 import { useNotificationCenter } from '../model/use-notification-center';
 
 export const NotificationCenter = () => {
-  const notifications = useNotificationCenter();
+  const {
+    clearRead,
+    close,
+    fetchNextPage,
+    hasNextPage,
+    isAllowed,
+    isClearingRead,
+    isFetchingNextPage,
+    isLoading,
+    isMarkingAllRead,
+    isOpen,
+    items,
+    markAllRead,
+    open,
+    openNotification,
+    setUnreadOnly,
+    unreadCount,
+    unreadOnly,
+  } = useNotificationCenter();
 
-  if (!notifications.isAllowed) return null;
+  if (!isAllowed) return null;
 
   return (
     <>
       <button
         type="button"
         className="relative mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-(--color-icon-primary) hover:bg-(--color-bg-neutral-subtle) [&>svg]:h-6! [&>svg]:w-6!"
-        aria-label={`Уведомления${notifications.unreadCount ? `, непрочитанных: ${notifications.unreadCount}` : ''}`}
-        onClick={notifications.open}
+        aria-label={`Уведомления${unreadCount ? `, непрочитанных: ${unreadCount}` : ''}`}
+        onClick={open}
       >
         <OutlineSystemBell />
-        {notifications.unreadCount > 0 && (
+        {unreadCount > 0 && (
           <div className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] leading-none font-bold text-white">
-            {notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
+            {unreadCount > 99 ? '99+' : unreadCount}
           </div>
         )}
       </button>
 
       <Drawer
         title="Уведомления"
-        subTitle={`${notifications.unreadCount} непрочитанных`}
+        subTitle={`${unreadCount} непрочитанных`}
         position="right"
         width="440px"
-        isOpen={notifications.isOpen}
-        onClose={notifications.close}
+        isOpen={isOpen}
+        onClose={close}
         isCloseOutside
       >
         <div className="flex h-full min-h-0 flex-col gap-4">
@@ -40,8 +58,8 @@ export const NotificationCenter = () => {
               { label: 'Все', value: 'all' },
               { label: 'Непрочитанные', value: 'unread' },
             ]}
-            value={notifications.unreadOnly ? 'unread' : 'all'}
-            onChange={(value) => notifications.setUnreadOnly(value === 'unread')}
+            value={unreadOnly ? 'unread' : 'all'}
+            onChange={(value) => setUnreadOnly(value === 'unread')}
             rounded
             size="m"
             variant="accent"
@@ -52,8 +70,8 @@ export const NotificationCenter = () => {
               type="button"
               size="s"
               variant="outline-neutral"
-              disabled={!notifications.unreadCount || notifications.isMarkingAllRead}
-              onClick={notifications.markAllRead}
+              disabled={!unreadCount || isMarkingAllRead}
+              onClick={markAllRead}
             >
               Прочитать все
             </Button>
@@ -61,19 +79,19 @@ export const NotificationCenter = () => {
               type="button"
               size="s"
               variant="outline-neutral"
-              disabled={notifications.isClearingRead}
-              onClick={notifications.clearRead}
+              disabled={isClearingRead}
+              onClick={clearRead}
             >
               Очистить прочитанные
             </Button>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {notifications.isLoading ? (
+            {isLoading ? (
               <div className="flex justify-center py-10">
                 <Loader />
               </div>
-            ) : notifications.items.length === 0 ? (
+            ) : items.length === 0 ? (
               <Typography
                 category="body"
                 proportions="s"
@@ -83,12 +101,12 @@ export const NotificationCenter = () => {
               </Typography>
             ) : (
               <div className="flex flex-col gap-2">
-                {notifications.items.map((item) => (
+                {items.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     className={`flex w-full gap-3 rounded-xl border p-4 text-left transition-colors hover:bg-(--color-bg-neutral-subtle) ${item.is_read ? 'border-(--color-border-default)' : 'border-red-200 bg-red-50/60'}`}
-                    onClick={() => notifications.openNotification(item)}
+                    onClick={() => openNotification(item)}
                   >
                     <span
                       className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.is_read ? 'bg-gray-300' : 'bg-red-600'}`}
@@ -101,13 +119,13 @@ export const NotificationCenter = () => {
                     </span>
                   </button>
                 ))}
-                {notifications.hasNextPage && (
+                {hasNextPage && (
                   <Button
                     type="button"
                     variant="outline-neutral"
-                    isLoading={notifications.isFetchingNextPage}
-                    disabled={notifications.isFetchingNextPage}
-                    onClick={() => notifications.fetchNextPage()}
+                    isLoading={isFetchingNextPage}
+                    disabled={isFetchingNextPage}
+                    onClick={() => fetchNextPage()}
                   >
                     Показать ещё
                   </Button>

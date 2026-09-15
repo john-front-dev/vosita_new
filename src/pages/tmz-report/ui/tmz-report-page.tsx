@@ -9,8 +9,10 @@ import { useTmzReportPage } from '../model/use-tmz-report-page';
 export const TmzReportPage = () => {
   const {
     columns,
-    fileDownload,
+    download,
     from,
+    isDownloading,
+    isWarehousesLoading,
     leafColumns,
     records,
     reportIsLoading,
@@ -50,7 +52,7 @@ export const TmzReportPage = () => {
           <div className="w-72">
             <Select
               label="Склад"
-              options={warehouses.warehouses.map((warehouse) => ({
+              options={warehouses.map((warehouse) => ({
                 label: warehouse.storage_name,
                 value: String(warehouse.storage_id),
               }))}
@@ -58,15 +60,15 @@ export const TmzReportPage = () => {
               onChange={(value) =>
                 setSelectedStorageId(Number(normalizeSelectValue(value)) || 0)
               }
-              isLoading={warehouses.isLoading}
+              isLoading={isWarehousesLoading}
             />
           </div>
           <Button
             type="button"
             variant="outline-neutral"
             leftSection={<OutlineSystemDownload />}
-            onClick={fileDownload.download}
-            isLoading={fileDownload.isDownloading}
+            onClick={download}
+            isLoading={isDownloading}
             disabled={!storageId}
           >
             Скачать

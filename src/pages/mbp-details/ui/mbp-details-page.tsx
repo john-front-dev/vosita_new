@@ -7,7 +7,6 @@ import { StockAssetComments } from '@features/stock-asset-comments';
 import { StockAssetHistory } from '@features/stock-asset-history';
 import { getMbpStatusPresentation, useMbpDetails } from '@entities/mbp';
 import { useStockAssetComments, useStockAssetHistory } from '@entities/stock-asset';
-import { routes } from '@shared/config';
 import { StatusBanner } from '@shared/ui';
 
 import { MbpDetailsDescription } from './mbp-details-description';
@@ -29,8 +28,8 @@ export const MbpDetailsPage = () => {
         variant="outline-neutral"
         size="s"
         isIconBtn
-        aria-label="Вернуться к списку МБП"
-        onClick={() => navigate(routes.mbp)}
+        aria-label="Вернуться назад"
+        onClick={() => navigate(-1)}
       >
         <OutlineNavigationLeftArrow />
       </Button>

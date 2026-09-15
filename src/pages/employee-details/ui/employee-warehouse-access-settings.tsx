@@ -2,13 +2,7 @@ import { useMemo } from 'react';
 import { Checkbox, SelectMultiple, Typography } from 'alif-ui';
 
 import { type EmployeeLocationAccess, employeeStorageTypeOptions } from '@entities/employee';
-import {
-  getDepartmentName,
-  getStorageId,
-  getStorageName,
-  getSubdivisionName,
-  useAllWarehouses,
-} from '@entities/location';
+import { useAllWarehouses } from '@entities/location';
 
 const selectAllWarehousesValue = -1;
 
@@ -25,24 +19,20 @@ export const EmployeeWarehouseAccessSettings = ({
   isStorageTypeLocked = false,
   onChange,
 }: Props) => {
-  const warehousesQuery = useAllWarehouses(true);
+  const { isFetching, isLoading, warehouses: warehouseLocations } = useAllWarehouses(true);
   const warehouses = useMemo(
     () =>
-      warehousesQuery.warehouses
+      warehouseLocations
         .map((warehouse) => ({
-          id: getStorageId(warehouse),
-          label: [
-            getDepartmentName(warehouse),
-            getSubdivisionName(warehouse),
-            getStorageName(warehouse),
-          ]
+          id: warehouse.storage_id,
+          label: [warehouse.department_name, warehouse.subdivision_name, warehouse.storage_name]
             .filter(Boolean)
             .join(' / '),
         }))
         .filter((warehouse): warehouse is { id: number; label: string } =>
           Boolean(warehouse.id && warehouse.label),
         ),
-    [warehousesQuery.warehouses],
+    [warehouseLocations],
   );
   const toggleStorageType = (storageType: string) => {
     onChange(
@@ -102,7 +92,7 @@ export const EmployeeWarehouseAccessSettings = ({
             })),
           ]}
           disabled={disabled}
-          isLoading={warehousesQuery.isLoading || warehousesQuery.isFetching}
+          isLoading={isLoading || isFetching}
           onChange={(values) => {
             const warehouseIds = values.map(Number);
 

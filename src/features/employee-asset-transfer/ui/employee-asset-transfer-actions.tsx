@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import {
-  Button,
-  Modal,
-  OutlineFinanceWalletTransfer,
-  OutlineSystemEdit,
-  Select,
-} from 'alif-ui';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Modal, OutlineFinanceWalletTransfer, OutlineSystemEdit, Select } from 'alif-ui';
+import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import { useEmployees } from '@entities/employee';
 import { useBuildings, useCabinets, useCities } from '@entities/location';
-import { normalizeSelectValue } from '@shared/lib';
 
+import {
+  type EmployeeAssetTransferFormValues,
+  employeeAssetTransferSchema,
+} from '../model/employee-asset-transfer-validation';
 import { useEmployeeAssetTransfer } from '../model/use-employee-asset-transfer';
 
 type Props = {
@@ -29,39 +28,40 @@ export const EmployeeAssetTransferActions = ({
   onSuccess,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [responsibleId, setResponsibleId] = useState('');
-  const [cityId, setCityId] = useState('');
-  const [buildingId, setBuildingId] = useState('');
-  const [cabinetId, setCabinetId] = useState('');
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<EmployeeAssetTransferFormValues>({
+    defaultValues: { buildingId: '', cabinetId: '', cityId: '', responsibleId: '' },
+    mode: 'onChange',
+    resolver: zodResolver(employeeAssetTransferSchema),
+  });
+  const { buildingId, cabinetId, cityId, responsibleId } = useWatch({ control });
   const { employees, isLoading: isEmployeesLoading } = useEmployees('', isOpen, '1,4,2');
   const { cities, isLoading: isCitiesLoading } = useCities('', isOpen);
   const { buildings, isLoading: isBuildingsLoading } = useBuildings(cityId, '', isOpen);
   const { cabinets, isLoading: isCabinetsLoading } = useCabinets(buildingId, '', isOpen);
-  const transfer = useEmployeeAssetTransfer(employeeId, () => {
+  const { isTransferring, transfer } = useEmployeeAssetTransfer(employeeId, () => {
     setIsOpen(false);
     onSuccess();
   });
-  const isFormInvalid = !responsibleId || !cityId || !buildingId || !cabinetId;
 
-  const resetForm = () => {
-    setResponsibleId('');
-    setCityId('');
-    setBuildingId('');
-    setCabinetId('');
-  };
   const close = () => {
     setIsOpen(false);
-    resetForm();
+    reset();
   };
-  const submit = () => {
-    if (isFormInvalid || !inventoryNumbers.length) return;
+  const submit: SubmitHandler<EmployeeAssetTransferFormValues> = (formValues) => {
+    if (!inventoryNumbers.length) return;
 
-    transfer.transfer({
-      department_id: Number(cityId),
+    transfer({
+      department_id: Number(formValues.cityId),
       inventory_number: inventoryNumbers,
-      responsible_id: responsibleId,
-      room_id: Number(cabinetId),
-      subdivision_id: Number(buildingId),
+      responsible_id: formValues.responsibleId,
+      room_id: Number(formValues.cabinetId),
+      subdivision_id: Number(formValues.buildingId),
     });
   };
 
@@ -82,7 +82,7 @@ export const EmployeeAssetTransferActions = ({
           leftSection={<OutlineFinanceWalletTransfer />}
           disabled={!isSelecting || !inventoryNumbers.length}
           onClick={() => {
-            resetForm();
+            reset();
             setIsOpen(true);
           }}
         >
@@ -100,7 +100,11 @@ export const EmployeeAssetTransferActions = ({
               label: employee.full_name,
               value: String(employee.id),
             }))}
-            onChange={(value) => setResponsibleId(normalizeSelectValue(value))}
+            onChange={(value) =>
+              setValue('responsibleId', value ?? '', {
+                shouldValidate: true,
+              })
+            }
             isLoading={isEmployeesLoading}
             fullWidth
           />
@@ -109,9 +113,9 @@ export const EmployeeAssetTransferActions = ({
             value={cityId || null}
             options={cities.map((city) => ({ label: city.name, value: String(city.id) }))}
             onChange={(value) => {
-              setCityId(normalizeSelectValue(value));
-              setBuildingId('');
-              setCabinetId('');
+              setValue('cityId', value ?? '', { shouldValidate: true });
+              setValue('buildingId', '', { shouldValidate: true });
+              setValue('cabinetId', '', { shouldValidate: true });
             }}
             isLoading={isCitiesLoading}
             fullWidth
@@ -124,8 +128,8 @@ export const EmployeeAssetTransferActions = ({
               value: String(building.id),
             }))}
             onChange={(value) => {
-              setBuildingId(normalizeSelectValue(value));
-              setCabinetId('');
+              setValue('buildingId', value ?? '', { shouldValidate: true });
+              setValue('cabinetId', '', { shouldValidate: true });
             }}
             isLoading={isBuildingsLoading}
             disabled={!cityId}
@@ -138,7 +142,7 @@ export const EmployeeAssetTransferActions = ({
               label: cabinet.room,
               value: String(cabinet.id),
             }))}
-            onChange={(value) => setCabinetId(normalizeSelectValue(value))}
+            onChange={(value) => setValue('cabinetId', value ?? '', { shouldValidate: true })}
             isLoading={isCabinetsLoading}
             disabled={!buildingId}
             fullWidth
@@ -151,9 +155,9 @@ export const EmployeeAssetTransferActions = ({
           <Button
             type="button"
             variant="primary"
-            disabled={isFormInvalid || transfer.isTransferring}
-            isLoading={transfer.isTransferring}
-            onClick={submit}
+            disabled={!isValid || isTransferring}
+            isLoading={isTransferring}
+            onClick={handleSubmit(submit)}
           >
             Переместить
           </Button>

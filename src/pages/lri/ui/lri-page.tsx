@@ -45,7 +45,7 @@ export const LriPage = () => {
     () => getAppliedLriFilters(lriFilters, cities, buildings),
     [buildings, cities, lriFilters],
   );
-  const lriList = useLriList({
+  const { isFetching, isLoading, records, totalCount } = useLriList({
     filters: lriFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -141,16 +141,16 @@ export const LriPage = () => {
 
         <DataTable
           columns={columns}
-          records={lriList.records}
-          isFetching={lriList.isFetching}
-          isLoading={lriList.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={(record) => navigate(routes.lriDetails.replace(':id', String(record.id)))}
           emptyPlaceholder={
             queryParams.searchText
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Список ПАУ пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: lriList.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>

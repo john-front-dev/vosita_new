@@ -164,7 +164,14 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     [statusCounts],
   );
 
-  const applicationActions = useApplicationDetailsActions({
+  const {
+    deleteSubrequests,
+    isDeleting,
+    isUploadingReceipt,
+    refresh,
+    removeSubrequests,
+    uploadReceipt,
+  } = useApplicationDetailsActions({
     onDeleted: () => {
       setIsDeleteConfirmOpen(false);
       setSelectedIds([]);
@@ -180,11 +187,11 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
     const ids = selectedIds.join(',');
 
     if (status === 'not-reviewed') {
-      applicationActions.removeSubrequests(ids);
+      removeSubrequests(ids);
       return;
     }
 
-    applicationActions.deleteSubrequests(ids);
+    deleteSubrequests(ids);
   };
 
   const handleEditSelected = () => {
@@ -208,7 +215,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
       return;
     }
 
-    applicationActions.uploadReceipt(selectedIds.join(','), selectedFile);
+    uploadReceipt(selectedIds.join(','), selectedFile);
   };
 
   const handleCloseEditModal = () => {
@@ -356,8 +363,8 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
                       variant="outline-neutral"
                       size="s"
                       leftSection={<OutlineSystemFileAdd />}
-                      disabled={selectedIds.length === 0 || applicationActions.isUploadingReceipt}
-                      isLoading={applicationActions.isUploadingReceipt}
+                      disabled={selectedIds.length === 0 || isUploadingReceipt}
+                      isLoading={isUploadingReceipt}
                       onClick={() => receiptFileInputRef.current?.click()}
                     >
                       Добавить чек
@@ -370,8 +377,8 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
                     variant="risk"
                     size="s"
                     leftSection={<OutlineSystemTrash />}
-                    disabled={selectedIds.length === 0 || applicationActions.isDeleting}
-                    isLoading={applicationActions.isDeleting}
+                    disabled={selectedIds.length === 0 || isDeleting}
+                    isLoading={isDeleting}
                     onClick={() => setIsDeleteConfirmOpen(true)}
                   >
                     Удалить
@@ -474,7 +481,6 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           isOpen={isSubrequestOpen}
           requestId={details.id}
           onClose={() => setIsSubrequestOpen(false)}
-          onSuccess={applicationActions.refresh}
         />
       )}
 
@@ -483,7 +489,6 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           isOpen={Boolean(editingSubrequest)}
           subrequest={editingSubrequest}
           onClose={handleCloseEditModal}
-          onSuccess={applicationActions.refresh}
         />
       )}
 
@@ -491,7 +496,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
         <UploadSubrequestsModal
           isOpen={isUploadOpen}
           onClose={() => setIsUploadOpen(false)}
-          onSuccess={applicationActions.refresh}
+          onSuccess={refresh}
         />
       )}
 
@@ -505,7 +510,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
           onClose={() => setIsIssueOpen(false)}
           onSuccess={() => {
             setSelectedIds([]);
-            applicationActions.refresh();
+            refresh();
           }}
         />
       )}
@@ -515,7 +520,7 @@ export const ApplicationDetailsPage = ({ type }: ApplicationDetailsPageProps) =>
         message="После удаления их нельзя будет восстановить."
         confirmText="Удалить"
         isOpen={isDeleteConfirmOpen}
-        isConfirmLoading={applicationActions.isDeleting}
+        isConfirmLoading={isDeleting}
         variant="risk"
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDelete}

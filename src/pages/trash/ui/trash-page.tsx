@@ -4,19 +4,17 @@ import {
   OutlineSystemRefresh,
   Search,
   SegmentedControl,
-  snackbar,
   Surface,
   Typography,
 } from 'alif-ui';
 
-import { queryClient, useMutationQuery } from '@shared/api';
 import { formatMoney, useUrlListState } from '@shared/lib';
 import { ConfirmModal, DataTable, type DataTableProps } from '@shared/ui';
 
-import { trashEndpoints } from '../api/trash-api';
 import { trashTabs, trashTypeLabels } from '../model/trash-tabs';
 import type { TrashedAsset, TrashedLri, TrashRecord } from '../model/types';
 import { isTrashType } from '../model/types';
+import { useRestoreTrashRecord } from '../model/use-restore-trash-record';
 import { useTrashList } from '../model/use-trash-list';
 
 export const TrashPage = () => {
@@ -26,23 +24,13 @@ export const TrashPage = () => {
     defaultType: 'fixed-assets',
     isType: isTrashType,
   });
-  const list = useTrashList({
+  const { isFetching, isLoading, records, totalCount } = useTrashList({
     limit: queryParams.limit,
     page: queryParams.page,
     searchText: queryParams.searchText,
     type,
   });
-  const restoreMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
-    method: 'post',
-    url: '',
-    options: {
-      onSuccess: () => {
-        setRestoringRecord(null);
-        snackbar.show({ title: 'Объект восстановлен', type: 'success' });
-        void queryClient.invalidateQueries({ queryKey: ['trash-list', type] });
-      },
-    },
-  });
+  const { isRestoring, restore } = useRestoreTrashRecord(type, () => setRestoringRecord(null));
   const columns = useMemo<DataTableProps<TrashRecord>['columns']>(() => {
     const result: DataTableProps<TrashRecord>['columns'] =
       type === 'lri'
@@ -156,15 +144,15 @@ export const TrashPage = () => {
         />
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           emptyPlaceholder={
             queryParams.searchText
               ? `По поиску «${queryParams.searchText}» ничего не найдено.`
               : `В корзине пока нет объектов «${trashTypeLabels[type]}».`
           }
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
 
@@ -173,11 +161,11 @@ export const TrashPage = () => {
         title={`Восстановить ${trashTypeLabels[type]}?`}
         message="Объект будет возвращён из корзины."
         confirmText="Восстановить"
-        isConfirmLoading={restoreMutation.isPending}
+        isConfirmLoading={isRestoring}
         onClose={() => setRestoringRecord(null)}
         onConfirm={() => {
           if (restoringRecord) {
-            restoreMutation.mutate({ url: trashEndpoints.restore(restoringRecord.id) });
+            restore(restoringRecord.id);
           }
         }}
       />

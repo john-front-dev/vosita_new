@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Button, DatePicker, Input, Modal, Select, snackbar } from 'alif-ui';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, DatePicker, Input, Modal, Select } from 'alif-ui';
+import { Controller, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
-import { useMutationQuery } from '@shared/api';
-import { formatDateOnly, normalizeSelectValue, parseDateOnly } from '@shared/lib';
+import { formatDateOnly, parseDateOnly } from '@shared/lib';
 
-import { locationsEndpoints } from '../api/locations-api';
+import { createLocationFormSchema } from '../model/location-form-validation';
 import { locationTypeLabels } from '../model/location-tabs';
 import type {
   BuildingRecord,
@@ -21,16 +22,14 @@ import {
   useLocationFormCities,
   useResponsiblePeople,
 } from '../model/use-location-form-options';
+import { useSaveLocation } from '../model/use-location-mutations';
 
 type LocationFormModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
   record: LocationRecord | null;
   type: LocationType;
 };
-
-type LocationMutationVariables = { body: Record<string, unknown>; url: string };
 
 const emptyForm: LocationFormValues = {
   buildingId: '',
@@ -78,131 +77,70 @@ const getInitialForm = (type: LocationType, record: LocationRecord | null): Loca
   };
 };
 
-const getEndpoint = (type: LocationType, record: LocationRecord | null) => {
-  if (!record) {
-    return {
-      cities: locationsEndpoints.createCity,
-      buildings: locationsEndpoints.createBuilding,
-      cabinets: locationsEndpoints.createCabinet,
-      warehouses: locationsEndpoints.createWarehouse,
-    }[type];
-  }
-  return {
-    cities: locationsEndpoints.editCity,
-    buildings: locationsEndpoints.editBuilding,
-    cabinets: locationsEndpoints.editCabinet,
-    warehouses: locationsEndpoints.editWarehouse,
-  }[type](record.id);
-};
-
-const getBody = (type: LocationType, values: LocationFormValues, isEdit: boolean) => {
-  if (type === 'cities') return { region: values.name.trim() };
-  if (type === 'buildings') {
-    return {
-      crm_id: values.crmId.trim(),
-      end_date: new Date(values.endDate).toISOString(),
-      filial_id: Number(values.cityId),
-      name: values.name.trim(),
-      responsible: values.responsibleText.trim(),
-      start_date: new Date(values.startDate).toISOString(),
-    };
-  }
-  if (type === 'cabinets') {
-    return {
-      department_id: Number(values.cityId),
-      name_room: values.name.trim(),
-      subdivision_id: Number(values.buildingId),
-      ...(!isEdit && values.responsibleId ? { responsible_id: values.responsibleId } : {}),
-    };
-  }
-  if (isEdit) {
-    return { name: values.name.trim(), responsible_id: values.responsibleId };
-  }
-  return {
-    department_id: Number(values.cityId),
-    name: values.name.trim(),
-    responsible_id: values.responsibleId || undefined,
-    storage_type_id: Number(values.storageTypeId),
-    subdivision_id: Number(values.buildingId),
-  };
-};
-
-const isFormValid = (type: LocationType, values: LocationFormValues, isEdit: boolean) => {
-  if (!values.name.trim()) return false;
-  if (type === 'cities') return true;
-  if (!values.cityId) return false;
-  if (type === 'buildings') {
-    const startDate = parseDateOnly(values.startDate);
-    const endDate = parseDateOnly(values.endDate);
-
-    return Boolean(values.responsibleText.trim() && startDate && endDate && startDate <= endDate);
-  }
-  if (!values.buildingId) return false;
-  if (type === 'cabinets') return isEdit || Boolean(values.responsibleId);
-  return isEdit ? Boolean(values.responsibleId) : Boolean(values.storageTypeId);
-};
-
 export const LocationFormModal = ({
   isOpen,
   onClose,
-  onSuccess,
   record,
   type,
 }: LocationFormModalProps) => {
-  const isEdit = Boolean(record);
-  const [values, setValues] = useState(() => getInitialForm(type, record));
+  const isEdit = record !== null;
+  const schema = useMemo(() => createLocationFormSchema(type, isEdit), [isEdit, type]);
+  const {
+    control,
+    formState: { errors, isValid },
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<LocationFormValues>({
+    defaultValues: getInitialForm(type, record),
+    mode: 'onChange',
+    resolver: zodResolver(schema),
+  });
+  const {
+    buildingId = '',
+    cityId = '',
+    crmId = '',
+    endDate = '',
+    responsibleId = '',
+    responsibleText = '',
+    startDate = '',
+    storageTypeId = '',
+  } = useWatch({ control });
   const [employeeSearch, setEmployeeSearch] = useState('');
   const needsHierarchy = type !== 'cities' && !(type === 'warehouses' && isEdit);
   const needsResponsible = (type === 'cabinets' && !isEdit) || type === 'warehouses';
-  const citiesQuery = useLocationFormCities(isOpen && needsHierarchy);
-  const buildingsQuery = useLocationFormBuildings(values.cityId, isOpen && needsHierarchy);
-  const employeesQuery = useResponsiblePeople(
+  const { cities, isLoading: isCitiesLoading } = useLocationFormCities(
+    isOpen && needsHierarchy,
+  );
+  const { buildings, isLoading: isBuildingsLoading } = useLocationFormBuildings(
+    cityId,
+    isOpen && needsHierarchy,
+  );
+  const { employees, isLoading: isEmployeesLoading } = useResponsiblePeople(
     employeeSearch,
     type === 'cabinets' ? '1,4' : '1,2',
     isOpen && needsResponsible,
   );
-  const itemTypesQuery = useItemTypes(isOpen && type === 'warehouses' && !isEdit);
-  const endpoint = getEndpoint(type, record);
-  const mutationOptions = {
-    onSuccess: () => {
-      snackbar.show({
-        title: isEdit ? 'Изменения сохранены' : 'Местоположение добавлено',
-        type: 'success',
-      });
-      onSuccess();
-      onClose();
-    },
-  };
-  const postMutation = useMutationQuery<ApiResponse<unknown>, LocationMutationVariables>({
-    method: 'post',
-    url: endpoint,
-    options: mutationOptions,
-  });
-  const putMutation = useMutationQuery<ApiResponse<unknown>, LocationMutationVariables>({
-    method: 'put',
-    url: endpoint,
-    options: mutationOptions,
-  });
-  const isSubmitting = postMutation.isPending || putMutation.isPending;
-  const startDate = parseDateOnly(values.startDate);
-  const endDate = parseDateOnly(values.endDate);
-  const hasInvalidDateRange = Boolean(startDate && endDate && startDate > endDate);
-  const update = (patch: Partial<LocationFormValues>) =>
-    setValues((current) => ({ ...current, ...patch }));
+  const { isLoading: isItemTypesLoading, itemTypes } = useItemTypes(
+    isOpen && type === 'warehouses' && !isEdit,
+  );
+  const { isSaving, save } = useSaveLocation(type, record, onClose);
+  const startDateValue = parseDateOnly(startDate);
+  const endDateValue = parseDateOnly(endDate);
   const cityOptions = useMemo(
-    () => citiesQuery.cities.map((city) => ({ label: city.name, value: String(city.id) })),
-    [citiesQuery.cities],
+    () => cities.map((city) => ({ label: city.name, value: String(city.id) })),
+    [cities],
   );
   const buildingOptions = useMemo(
     () =>
-      buildingsQuery.buildings.map((building) => ({
+      buildings.map((building) => ({
         label: building.name,
         value: String(building.id),
       })),
-    [buildingsQuery.buildings],
+    [buildings],
   );
   const employeeOptions = useMemo(() => {
-    const options = employeesQuery.employees.map((employee) => ({
+    const options = employees.map((employee) => ({
       label: employee.full_name,
       value: String(type === 'cabinets' ? employee.id : (employee.user_id ?? employee.id)),
     }));
@@ -217,49 +155,48 @@ export const LocationFormModal = ({
     }
 
     return options;
-  }, [employeesQuery.employees, record, type]);
+  }, [employees, record, type]);
 
   const handleClose = () => {
-    setValues(getInitialForm(type, record));
+    reset(getInitialForm(type, record));
     onClose();
   };
+  const submit: SubmitHandler<LocationFormValues> = (formValues) => save(formValues);
 
   return (
     <Modal className="w-130" isOpen={isOpen} onClose={handleClose} isCentered withCloseButton>
       <Modal.Header
         title={`${isEdit ? 'Изменить' : 'Добавить'} ${locationTypeLabels[type].singular}`}
       />
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!isFormValid(type, values, isEdit)) return;
-          const variables = { body: getBody(type, values, isEdit), url: endpoint };
-          if (isEdit && (type === 'cabinets' || type === 'warehouses')) {
-            putMutation.mutate(variables);
-          } else {
-            postMutation.mutate(variables);
-          }
-        }}
-      >
+      <form onSubmit={handleSubmit(submit)}>
         <Modal.Content className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
           {needsHierarchy && (
             <Select
               label="Город"
-              value={values.cityId || null}
+              value={cityId || null}
               options={cityOptions}
-              onChange={(value) => update({ cityId: normalizeSelectValue(value), buildingId: '' })}
-              isLoading={citiesQuery.isLoading}
+              onChange={(value) => {
+                setValue('cityId', value ?? '', { shouldValidate: true });
+                setValue('buildingId', '', { shouldValidate: true });
+              }}
+              hasError={Boolean(errors.cityId)}
+              hintText={errors.cityId?.message}
+              isHintAlwaysShown={Boolean(errors.cityId)}
+              isLoading={isCitiesLoading}
               fullWidth
             />
           )}
           {needsHierarchy && type !== 'buildings' && (
             <Select
               label="Здание"
-              value={values.buildingId || null}
+              value={buildingId || null}
               options={buildingOptions}
-              onChange={(value) => update({ buildingId: normalizeSelectValue(value) })}
-              disabled={!values.cityId}
-              isLoading={buildingsQuery.isLoading}
+              onChange={(value) => setValue('buildingId', value ?? '', { shouldValidate: true })}
+              hasError={Boolean(errors.buildingId)}
+              hintText={errors.buildingId?.message}
+              isHintAlwaysShown={Boolean(errors.buildingId)}
+              disabled={!cityId}
+              isLoading={isBuildingsLoading}
               fullWidth
             />
           )}
@@ -281,62 +218,80 @@ export const LocationFormModal = ({
               />
             </>
           )}
-          <Input
-            label={
-              type === 'cities'
-                ? 'Название города'
-                : type === 'buildings'
-                  ? 'Название здания'
-                  : type === 'cabinets'
-                    ? 'Название кабинета'
-                    : 'Название склада'
-            }
-            value={values.name}
-            onChange={(event) => update({ name: event.target.value })}
-            fullWidth
-            bordered
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <Input
+                label={
+                  type === 'cities'
+                    ? 'Название города'
+                    : type === 'buildings'
+                      ? 'Название здания'
+                      : type === 'cabinets'
+                        ? 'Название кабинета'
+                        : 'Название склада'
+                }
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                hasError={Boolean(fieldState.error)}
+                hintText={fieldState.error?.message}
+                isHintAlwaysShown={Boolean(fieldState.error)}
+                fullWidth
+                bordered
+              />
+            )}
           />
           {type === 'buildings' && (
             <>
               <Input
                 label="Ответственное лицо"
-                value={values.responsibleText}
-                onChange={(event) => update({ responsibleText: event.target.value })}
+                value={responsibleText}
+                onChange={(event) =>
+                  setValue('responsibleText', event.target.value, { shouldValidate: true })
+                }
+                hasError={Boolean(errors.responsibleText)}
+                hintText={errors.responsibleText?.message}
+                isHintAlwaysShown={Boolean(errors.responsibleText)}
                 fullWidth
                 bordered
               />
               <Input
                 label="CRM ID"
-                value={values.crmId}
-                onChange={(event) => update({ crmId: event.target.value })}
+                value={crmId}
+                onChange={(event) => setValue('crmId', event.target.value)}
                 fullWidth
                 bordered
               />
               <DatePicker
                 label="Начало договора"
-                values={startDate}
+                values={startDateValue}
                 onDateChange={(date) =>
-                  update({ startDate: date instanceof Date ? formatDateOnly(date) : '' })
+                  setValue('startDate', date instanceof Date ? formatDateOnly(date) : '', {
+                    shouldValidate: true,
+                  })
                 }
-                onClear={() => update({ startDate: '' })}
+                onClear={() => setValue('startDate', '', { shouldValidate: true })}
+                hasError={Boolean(errors.startDate)}
+                hintText={errors.startDate?.message}
+                isHintAlwaysShown={Boolean(errors.startDate)}
                 allowTime={false}
                 fullWidth
               />
               <DatePicker
                 label="Конец договора"
-                values={endDate}
+                values={endDateValue}
                 onDateChange={(date) =>
-                  update({ endDate: date instanceof Date ? formatDateOnly(date) : '' })
+                  setValue('endDate', date instanceof Date ? formatDateOnly(date) : '', {
+                    shouldValidate: true,
+                  })
                 }
-                onClear={() => update({ endDate: '' })}
+                onClear={() => setValue('endDate', '', { shouldValidate: true })}
                 allowTime={false}
-                hasError={hasInvalidDateRange}
-                hintText={
-                  hasInvalidDateRange
-                    ? 'Дата окончания должна быть не раньше даты начала'
-                    : undefined
-                }
-                isHintAlwaysShown={hasInvalidDateRange}
+                hasError={Boolean(errors.endDate)}
+                hintText={errors.endDate?.message}
+                isHintAlwaysShown={Boolean(errors.endDate)}
                 fullWidth
               />
             </>
@@ -344,25 +299,35 @@ export const LocationFormModal = ({
           {needsResponsible && (
             <Select
               label="Ответственное лицо"
-              value={values.responsibleId || null}
+              value={responsibleId || null}
               options={employeeOptions}
               searchValue={employeeSearch}
               onSearch={setEmployeeSearch}
-              onChange={(value) => update({ responsibleId: normalizeSelectValue(value) })}
-              isLoading={employeesQuery.isLoading}
+              onChange={(value) =>
+                setValue('responsibleId', value ?? '', { shouldValidate: true })
+              }
+              hasError={Boolean(errors.responsibleId)}
+              hintText={errors.responsibleId?.message}
+              isHintAlwaysShown={Boolean(errors.responsibleId)}
+              isLoading={isEmployeesLoading}
               fullWidth
             />
           )}
           {type === 'warehouses' && !isEdit && (
             <Select
               label="Тип товара"
-              value={values.storageTypeId || null}
-              options={itemTypesQuery.itemTypes.map((itemType) => ({
+              value={storageTypeId || null}
+              options={itemTypes.map((itemType) => ({
                 label: itemType.name,
                 value: String(itemType.id),
               }))}
-              onChange={(value) => update({ storageTypeId: normalizeSelectValue(value) })}
-              isLoading={itemTypesQuery.isLoading}
+              onChange={(value) =>
+                setValue('storageTypeId', value ?? '', { shouldValidate: true })
+              }
+              hasError={Boolean(errors.storageTypeId)}
+              hintText={errors.storageTypeId?.message}
+              isHintAlwaysShown={Boolean(errors.storageTypeId)}
+              isLoading={isItemTypesLoading}
               fullWidth
             />
           )}
@@ -374,8 +339,8 @@ export const LocationFormModal = ({
           <Button
             type="submit"
             variant="primary"
-            disabled={!isFormValid(type, values, isEdit)}
-            isLoading={isSubmitting}
+            disabled={!isValid}
+            isLoading={isSaving}
           >
             {isEdit ? 'Сохранить' : 'Добавить'}
           </Button>

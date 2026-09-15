@@ -1,132 +1,146 @@
-import { useState } from 'react';
-import { Button, Modal, Select, snackbar } from 'alif-ui';
+import { useMemo } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Modal, Select } from 'alif-ui';
+import { Controller, type SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 
-import { httpClient } from '@shared/api';
-import { normalizeSelectValue } from '@shared/lib';
-
-import { categoriesEndpoints } from '../api/categories-api';
+import {
+  createTmzCategoryFormSchema,
+  tmzCategoryFormDefaultValues,
+  type TmzCategoryFormInput,
+  type TmzCategoryFormValues,
+} from '../model/tmz-category-form-validation';
+import { useCreateTmzCategoryBindings } from '../model/use-category-mutations';
 import { useTmzCategoryOptions } from '../model/use-tmz-category-options';
 
-type Props = { isOpen: boolean; onClose: () => void; onSuccess: () => void };
+type Props = { isOpen: boolean; onClose: () => void };
 
-type FormRow = {
-  categoryId: string;
-  expenseTypeId: string;
-  key: number;
-  storageId: string;
-};
-
-const createRow = (key: number): FormRow => ({
-  categoryId: '',
-  expenseTypeId: '',
-  key,
-  storageId: '',
-});
-
-export const TmzCategoryAddModal = ({ isOpen, onClose, onSuccess }: Props) => {
-  const options = useTmzCategoryOptions(isOpen);
-  const [rows, setRows] = useState<FormRow[]>([createRow(1)]);
-  const [nextKey, setNextKey] = useState(2);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isValid = rows.every((row) => {
-    const expenseType = options.expenseTypes.find((item) => item.id === row.expenseTypeId);
-    return Boolean(row.storageId && row.expenseTypeId && row.categoryId && expenseType?.branchName);
+export const TmzCategoryAddModal = ({ isOpen, onClose }: Props) => {
+  const { categories, expenseTypes, isLoading, storages } = useTmzCategoryOptions(isOpen);
+  const schema = useMemo(() => createTmzCategoryFormSchema(expenseTypes), [expenseTypes]);
+  const {
+    control,
+    formState: { isValid },
+    handleSubmit,
+  } = useForm<TmzCategoryFormInput, unknown, TmzCategoryFormValues>({
+    defaultValues: tmzCategoryFormDefaultValues,
+    mode: 'onChange',
+    resolver: zodResolver(schema),
   });
+  const { append, fields, remove } = useFieldArray({
+    control,
+    name: 'rows',
+  });
+  const { create, isCreating } = useCreateTmzCategoryBindings(onClose);
 
-  const updateRow = (key: number, patch: Partial<FormRow>) => {
-    setRows((current) =>
-      current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
-    );
-  };
-
-  const addRow = () => {
-    if (rows.length >= 5) return;
-    setRows((current) => [...current, createRow(nextKey)]);
-    setNextKey((current) => current + 1);
-  };
-
-  const removeRow = (key: number) => {
-    if (rows.length === 1) return;
-    setRows((current) => current.filter((row) => row.key !== key));
-  };
-
-  const submit = async () => {
-    if (!isValid) return;
-    setIsSubmitting(true);
-    try {
-      const body = rows.map((row, index) => {
-        const expenseType = options.expenseTypes.find((item) => item.id === row.expenseTypeId)!;
-        return {
-          accountant_number: expenseType.accountNumber ?? '',
-          branchName: expenseType.branchName ?? '',
-          category_id: Number(row.categoryId),
-          expense_type_id: expenseType.id,
-          id: index === 0 ? 1 : 0,
-          name: expenseType.expenseType,
-          storage_id: Number(row.storageId),
-        };
-      });
-      await httpClient.post<ApiResponse<unknown>>(categoriesEndpoints.createTmz, body);
-      snackbar.show({ title: 'Типы расходов добавлены', type: 'success' });
-      onSuccess();
-      onClose();
-    } catch {
-      snackbar.show({ title: 'Не удалось добавить типы расходов', type: 'error' });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const submit: SubmitHandler<TmzCategoryFormValues> = async ({ rows }) => {
+    const body = rows.map(({ categoryId, expenseType, storageId }, index) => {
+      return {
+        accountant_number: expenseType.accountNumber ?? '',
+        branchName: expenseType.branchName,
+        category_id: Number(categoryId),
+        expense_type_id: expenseType.id,
+        id: index === 0 ? 1 : 0,
+        name: expenseType.expenseType,
+        storage_id: Number(storageId),
+      };
+    });
+    await create(body);
   };
 
   return (
     <Modal className="w-160" isOpen={isOpen} onClose={onClose} isCentered withCloseButton>
       <Modal.Header title="Добавить тип расхода" />
-      <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
+      <form onSubmit={handleSubmit(submit)}>
         <Modal.Content className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
-          {rows.map((row, index) => (
-            <div className="flex flex-col gap-3 rounded-lg border border-solid border-neutral-200 p-4" key={row.key}>
+          {fields.map((row, index) => (
+            <div
+              className="flex flex-col gap-3 rounded-lg border border-solid border-neutral-200 p-4"
+              key={row.id}
+            >
               <div className="flex items-center justify-between gap-3">
                 <span>Привязка {index + 1}</span>
-                {rows.length > 1 && (
-                  <Button type="button" variant="risk" size="s" onClick={() => removeRow(row.key)}>
+                {fields.length > 1 && (
+                  <Button type="button" variant="risk" size="s" onClick={() => remove(index)}>
                     Удалить
                   </Button>
                 )}
               </div>
-              <Select
-                label="Склад"
-                value={row.storageId || null}
-                options={options.storages.map((item) => ({ label: item.name, value: String(item.id) }))}
-                onChange={(value) => updateRow(row.key, { storageId: normalizeSelectValue(value) })}
-                isLoading={options.isLoading}
-                fullWidth
+              <Controller
+                control={control}
+                name={`rows.${index}.storageId`}
+                render={({ field, fieldState }) => (
+                  <Select
+                    label="Склад"
+                    value={field.value || null}
+                    options={storages.map(({ id, name }) => ({ label: name, value: String(id) }))}
+                    onChange={(value) => field.onChange(value ?? '')}
+                    onBlur={field.onBlur}
+                    hasError={Boolean(fieldState.error)}
+                    hintText={fieldState.error?.message}
+                    isHintAlwaysShown={Boolean(fieldState.error)}
+                    isLoading={isLoading}
+                    fullWidth
+                  />
+                )}
               />
-              <Select
-                label="Тип расхода"
-                value={row.expenseTypeId || null}
-                options={options.expenseTypes.map((item) => ({ label: item.expenseType, value: item.id }))}
-                onChange={(value) => updateRow(row.key, { expenseTypeId: normalizeSelectValue(value) })}
-                isLoading={options.isLoading}
-                fullWidth
+              <Controller
+                control={control}
+                name={`rows.${index}.expenseTypeId`}
+                render={({ field, fieldState }) => (
+                  <Select
+                    label="Тип расхода"
+                    value={field.value || null}
+                    options={expenseTypes.map(({ expenseType, id }) => ({
+                      label: expenseType,
+                      value: id,
+                    }))}
+                    onChange={(value) => field.onChange(value ?? '')}
+                    onBlur={field.onBlur}
+                    hasError={Boolean(fieldState.error)}
+                    hintText={fieldState.error?.message}
+                    isHintAlwaysShown={Boolean(fieldState.error)}
+                    isLoading={isLoading}
+                    fullWidth
+                  />
+                )}
               />
-              <Select
-                label="Категория"
-                value={row.categoryId || null}
-                options={options.categories.map((item) => ({ label: item.name, value: String(item.id) }))}
-                onChange={(value) => updateRow(row.key, { categoryId: normalizeSelectValue(value) })}
-                isLoading={options.isLoading}
-                fullWidth
+              <Controller
+                control={control}
+                name={`rows.${index}.categoryId`}
+                render={({ field, fieldState }) => (
+                  <Select
+                    label="Категория"
+                    value={field.value || null}
+                    options={categories.map(({ id, name }) => ({ label: name, value: String(id) }))}
+                    onChange={(value) => field.onChange(value ?? '')}
+                    onBlur={field.onBlur}
+                    hasError={Boolean(fieldState.error)}
+                    hintText={fieldState.error?.message}
+                    isHintAlwaysShown={Boolean(fieldState.error)}
+                    isLoading={isLoading}
+                    fullWidth
+                  />
+                )}
               />
             </div>
           ))}
-          {rows.length < 5 && (
-            <Button type="button" variant="outline-neutral" onClick={addRow}>
+          {fields.length < 5 && (
+            <Button
+              type="button"
+              variant="outline-neutral"
+              onClick={() => append({ categoryId: '', expenseTypeId: '', storageId: '' })}
+            >
               Добавить ещё привязку
             </Button>
           )}
         </Modal.Content>
         <Modal.Actions className="mt-4 flex justify-end gap-3">
-          <Button type="button" variant="outline-neutral" onClick={onClose}>Отмена</Button>
-          <Button type="submit" variant="primary" disabled={!isValid} isLoading={isSubmitting}>Сохранить</Button>
+          <Button type="button" variant="outline-neutral" onClick={onClose}>
+            Отмена
+          </Button>
+          <Button type="submit" variant="primary" disabled={!isValid} isLoading={isCreating}>
+            Сохранить
+          </Button>
         </Modal.Actions>
       </form>
     </Modal>

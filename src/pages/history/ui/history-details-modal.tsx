@@ -59,8 +59,8 @@ const getDetailsRows = (history: HistoryDetails) =>
   ].filter((row) => hasValue(row.value));
 
 export const HistoryDetailsModal = ({ historyId, onClose }: HistoryDetailsModalProps) => {
-  const details = useHistoryDetails(historyId);
-  const rows = details.history ? getDetailsRows(details.history) : [];
+  const { history, isError, isLoading } = useHistoryDetails(historyId);
+  const rows = history ? getDetailsRows(history) : [];
 
   return (
     <Modal
@@ -70,19 +70,19 @@ export const HistoryDetailsModal = ({ historyId, onClose }: HistoryDetailsModalP
       isCentered
       withCloseButton
     >
-      <Modal.Header title={details.history?.operation_type || 'История события'} />
+      <Modal.Header title={history?.operation_type || 'История события'} />
       <Modal.Content className="max-h-[70vh] overflow-y-auto">
-        {details.isLoading && (
+        {isLoading && (
           <div className="flex justify-center py-6">
             <Loader />
           </div>
         )}
-        {details.isError && (
+        {isError && (
           <Typography category="body" proportions="s" className="text-(--color-danger)">
             Не удалось загрузить событие.
           </Typography>
         )}
-        {details.history &&
+        {history &&
           rows.map((row) => (
             <DetailsRow key={row.label} label={row.label} value={row.value ?? undefined} />
           ))}

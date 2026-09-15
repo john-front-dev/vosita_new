@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Button, Surface, Typography } from 'alif-ui';
 
 import type { StockAssetCapitalization as CapitalizationItem } from '@entities/stock-asset';
-import { queryClient, useMutationQuery } from '@shared/api';
 import { formatDate, formatMoney } from '@shared/lib';
 import { ConfirmModal } from '@shared/ui';
+
+import { useStockAssetCapitalizationMutations } from '../model/use-stock-asset-capitalization-mutations';
 
 type StockAssetCapitalizationProps = {
   assetId: string;
@@ -27,16 +28,11 @@ export const StockAssetCapitalization = ({
       0,
     ),
   }));
-  const removeMutation = useMutationQuery<ApiResponse<unknown>, { url: string }>({
-    method: 'delete',
-    url: '/capitalization/',
-    options: {
-      onSuccess: () => {
-        setRemovingId(null);
-        queryClient.invalidateQueries({ queryKey: ['stock-asset', assetId] });
-      },
-    },
-  });
+  const { isRemoving, removeCapitalization } = useStockAssetCapitalizationMutations(
+    assetId,
+    undefined,
+    () => setRemovingId(null),
+  );
 
   return (
     <>
@@ -127,10 +123,10 @@ export const StockAssetCapitalization = ({
         message="После удаления записи её нельзя будет восстановить."
         confirmText="Удалить"
         variant="risk"
-        isConfirmLoading={removeMutation.isPending}
+        isConfirmLoading={isRemoving}
         onClose={() => setRemovingId(null)}
         onConfirm={() =>
-          removingId !== null && removeMutation.mutate({ url: `/capitalization/${removingId}` })
+          removingId !== null && removeCapitalization(removingId)
         }
       />
     </>

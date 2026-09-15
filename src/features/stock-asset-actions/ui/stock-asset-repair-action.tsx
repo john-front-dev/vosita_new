@@ -14,7 +14,7 @@ export const StockAssetRepairAction = ({
   type: StockAssetType;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const action = useStockAssetRepair({
+  const { isRepairing, repair } = useStockAssetRepair({
     assetId: asset.id,
     type,
     onSuccess: () => setIsOpen(false),
@@ -36,9 +36,9 @@ export const StockAssetRepairAction = ({
         isOpen={isOpen}
         title={`Вы уверены, что хотите ${isReturning ? 'вернуть объект с ремонта' : 'отправить объект в ремонт'}?`}
         confirmText="Уверен"
-        isConfirmLoading={action.isRepairing}
+        isConfirmLoading={isRepairing}
         onClose={() => setIsOpen(false)}
-        onConfirm={action.repair}
+        onConfirm={repair}
       />
     </>
   );

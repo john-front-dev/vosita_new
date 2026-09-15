@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { OutlineSystemHome } from 'alif-ui';
 
-import type { AccessibleWarehouse } from '@entities/location';
+import type { WarehouseLocation } from '@entities/location';
 import { routes } from '@shared/config';
 import {
   type AuthAccess,
@@ -14,35 +14,33 @@ import {
 import type { SidebarNavItem } from './navigation';
 
 type WarehouseSource = {
-  id?: number;
-  name?: string;
-  storage_id?: number;
-  storage_name?: string;
+  id: number;
+  name: string;
 };
 
 const toNavigationItem = (warehouse: WarehouseSource): SidebarNavItem | null => {
-  const id = warehouse.id ?? warehouse.storage_id;
-  const name = warehouse.name ?? warehouse.storage_name;
-
-  if (!id || !name) return null;
+  if (!warehouse.id || !warehouse.name) return null;
 
   return {
     icon: createElement(OutlineSystemHome),
-    path: `${routes.inventory}/${id}`,
-    title: name,
+    path: `${routes.inventory}/${warehouse.id}`,
+    title: warehouse.name,
   };
 };
 
 export const getTmzNavigationItems = (
   user: AuthUser | null,
   accesses: AuthAccess[],
-  allWarehouses: AccessibleWarehouse[],
+  allWarehouses: WarehouseLocation[],
 ): SidebarNavItem[] => {
   if (!user) return [];
 
   const warehouses: WarehouseSource[] =
     isResponsible(user) && !isWarehouseManager(user)
-      ? allWarehouses
+      ? allWarehouses.map((warehouse) => ({
+          id: warehouse.storage_id,
+          name: warehouse.storage_name,
+        }))
       : isAccountant(accesses)
         ? accesses.flatMap((access) =>
             access.storage_type === 'Accountant' ? access.storages : [],

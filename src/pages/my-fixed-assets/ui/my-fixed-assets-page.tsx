@@ -40,18 +40,13 @@ export const MyFixedAssetsPage = () => {
     () => ({ ...myFixedAssetsDefaultFilters, ...filters }),
     [filters],
   );
-  const employeesQuery = useEmployees('', Boolean(myFixedAssetsFilters.EXPLOITER_ID[0]));
-  const categoriesQuery = useCategories('', Boolean(myFixedAssetsFilters.CATEGORY_ID[0]));
+  const { employees } = useEmployees('', Boolean(myFixedAssetsFilters.EXPLOITER_ID[0]));
+  const { categories } = useCategories('', Boolean(myFixedAssetsFilters.CATEGORY_ID[0]));
   const appliedFilters = useMemo(
-    () =>
-      getAppliedMyFixedAssetsFilters(
-        myFixedAssetsFilters,
-        employeesQuery.employees,
-        categoriesQuery.categories,
-      ),
-    [categoriesQuery.categories, employeesQuery.employees, myFixedAssetsFilters],
+    () => getAppliedMyFixedAssetsFilters(myFixedAssetsFilters, employees, categories),
+    [categories, employees, myFixedAssetsFilters],
   );
-  const list = useMyFixedAssetsList({
+  const { isFetching, isLoading, records, totalCount } = useMyFixedAssetsList({
     filters: myFixedAssetsFilters,
     limit: queryParams.limit,
     page: queryParams.page,
@@ -128,9 +123,9 @@ export const MyFixedAssetsPage = () => {
         )}
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           onRowClick={
             canManage
               ? (record) => navigate(routes.fixedAssetsDetails.replace(':id', String(record.id)))
@@ -141,7 +136,7 @@ export const MyFixedAssetsPage = () => {
               ? 'По заданным условиям ничего не найдено.'
               : 'Список ОС пока пуст.'
           }
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>

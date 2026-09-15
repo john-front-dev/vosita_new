@@ -10,11 +10,9 @@ import {
 } from 'alif-ui';
 
 import { useAllWarehouses } from '@entities/location';
-import { httpClient } from '@shared/api';
-import { downloadBlob, formatDate, useUrlListState } from '@shared/lib';
+import { formatDate, useUrlListState } from '@shared/lib';
 import { AppliedFilterTags, DataTable, type DataTableProps } from '@shared/ui';
 
-import { approvalEndpoints } from '../api/approval-api';
 import {
   formatApprovalLocation,
   formatApprovalQuantity,
@@ -33,7 +31,6 @@ import { ApprovalFilters } from './approval-filters';
 
 export const ApprovalPage = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const {
     clearFilters,
     filters,
@@ -45,17 +42,17 @@ export const ApprovalPage = () => {
     setSearchText,
   } = useUrlListState<string, ApprovalFilterKey>({ filterKeys: approvalFilterKeys });
   const approvalFilters = filters as ApprovalFiltersValues;
-  const warehousesQuery = useAllWarehouses(true);
-  const list = useApprovalList({
+  const { warehouses } = useAllWarehouses(true);
+  const { isFetching, isLoading, records, totalCount } = useApprovalList({
     filters: approvalFilters,
     limit: queryParams.limit,
     page: queryParams.page,
     searchText: queryParams.searchText,
   });
-  const actions = useApprovalActions();
+  const { approve, downloadInvoice, downloadingId, isPending, reject } = useApprovalActions();
   const selectableIds = useMemo(
-    () => list.records.filter((record) => record.status_id === 1).map((record) => record.id),
-    [list.records],
+    () => records.filter((record) => record.status_id === 1).map((record) => record.id),
+    [records],
   );
   const selectionKey = JSON.stringify({
     filters: approvalFilterKeys.map((key) => approvalFilters[key]),
@@ -85,29 +82,14 @@ export const ApprovalPage = () => {
     [selectionKey],
   );
   const appliedFilters = useMemo(
-    () => getAppliedApprovalFilters(approvalFilters, warehousesQuery.warehouses),
-    [approvalFilters, warehousesQuery.warehouses],
+    () => getAppliedApprovalFilters(approvalFilters, warehouses),
+    [approvalFilters, warehouses],
   );
-
-  const downloadInvoice = async (record: ApprovalRecord) => {
-    try {
-      setDownloadingId(record.id);
-      const response = await httpClient.get<Blob>(approvalEndpoints.invoice(record.id), {
-        responseType: 'blob',
-      });
-      downloadBlob(response.data, `invoice-${record.invoice_number || record.id}.pdf`);
-      snackbar.show({ title: 'Накладная скачана', type: 'success' });
-    } catch {
-      snackbar.show({ title: 'Не удалось скачать накладную', type: 'error' });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
 
   const runAction = async (action: 'approve' | 'reject') => {
     if (!selectedIds.length) return;
     try {
-      await actions[action](selectedIds);
+      await (action === 'approve' ? approve(selectedIds) : reject(selectedIds));
       snackbar.show({
         title: action === 'approve' ? 'Операции приняты' : 'Операции отклонены',
         type: 'success',
@@ -214,7 +196,7 @@ export const ApprovalPage = () => {
             isLoading={downloadingId === record.id}
             onClick={(event) => {
               event.stopPropagation();
-              void downloadInvoice(record);
+              void downloadInvoice(record.id, record.invoice_number || record.id);
             }}
           >
             <OutlineSystemDownload />
@@ -224,7 +206,7 @@ export const ApprovalPage = () => {
         title: '',
       },
     ],
-    [downloadingId],
+    [downloadInvoice, downloadingId],
   );
 
   return (
@@ -269,7 +251,7 @@ export const ApprovalPage = () => {
               type="button"
               variant="primary"
               disabled={!selectedIds.length}
-              isLoading={actions.isPending}
+              isLoading={isPending}
               onClick={() => void runAction('approve')}
             >
               Принять
@@ -278,7 +260,7 @@ export const ApprovalPage = () => {
               type="button"
               variant="outline-neutral"
               disabled={!selectedIds.length}
-              isLoading={actions.isPending}
+              isLoading={isPending}
               onClick={() => void runAction('reject')}
             >
               Отклонить
@@ -287,9 +269,9 @@ export const ApprovalPage = () => {
         </div>
         <DataTable
           columns={columns}
-          records={list.records}
-          isFetching={list.isFetching}
-          isLoading={list.isLoading}
+          records={records}
+          isFetching={isFetching}
+          isLoading={isLoading}
           selectedRecords={selectedIds}
           onSelectedRecordsChange={(nextSelectedIds) =>
             setSelectedIds((currentIds) => {
@@ -313,7 +295,7 @@ export const ApprovalPage = () => {
               ? `По поиску "${queryParams.searchText}" ничего не найдено.`
               : 'Здесь пока нет данных для подтверждения.'
           }
-          pagination={{ ...pagination, totalCount: list.totalCount }}
+          pagination={{ ...pagination, totalCount }}
         />
       </Surface>
     </section>
