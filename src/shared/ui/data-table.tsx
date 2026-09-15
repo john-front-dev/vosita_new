@@ -104,7 +104,7 @@ export const DataTable = <T,>({
   })) satisfies DataTableColumn<T>[];
 
   return (
-    <div className={'w-full ' + className}>
+    <div className={'flex w-full flex-1 flex-col ' + className}>
       <Table
         columns={normalizedColumns}
         records={records}
@@ -123,7 +123,7 @@ export const DataTable = <T,>({
           totalCount={pagination.totalCount}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          className="mt-6 flex justify-center"
+          className="mt-auto flex justify-center pt-6"
           pageOptions={pagination.pageOptions ?? [...paginationConfig.pageOptions]}
           size="m"
           variant="default"
